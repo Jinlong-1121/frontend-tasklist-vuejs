@@ -926,28 +926,25 @@
                             <!-- <v-RadioGroup>
                       <v-Radio label="By Date Range" value="By Date Range" v-model="RadioBtnSetTarget" :onclick="RadioBtnSetTargetClick"></v-Radio> -->
                             <v-row>
-                              <v-col cols="6">
-                                <label style="font-size: 15px;">Start Date</label>
+
                                 <n-date-picker
-                                  style="margin: auto"
-                                  panel
-                                  v-model:formatted-value="StartDate"
-                                  value-format="yyyy-MM-dd"
-                                  type="date"
-                                  :is-date-disabled="disableBeforeToday"
-                                />
-                              </v-col>
-                              <v-col cols="6">
-                                <label style="font-size: 15px;">Due Date</label>
-                                <n-date-picker
-                                  style="margin: auto"
-                                  panel
-                                  v-model:formatted-value="EndDate"
-                                  value-format="yyyy-MM-dd"
-                                  type="date"
-                                  :is-date-disabled="disableBeforeStartOrToday"
-                                />
-                              </v-col>
+                                          style="
+                                            align-items: center;
+                                            margin: auto;
+                                            scale: 0.9;
+                                            
+                                            height: 350px;
+                                            --n-item-color-active: #FFC627; /* Selected range background */
+                                          "
+                                          :is-date-disabled="disableBeforeStartOrToday"
+                                          panel
+                                          v-model:formatted-value="
+                                            StartDateEndDate
+                                          "
+                                          value-format="yyyy-MM-dd"
+                                          type="daterange"
+                                          @click=""
+                                        ></n-date-picker>
                             </v-row>
                             <!-- <v-Radio label="By Period" value="By Period" v-model="RadioBtnSetTarget" :onclick="RadioBtnSetTargetClick"></v-Radio> -->
                             <v-row style="margin: auto">
@@ -956,12 +953,12 @@
                                   <div>
                                     <label>Start Date</label>
                                     <a>:</a>
-                                    <a>{{ StartDate }}</a>
+                                    <a>{{ StartDateEndDate?.[0] }}</a>
                                   </div>
                                   <div>
                                     <label>Due Date</label>
                                     <a>:</a>
-                                    <a>{{ EndDate }}</a>
+                                    <a>{{ StartDateEndDate?.[1] }}</a>
                                   </div>
                                   <div>
                                     <label>Duration</label>
@@ -969,9 +966,9 @@
                                     <a
                                       >{{
                                         Math.floor(
-                                          (new Date(EndDate) -
-                                            new Date(StartDate)) /
-                                            (1000 * 60 * 60 * 24)
+                                          (new Date(StartDateEndDate?.[1]) -
+                                            new Date(StartDateEndDate?.[0])) /
+                                            (1000 * 60 * 60 * 24)+1
                                         )
                                       }}
                                       Days</a
@@ -987,9 +984,9 @@
                                         min="0"
                                         :max="
                                           Math.floor(
-                                            (new Date(EndDate) -
-                                              new Date(StartDate)) /
-                                              (1000 * 60 * 60 * 24)
+                                            (new Date(StartDateEndDate?.[1]) -
+                                              new Date(StartDateEndDate?.[0])) /
+                                              (1000 * 60 * 60 * 24)+1
                                           )
                                         "
                                         type="number"
@@ -1006,9 +1003,9 @@
                                       /
                                       {{
                                         Math.floor(
-                                          (new Date(EndDate) -
-                                            new Date(StartDate)) /
-                                            (1000 * 60 * 60 * 24)
+                                          (new Date(StartDateEndDate?.[1]) -
+                                            new Date(StartDateEndDate?.[0])) /
+                                            (1000 * 60 * 60 * 24)+1
                                         ) - Remainder_Task
                                       }}
                                       Days Before Due Date
@@ -1506,8 +1503,7 @@ export default defineComponent({
       Schedulerdate_yearly: null,
       tabScheduler: null,
       RadioBtnSetTarget: "By Date Range",
-      StartDate: null,
-      EndDate: null,
+      StartDateEndDate: null,
       Schedulerdate_monthly: null,
       isDragging: false,
       currentPage: 1,
@@ -2162,7 +2158,7 @@ try {
         } else if (param == "GetDataDetailTaskList") {
           this.TaskListDetail = Tasklist;
         } else if (param == "GetDataAssignTo") {
-          this.ListDataAssignTo = AssignTO;
+          this.ListDataAssignTo = Tasklist;
         } else if (param == "GetDataAssignToALL") {
           this.ListDataAssignTo = Tasklist;
         } else if (param == "ValidateUserLevel") {
@@ -2491,18 +2487,18 @@ try {
       this.StartDate = null;
       this.EndDate = null;
       this.NewTaskAssignTo = "";
-      this.StartDate = null;
-      this.EndDate = null;
+
       this.Remainder_Task = 0;
       this.selectedDays= null;
       this.selectedDays= "";
       this.Schedulerdate_monthly = null;
         this.Schedulerdate_yearly = null;
         this.Remainder_Task = 0;
-
+        this.StartDateEndDate = null;
 
     },
     Closeform() {
+      this.StartDateEndDate = null;
       this.dialog = false;
       this.changeassignto = false;
       this.ChangeUser = false;

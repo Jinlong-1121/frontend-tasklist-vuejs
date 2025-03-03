@@ -35,6 +35,27 @@ export default class Api_Generate {
     console.log("Generated JWT:", JWT_SECRET);
     return token;
 }
+  async CreatingJWT(){
+    try {
+      const data = JSON.parse(dataLocal);
+    const tokenValue = data.token || "";
+    const pinValue = data.pin || "";
+      const Value = {
+        "Userstampt":tokenValue+pinValue
+      }
+      // Send GET request with axios
+      const response = await axios.post("http://192.168.10.24:8000/jwt-gateway" + "/JwtCreator/TaskListJwt", Value, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      //console.log(response.data);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error in GET request:', error);
+      return null; 
+    }
+  }
   async GetMethode_Old(ApiPath) {
     try {
       // Send GET request with axios
@@ -52,7 +73,7 @@ export default class Api_Generate {
   }
   async GetMethode(ApiPath) {
     try {
-      const token = await this.createJWT();
+      const token = await this.CreatingJWT();
       const response = await axios.get(contextPath_Kong + ApiPath, {
         headers: {
           //'Content-Type': 'application/json',

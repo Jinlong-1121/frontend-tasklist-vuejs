@@ -2815,7 +2815,7 @@ try {
 
 <style>
 
-@import "@/assets/Css/Tasklist.css";
+@import "@/assets/css/TaskList.css";
 .e-grid .e-altrow {
     background-color: #ececec;
   }

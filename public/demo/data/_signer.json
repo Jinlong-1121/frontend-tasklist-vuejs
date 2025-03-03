@@ -1,0 +1,7 @@
+{
+    "data": [
+        { "user_name": "Suhardi", "email": "email@gmail.com", "position": "Direksi", "user_id": 1 },
+        { "user_name": "Luthfi", "email": "email@gmail.com", "position": "Direksi", "user_id": 2 },
+        { "user_name": "Supri", "email": "email@gmail.com", "position": "Koor. TI", "user_id": 3 }
+    ]
+}

@@ -1,0 +1,81 @@
+{
+    "data": {
+        "type": {
+            "id": 2,
+            "name": "Surat External",
+            "code": "EXT"
+        },
+        "parent": null,
+        "category": {
+            "id": 1,
+            "name": "Penawaran",
+            "code": "PNW"
+        },
+        "template": {
+            "id": 1,
+            "name": "Penawaran Kerjasama",
+            "content": "<table><tr><td>No</td><td>:</td><td>{{nomor}}</td></tr><tr><td>Perihal</td><td>:</td><td>{{perihal}}</td></tr><tr><td valign='top'>Kepada</td><td valign='top'>:</td><td>{{tujuan}}</td></tr><tr><td>up</td><td>:</td><td>{{up}}</td></tr></table><p></p><p><span>hello {{nama}} dan {{tanggal}}</span></p><p><span>{{peserta}}</span></p><p></p>{{signer}}",
+            "description": "Template hello",
+            "category": 1,
+            "category_name": "Penawaran"
+        },
+        "up": "direksi",
+        "tujuan": {
+            "id": 1,
+            "name": "OJK",
+            "alamat": "Jl. Ojk Raya"
+        },
+        "signer": [
+            {
+                "name": "Suhardi",
+                "jabatan": "Direksi",
+                "id": 1
+            },
+            {
+                "name": "Luthfi",
+                "jabatan": "Direksi",
+                "id": 2
+            }
+        ],
+        "verifikator": [],
+        "perihal": "Penawaran Kerjasama",
+        "tembusan": "",
+        "attachment": null,
+        "content": "<table><tr><td>No</td><td>:</td><td>{{nomor}}</td></tr><tr><td>Perihal</td><td>:</td><td>Penawaran Kerjasama</td></tr><tr><td valign='top'>Kepada</td><td valign='top'>:</td><td><span>OJK</span><br><span>Jl. Ojk Raya</span></td></tr><tr><td>up</td><td>:</td><td>direksi</td></tr></table><p></p><p><span>hello Abdul Rouf dan Wed May 17 2023 00:00:00 GMT+0700 (Western Indonesia Time)</span></p><p><span><table style=\"width:50%\"><tr><th>name</th><th>jabatan</th><th>id</th></tr><tr><td>Supri</td><td>Koor. TI</td><td>3</td></tr></table></span></p><p></p><table style=\"width:100%\"><tr><td>Suhardi<br>Direksi</td><td>Luthfi<br>Direksi</td></tr></table>",
+        "data_form": [
+            {
+                "id": 1,
+                "type": 1,
+                "type_name": "input text",
+                "label": "Nama",
+                "parameter": "nama",
+                "template": 1,
+                "value": "Abdul Rouf"
+            },
+            {
+                "id": 2,
+                "type": 2,
+                "type_name": "input tanggal",
+                "label": "Tanggal",
+                "parameter": "tanggal",
+                "template": 1,
+                "value": "2023-05-16T17:00:00.000Z"
+            },
+            {
+                "id": 3,
+                "type": 3,
+                "type_name": "tabel user",
+                "label": "Peserta",
+                "parameter": "peserta",
+                "template": 1,
+                "value": [
+                    {
+                        "name": "Supri",
+                        "jabatan": "Koor. TI",
+                        "id": 3
+                    }
+                ]
+            }
+        ]
+    }
+}

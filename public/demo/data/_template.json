@@ -1,0 +1,44 @@
+{
+    "data": [
+        {
+            "id": 0,
+            "name": "Blank Template",
+            "content": "",
+            "description": "Template Kosong",
+            "category": 1,
+            "category_name": "Penawaran"
+        },
+        {
+            "id": 1,
+            "name": "Penawaran Kerjasama",
+            "content": "<table><tr><td>No</td><td>:</td><td>{{nomor}}</td></tr><tr><td>Perihal</td><td>:</td><td>{{perihal}}</td></tr><tr><td valign='top'>Kepada</td><td valign='top'>:</td><td>{{tujuan}}</td></tr><tr><td>up</td><td>:</td><td>{{up}}</td></tr></table><p></p><p><span>hello {{nama}} dan {{tanggal}}</span></p><p><span>{{peserta}}</span></p><p></p>{{signer}}",
+            "description": "Template hello",
+            "category": 1,
+            "category_name": "Penawaran"
+        },
+        {
+            "id": 2,
+            "name": "Closing Price",
+            "content": "<style>.border,.border td,.border th{border:1px solid #000;border-collapse:collapse}</style><table><tr><td>No</td><td>:</td><td>{{nomor}}</td></tr><tr><td><br></td><td></td><td></td></tr><tr><td valign='top'>Kepada</td><td valign='top'>:</td><td>{{tujuan}}</td></tr><tr><td><br></td><td></td><td></td></tr><tr><td>up</td><td>:</td><td>{{up}}</td></tr><tr><td><br></td><td></td><td></td></tr><tr><td>Perihal</td><td>:</td><td>{{perihal}}</td></tr></table><p></p><p><span>Dengan hormat</span></p><p><span>Berikut harga pasar wajar IBPA kami sampaikan untuk dapat di gunakan dalam perhitungan NAV Reksa Dana Purwanto Campuran Dinamis dan Reksa Dana Purwanto Likuid Plus tanggal {{tanggal}}.</span></p><table class='border' style='width:50%'><tr><th>No</th><th>Efek</th><th>Close Price</th></tr><tr><td>1</td><td>SR013</td><td>{{efek1}}</td></tr><tr><td>2</td><td>BBRI01AGNCN1</td><td>{{efek2}}</td></tr><tr><td>3</td><td>ORI017</td><td>{{efek3}}</td></tr><tr><td>4</td><td>PBS019</td><td>{{efek4}}</td></tr><tr><td>5</td><td>PBS027</td><td>{{efek5}}</td></tr></table><p><span>Demikian disampaikan, atas perhatian dan kerjasamanya kami ucapkan terima kasih.</span></p><p><span>Hormat kami,</span></p><p><span>PT. Purwanto Asset Management</span></p><p></p><p></p><p></p>{{signer}}",
+            "description": "Closing Price IBPA 1",
+            "category": 3,
+            "category_name": "Laporan"
+        },
+        {
+            "id": 3,
+            "name": "hello",
+            "content": "<span>hello3</span>",
+            "description": "Template hello3",
+            "category": 2,
+            "category_name": "Perjanjian"
+        },
+        {
+            "id": 4,
+            "name": "hello2",
+            "content": "<span>hello4</span>",
+            "description": "Template hello4",
+            "category": 3,
+            "category_name": "Laporan"
+        }
+    ]
+}

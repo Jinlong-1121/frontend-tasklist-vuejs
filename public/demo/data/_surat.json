@@ -1,0 +1,87 @@
+{
+    "data": 
+      {
+          "code": 200,
+          "data": {
+            "limit": 10,
+            "page": 1,
+            "sort": "",
+            "total_rows": 1,
+            "total_pages": 1,
+            "rows": [
+              {
+                "id": 1,
+                "document_no": "{no}/EXT.PNW/INV/VI/2023",
+                "content": "<span>content document penawaran {satu} dan {dua}</span>",
+                "note": "",
+                "parent": 0,
+                "asset_url": "",
+                "ref_id": "",
+                "perihal": "Penawaran Kerjasama baru",
+                "sender": {
+                  "id": 1,
+                  "user_id": 2,
+                  "user_name": "Fitri Zain",
+                  "user_type": "1",
+                  "document_id": 1
+                },
+                "receiver": {
+                  "id": 1,
+                  "user_id": 1,
+                  "user_name": "OJKs",
+                  "user_type": "2",
+                  "up": "Direktur investasi",
+                  "is_read": "0",
+                  "document_id": 1
+                },
+                "verificator": {
+                  "id": 1,
+                  "user_id": 3,
+                  "user_name": "Edhie Setiyo",
+                  "is_verification": "0",
+                  "document_id": 1
+                },
+                "tembusan": [
+                  {
+                    "id": 1,
+                    "user_id": 2,
+                    "user_name": "Kepala divisi",
+                    "user_type": "2",
+                    "document_id": 1
+                  },
+                  {
+                    "id": 2,
+                    "user_id": 3,
+                    "user_name": "Direktorat",
+                    "user_type": "2",
+                    "document_id": 1
+                  }
+                ],
+                "signer": [
+                  {
+                    "id": 1,
+                    "user_id": 1,
+                    "user_name": "Abdul Rouf",
+                    "is_sign": "0",
+                    "document_id": 1
+                  }
+                ],
+                "attachment": [
+                  {
+                    "id": 10,
+                    "asset_url": "1-17032023-11-ext-dir-inv-pam-iii-2023.pdf",
+                    "document_id": 1
+                  }
+                ],
+                "is_reply": "1",
+                "need_sign": "1",
+                "need_attach": "0",
+                "status": "1",
+                "created_at": "2023-07-03T09:40:26.667+07:00",
+                "updated_at": "2023-07-03T10:34:21.651+07:00"
+              }
+            ]
+          },
+          "error": false
+      }
+}

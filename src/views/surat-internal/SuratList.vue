@@ -1,0 +1,163 @@
+<script setup>
+import { onMounted, onUpdated, reactive, ref } from 'vue';
+import SuratService from '@/service/SuratService';
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const breadcrumbHome = ref({ icon: 'pi pi-home', to: '/' });
+const breadcrumbItems = ref([{ label: 'Surat', to: '/surat-internal/list' }, { label: 'List', to: '/surat-internal/list' }]);
+
+const suratService = new SuratService();
+
+const dataTotal = ref([])
+
+onMounted(() => {
+    getTotalSurat()
+})
+
+onUpdated(() => {
+    getTotalSuratUpdate(dataTotal.value)
+})
+
+const getTotalSurat = async () => {
+    let params = {
+        type: "2",
+    }
+    let dataTotals = await suratService.getSuratCount(params).then((data) => {
+        return data
+    });
+    dataTotal.value = dataTotals
+
+    let data0 = document.querySelectorAll("li.p-tabmenuitem")[2]
+    if (dataTotal.value[0] !== "0") {
+        document.querySelectorAll("li.p-tabmenuitem")[2].classList.add("notip")
+    }
+    let data1 = document.querySelectorAll("li.p-tabmenuitem")[3]
+    if (dataTotal.value[1] !== "0") {
+        document.querySelectorAll("li.p-tabmenuitem")[3].classList.add("notip")
+    }
+    let data2 = document.querySelectorAll("li.p-tabmenuitem")[4]
+    if (dataTotal.value[2] !== "0") {
+        document.querySelectorAll("li.p-tabmenuitem")[4].classList.add("notip")
+    }
+    let data3 = document.querySelectorAll("li.p-tabmenuitem")[5]
+    if (dataTotal.value[3] !== "0") {
+        document.querySelectorAll("li.p-tabmenuitem")[5].classList.add("notip")
+    }
+
+    data0.setAttribute("dataDynamic", dataTotal.value[0]);
+    data1.setAttribute("dataDynamic", dataTotal.value[1]);
+    data2.setAttribute("dataDynamic", dataTotal.value[2]);
+    data3.setAttribute("dataDynamic", dataTotal.value[3]);
+}
+
+const getTotalSuratUpdate = (tempDataTotal) => {
+    let data0 = document.querySelectorAll("li.p-tabmenuitem")[2]
+    if (tempDataTotal[0] !== "0") {
+        document.querySelectorAll("li.p-tabmenuitem")[2].classList.add("notip")
+    }
+    let data1 = document.querySelectorAll("li.p-tabmenuitem")[3]
+    if (tempDataTotal[1] !== "0") {
+        document.querySelectorAll("li.p-tabmenuitem")[3].classList.add("notip")
+    }
+    let data2 = document.querySelectorAll("li.p-tabmenuitem")[4]
+    if (tempDataTotal[2] !== "0") {
+        document.querySelectorAll("li.p-tabmenuitem")[4].classList.add("notip")
+    }
+    let data3 = document.querySelectorAll("li.p-tabmenuitem")[5]
+    if (tempDataTotal[3] !== "0") {
+        document.querySelectorAll("li.p-tabmenuitem")[5].classList.add("notip")
+    }
+
+    data0.setAttribute("dataDynamic", tempDataTotal[0]);
+    data1.setAttribute("dataDynamic", tempDataTotal[1]);
+    data2.setAttribute("dataDynamic", tempDataTotal[2]);
+    // data3.setAttribute("dataDynamic", tempDataTotal[3]);
+}
+
+const nestedRouteItems = ref([
+    {
+        label: 'Complete',
+        to: '/surat-internal/list'
+    },
+    {
+        label: 'Draft',
+        to: '/surat-internal/list/draft'
+    },
+    {
+        label: 'Revisi',
+        to: '/surat-internal/list/open'
+    },
+    {
+        label: 'Need Verif',
+        to: '/surat-internal/list/waiting'
+    },
+    {
+        label: 'Need Signer',
+        to: '/surat-internal/list/signer'
+    },
+    // {
+    //     label: 'Upload Documents',
+    //     to: '/surat-internal/list/upload-documents'
+    // },
+    // {
+    //     label: 'Surat Cancel',
+    //     to: '/surat-internal/list/surat-cancel'
+    // }
+]);
+
+const createNew = () => {
+    router.push('/surat/internal/create');
+}
+</script>
+
+<template>
+    <div class="grid">
+        <div class="col-12">
+            <div class="card card-w-title">
+                <h3>Surat Internal</h3>
+                <Breadcrumb class="mb-4" :home="breadcrumbHome" :model="breadcrumbItems" />
+                    <Button icon="pi pi-plus" label="Surat Baru" @click="createNew" class="mr-2 mb-2" />
+                    <TabMenu :model="nestedRouteItems" class="button-tabSurat"/>
+                <router-view />
+            </div>
+        </div>
+    </div>
+</template>
+
+<style scoped lang="scss">
+@import '@/assets/badges.scss';
+
+</style>
+
+<style lang="scss">
+.button-tabSurat {
+    ul {
+        li {
+            position: relative;
+            a:focus {
+                box-shadow: none !important;
+            }
+        }
+        .notip::after {
+            content: " " attr(dataDynamic) "" !important;
+            position: absolute;
+            z-index: 999;
+            top: 0;
+            right: 0px;
+            background: red;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px;
+            width: 12px;
+            height: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+    }
+}
+
+</style>

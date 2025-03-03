@@ -1,0 +1,94 @@
+{
+    "data": [
+        {
+            "id": 0,
+            "type": 0,
+            "type_name": "editor text",
+            "label": "Konten",
+            "parameter": "konten",
+            "template": 0,
+            "value": ""
+        },
+        {
+            "id": 1,
+            "type": 1,
+            "type_name": "input text",
+            "label": "Nama",
+            "parameter": "nama",
+            "template": 1,
+            "value": ""
+        },
+        {
+            "id": 2,
+            "type": 2,
+            "type_name": "input tanggal",
+            "label": "Tanggal",
+            "parameter": "tanggal",
+            "template": 1,
+            "value": ""
+        },
+        {
+            "id": 3,
+            "type": 3,
+            "type_name": "tabel user",
+            "label": "Peserta",
+            "parameter": "peserta",
+            "template": 1,
+            "value": ""
+        },
+        {
+            "id": 4,
+            "type": 2,
+            "type_name": "input tanggal",
+            "label": "Tanggal",
+            "parameter": "tanggal",
+            "template": 2,
+            "value": ""
+        },
+        {
+            "id": 5,
+            "type": 1,
+            "type_name": "input text",
+            "label": "SR013",
+            "parameter": "efek1",
+            "template": 2,
+            "value": ""
+        },
+        {
+            "id": 6,
+            "type": 1,
+            "type_name": "input text",
+            "label": "BBRI01AGNCN1",
+            "parameter": "efek2",
+            "template": 2,
+            "value": ""
+        },
+        {
+            "id": 7,
+            "type": 1,
+            "type_name": "input text",
+            "label": "ORI017",
+            "parameter": "efek3",
+            "template": 2,
+            "value": ""
+        },
+        {
+            "id": 8,
+            "type": 1,
+            "type_name": "input text",
+            "label": "PBS019",
+            "parameter": "efek4",
+            "template": 2,
+            "value": ""
+        },
+        {
+            "id": 9,
+            "type": 1,
+            "type_name": "input text",
+            "label": "PBS027",
+            "parameter": "efek5",
+            "template": 2,
+            "value": ""
+        }
+    ]
+}

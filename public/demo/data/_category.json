@@ -1,0 +1,19 @@
+{
+    "data": [
+        { 
+            "id": 1, 
+            "name": "Penawaran", 
+            "code": "PNW"
+        },
+        { 
+            "id": 2, 
+            "name": "Perjanjian", 
+            "code": "PJN"
+        },
+        { 
+            "id": 3, 
+            "name": "Laporan", 
+            "code": "LPR" 
+        }
+    ]
+}

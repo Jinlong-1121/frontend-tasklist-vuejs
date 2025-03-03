@@ -1,0 +1,28 @@
+{
+    "data": [
+        { 
+            "id": 1,
+            "user_id": 1,
+            "user_name": "OJK", 
+            "user_type": "2",
+            "up": "",
+            "address": "Jalan No 234 Direktur investasi"
+        },
+        { 
+            "id": 2, 
+            "user_id": 2, 
+            "user_name": "BCA", 
+            "user_type": "2",
+            "up": "",
+            "address": "Jl. Bca Raya"
+        },
+        { 
+            "id": 3, 
+            "user_id": 3, 
+            "user_name": "Densus", 
+            "user_type": "2",
+            "up": "",
+            "address": "Jl. Densus Raya"
+        }
+    ]
+}

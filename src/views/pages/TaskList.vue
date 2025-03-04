@@ -2491,7 +2491,7 @@ try {
       this.changeassignto = false;
       this.ChangeUser = false;
       this.AddCategoryTab = false;
-      const url = `/sipam/#/tasklist`;
+      const url = `#/tasklist`;
       window.location.href = url;
       if (this.DialogParam == "PdfView") {
         localStorage.removeItem("fileData");

@@ -142,7 +142,7 @@ async mounted() {
             };
         const Tasklist = await taskService.UpdateStatusNotifTask(data);
             this.fetchData();
-        const url = `/sipam/#/tasklist?Taskid=${TaskUsers.notif_value}`;
+        const url = `#/tasklist?Taskid=${TaskUsers.notif_value}`;
         window.location.href = url;
         window.location.reload();
         },

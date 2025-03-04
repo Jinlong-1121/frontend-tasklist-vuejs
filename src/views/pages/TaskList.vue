@@ -927,20 +927,8 @@
                       <v-Radio label="By Date Range" value="By Date Range" v-model="RadioBtnSetTarget" :onclick="RadioBtnSetTargetClick"></v-Radio> -->
                             <v-row>
 
-                                <n-date-picker
-                                          style="
-                                            align-items: center;
-                                            margin: auto;
-                                            scale: 0.9;
-                                            
-                                            height: 350px;
-                                            --n-item-color-active: #FFC627; /* Selected range background */
-                                          "
-                                          :is-date-disabled="disableBeforeStartOrToday"
-                                          panel
-                                          v-model:formatted-value="
-                                            StartDateEndDate
-                                          "
+                                <n-date-picker style="align-items: center;margin: auto;scale: 0.9;height: 350px;--n-item-color-active: #FFC627; /* Selected range background */"
+                                          :is-date-disabled="disableBeforeStartOrToday" panel v-model:formatted-value="StartDateEndDate"
                                           value-format="yyyy-MM-dd"
                                           type="daterange"
                                           @click=""

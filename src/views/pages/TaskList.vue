@@ -2302,8 +2302,8 @@ try {
     disableBeforeStartOrToday(date) {
       const today = new Date().setHours(0, 0, 0, 0); // Current date without time
       const current = new Date(date).setHours(0, 0, 0, 0);
-      if (!this.StartDate) return current < today; // If no StartDate, only disable before today
-      const startDate = new Date(this.StartDate).setHours(0, 0, 0, 0);
+      if (!this.StartDateEndDate?.[0]) return current < today; // If no StartDate, only disable before today
+      const startDate = new Date(this.StartDateEndDate?.[0]).setHours(0, 0, 0, 0);
       return current < Math.max(today, startDate); // Disable before the later of today or StartDate
     },
     async createTask() {

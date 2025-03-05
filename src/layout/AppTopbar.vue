@@ -142,6 +142,7 @@ async mounted() {
             };
         const Tasklist = await taskService.UpdateStatusNotifTask(data);
             this.fetchData();
+
         const url = `#/tasklist?Taskid=${TaskUsers.notif_value}`;
         window.location.href = url;
         window.location.reload();
@@ -202,7 +203,7 @@ async mounted() {
                         >
                         <div  class="Notif-Item">
                             <div class="Notif-Item-Header">
-                                <a>New Task Available</a>
+                                <a>{{ TaskUsers.notif_category }}</a>
                             </div>
                             <div
                             :style="{ backgroundColor: TaskUsers.notif_status === 'NEW' ? '#b8b8b8' : TaskUsers.notif_status === 'Clicked' ? '#ffffff':''}"
@@ -210,7 +211,7 @@ async mounted() {
                             
                             >
                                 <div style="display: grid;grid-template-columns: 60px auto;">
-                                    <a>Task ID</a>
+                                    <a>ID</a>
                                     <a>: <a>{{ TaskUsers.notif_value }}</a></a>
                                 </div>
                                 <div style="display: grid;grid-template-columns: 60px auto;">

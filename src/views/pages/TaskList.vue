@@ -477,17 +477,17 @@
                       class="d-flex flex-no-wrap justify-space-between"
                       style="height: auto"
                     >
-                      <div>
-                        <v-card-title style="font-size: 12px; font-weight: 700">
+                      <div style="width: 90%;">
+                        <v-card-title style="font-size: 15px; font-weight: 700">
                           {{ comment.Emp_NAME }} -
 
-                          <a style="font-size: 10px; font-weight: 300">{{
+                          <a style="font-size: 12px; font-weight: 300">{{
                             new Date(comment.Comment_Date).toUTCString()
                           }}</a>
                         </v-card-title>
 
                         <div
-                          style="margin-left: 10px; text-align: start"
+                          style="margin-left: 15px; text-align: start;font-size: 15px;"
                           class="wrapped-text"
                         >
                           {{ comment.Comments }}
@@ -544,16 +544,16 @@
                   <v-card color="#ffff" style="border: solid 1px #ffc627">
                     <div class="d-flex flex-no-wrap justify-space-between">
                       <div>
-                        <v-card-title style="font-size: 12px; font-weight: 700">
+                        <v-card-title style="font-size: 15px; font-weight: 700">
                           {{ comment.Emp_NAME }} -
 
-                          <a style="font-size: 10px; font-weight: 300">{{
+                          <a style="font-size: 12px; font-weight: 300">{{
                             new Date(comment.Comment_Date).toUTCString()
                           }}</a>
                         </v-card-title>
 
                         <div
-                          style="margin-left: 10px; text-align: start"
+                          style="margin-left: 10px; text-align: start;font-size: 15px;"
                           class="wrapped-text"  
                         >
                           {{ comment.Comments }}
@@ -583,7 +583,7 @@
                               setFileId(comment.File_ID, comment.Content_Name)
                             ">
                         <div style="text-align: left">
-                          <a style="font-size: 12px; font-weight: 700"
+                          <a style="font-size: 15px; font-weight: 700"
                             >Comment By : {{ comment.Emp_NAME }}</a
                           > 
 
@@ -601,9 +601,9 @@
                             v-if="comment.Content_Name !== 'No Media'"
                             style="
                               max-width: 500px;
-
+                              font-size: 15px;
                               text-wrap: wrap;
-
+                              
                               width: 500px;
                             "
                             >{{ comment.Content_Name }}</a
@@ -2032,7 +2032,7 @@ try {
           this.StatusBtnisDisabled = true;
         }
       }
-      if (this.TaskListDetail[0].task_progress == "DONE") {
+      if (this.TaskListDetail[0].task_progress == "DONE" || this.TaskListDetail[0].task_progress == "DONE (LATE)") {
         this.StatusBtn = "Task Finished";
         this.StatusBtnisDisabled = true;
       }

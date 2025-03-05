@@ -2308,11 +2308,11 @@ try {
     },
     async createTask() {
       try {
-        if ((this.Dept != null && this.name_Topic.name != null && this.NewTaskAssignTo != null && this.name_Priority.name  != null && this.NewTaskSubject != null && this.NewtTaskDesc  != null && this.StartDate != null && this.EndDate != null)) {
+        if ((this.Dept != null && this.name_Topic.name != null && this.NewTaskAssignTo != null && this.name_Priority.name  != null && this.NewTaskSubject != null && this.NewtTaskDesc  != null && this.StartDateEndDate?.[0] != null && this.StartDateEndDate?.[1] != null)) {
           const taskService = new TaskListService();
         const remainder = (
           Math.floor(
-            (new Date(this.EndDate) - new Date(this.StartDate)) /
+            (new Date(this.StartDateEndDate?.[1]) - new Date(this.StartDateEndDate?.[0])) /
               (1000 * 60 * 60 * 24)
           ) - this.Remainder_Task
         ).toString();
@@ -2325,8 +2325,8 @@ try {
           Priority: this.name_Priority.name,
           Subject: this.NewTaskSubject,
           Task_Name: this.NewtTaskDesc,
-          Start_Date: this.StartDate,
-          End_Date: this.EndDate,
+          Start_Date: this.StartDateEndDate?.[0],
+          End_Date: this.StartDateEndDate?.[1],
           Addwho: this.userid,
           Remainder_Date: remainder,
           Task_id_parent_of: this.TaskListDetail[0].task_id,
@@ -2344,8 +2344,8 @@ try {
           Priority: this.name_Priority.name,
           Subject: this.NewTaskSubject,
           Task_Name: this.NewtTaskDesc,
-          Start_Date: this.StartDate,
-          End_Date: this.EndDate,
+          Start_Date: this.StartDateEndDate?.[0],
+          End_Date: this.StartDateEndDate?.[1],
           Addwho: this.userid,
           Remainder_Date: remainder,
           task_id_parent_of: "",
@@ -2361,8 +2361,7 @@ try {
         this.name_Priority = "";
         this.NewTaskAssignTo = null;
         this.NewTaskExpired = "";
-        this.StartDate = null;
-        this.EndDate = null;
+        this.StartDateEndDate = null;
         this.NewTaskAssignTo = "";
         this.StartDate = null;
         this.EndDate = null;

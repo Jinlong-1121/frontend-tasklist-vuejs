@@ -257,7 +257,8 @@
                       {{ TaskListDetail[0].emp_name }} </a
                     >
                   </div>
-                  <v-btn :disabled="changeassignto" style="margin: auto; height: 25px; width: 25px; text-align: center;" icon="mdi-account-switch" size="x-small" @click="ChangeUser_Void"></v-btn>
+                  <v-btn  style="margin: auto; height: 25px; width: 25px; text-align: center;" icon="mdi-history" size="x-small" @click="ChangeUser_Void('History')"></v-btn>
+                  <v-btn :disabled="changeassignto" style="margin: auto; height: 25px; width: 25px; text-align: center;" icon="mdi-account-switch" size="x-small" @click="ChangeUser_Void('User')"></v-btn>
 
                   </div>
 
@@ -454,6 +455,31 @@
                 </e-columns>
               </ejs-treegrid>
               </div>
+            </div>
+            <div class="Commenst-Box" v-else-if="UserHistory == true">
+              <div style="margin-top: 5px;" class="Changeuserstyle">
+                <h4>User Assign History</h4>
+                <ejs-treegrid
+                  :dataSource="UserAssignHistory" ref='gridRefUser' childMapping=''
+                  :sort='true' :allowResizing='true' 
+                  height="480" rowHeight=30 style="margin: 10px;" 
+                  enableHover=true  :enableCollapseAll="false"
+                  :enableAutoFitAllColumns='true' gridLines='Both'
+                >
+                <e-columns >
+                  <e-column field='assigner_name' headerText='Assign By' textAlign='left' width=auto ></e-column>
+                  <e-column field='emp_name' headerText='Assign To' textAlign='left'  width=auto  ></e-column>
+                  <e-column field='start_date' headerText='Start Date' type="date" format="dd-MMM-yyyy hh:mm" textAlign='left' width=auto ></e-column>
+                  <e-column field='end_date' headerText='End Date' type="date" format="dd-MMM-yyyy hh:mm" textAlign='left' width=auto ></e-column>
+                  <e-column field='duration' headerText='Duration' textAlign='left' width=auto  ></e-column>
+                  <e-column field='status' headerText='Status' textAlign='left' width=auto  ></e-column>
+                </e-columns>
+              </ejs-treegrid>
+              <div class="ChangeUser-Btn">
+                    <v-btn color="#FFC627" style="margin-right: 10px;" @click="UserHistory = false">Back</v-btn>
+                  </div>
+              </div>
+              
             </div>
             <div class="Comments-Box" v-else>
               <!-- <div class="list-tasklist-parent">
@@ -1467,6 +1493,7 @@ export default defineComponent({
       RadioBtnSetAssignto:"dept",
       Addsubtask: false,
       ChangeUser:false,
+      UserHistory:false,
       AddCategoryTab: false,
       taggingvalue: null,
       NewCategoryAdd: null,
@@ -1772,9 +1799,13 @@ try {
         //console.log(error);
       }
     },
-    async ChangeUser_Void(){
+    async ChangeUser_Void(String){
       this.NewTaskAssignTo = null;
-      this.ChangeUser = true;
+      if(String == "History"){
+        this.UserHistory = true
+      }else{
+        this.ChangeUser = true;
+      }
       await this.GetDataList("GetDataAssignTo", "-");
       await this.GetDataUserAssignHistory(this.TaskListDetail[0].task_id);
     },
@@ -2489,6 +2520,7 @@ try {
       this.dialog = false;
       this.changeassignto = false;
       this.ChangeUser = false;
+      this.UserHistory = false;
       this.AddCategoryTab = false;
       const url = `#/tasklist`;
       window.location.href = url;

@@ -2003,7 +2003,7 @@ try {
         clearInterval(this.intervalId);
         this.intervalId = null;
       }
-      if(this.TaskListDetail[0]?.task_progress == "DONE"){
+      if(this.TaskListDetail[0]?.task_progress == "DONE" || this.TaskListDetail[0]?.task_progress == "DONE (LATE)"){
         this.changeassignto = true;
       }else{
         this.changeassignto = false;

@@ -121,6 +121,16 @@ export default class TaskListService {
       throw error; // Rethrow the error if you want the caller to handle it
     }
   }
+  async SendingWaitingToDone(datastring){
+    try {
+      const dataTotals = await helperrr.postStringMethod(`api/v1/Tasklist/SendingNotifDone`,datastring);
+      return dataTotals
+    }
+    catch (error) {
+      console.error("Error fetching task priority data:", error);
+      throw error; // Rethrow the error if you want the caller to handle it
+    }
+  }
   async InsertingSubtask(datastring){
     try {
       const dataTotals = await helperrr.postStringMethod(`api/v1/Tasklist/InsertingSubtask`,datastring);

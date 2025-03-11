@@ -354,7 +354,7 @@
                   <v-btn
                     color="#FFC627"
                     size="small"
-                    width="200px"
+                    width="520px"
                     :disabled="StatusBtnisDisabled"
                     @click="SaveEditStatus"
                     >{{ StatusBtn }}</v-btn
@@ -2018,7 +2018,7 @@ try {
         this.TaskListDetail[0].task_progress == "NEW" ||
         this.TaskListDetail[0].task_progress == "HOLD"
       ) {
-        this.StatusBtn = "Set Status To OPEN";
+        this.StatusBtn = "Set Status To OPEN / Waiting To Open";
         if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
           this.StatusBtnisDisabled = false;
         }else{
@@ -2026,23 +2026,34 @@ try {
         }
       }
       if (this.TaskListDetail[0].task_progress == "IN PROGRESS") {
-        this.StatusBtn = "Set Status To DONE";
+        this.StatusBtn = "Set Status To DONE / Waiting To Done";
         if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
           this.StatusBtnisDisabled = false;
         }else{
-          this.StatusBtnisDisabled = true;
+          if(this.TaskListDetail[0].user_assign_to == this.userid){
+            this.StatusBtnisDisabled = false;
+
+          }else {
+            this.StatusBtnisDisabled = true;
+
+          }
         }      
       }
       if (this.TaskListDetail[0].task_progress == "IN PROGRESS (LATE)") {
-        this.StatusBtn = "Set Status To DONE LATE";
+        this.StatusBtn = "Set Status To DONE LATE / Waiting To Done (Late)";
         if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
           this.StatusBtnisDisabled = false;
         }else{
-          this.StatusBtnisDisabled = true;
+          if(this.TaskListDetail[0].user_assign_to == this.userid){
+            this.StatusBtnisDisabled = false;
+
+          }else {
+            this.StatusBtnisDisabled = true;
+          }
         }      
       }
       if (this.TaskListDetail[0].task_progress == "OPEN") {
-        this.StatusBtn = "Set Status To PROGRESS";
+        this.StatusBtn = "Set Status To PROGRESS / Waiting To Progress";
 
         if(this.TaskListDetail[0].user_assign_to == this.userid) {
           this.StatusBtnisDisabled = false;
@@ -2053,7 +2064,7 @@ try {
         }
       }
       if (this.TaskListDetail[0].task_progress == "OPEN (LATE)") {
-        this.StatusBtn = "Set Status To PROGRESS LATE";
+        this.StatusBtn = "Set Status To PROGRESS LATE / Waiting To Progress (Late)";
 
         if(this.TaskListDetail[0].user_assign_to == this.userid) {
           this.StatusBtnisDisabled = false;
@@ -2064,12 +2075,16 @@ try {
         }
       }
       if (this.TaskListDetail[0].task_progress == "DONE" || this.TaskListDetail[0].task_progress == "DONE (LATE)") {
-        this.StatusBtn = "Task Finished";
+        this.StatusBtn = "Task Finished / Waiting To Close";
+        this.StatusBtnisDisabled = true;
+      }
+      if (this.TaskListDetail[0].task_progress == "CLOSED") {
+        this.StatusBtn = "Task Closed";
         this.StatusBtnisDisabled = true;
       }
       if (this.TaskListDetail[0].task_progress == "OUTDATE") {
         if(this.TaskListDetail[0].start_date.length < 1){ 
-          this.StatusBtn = "Set Status To OPEN LATE";
+          this.StatusBtn = "Set Status To OPEN LATE / Waiting To Open (Late)";
           if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
             this.StatusBtnisDisabled = false;
           }else{
@@ -2077,7 +2092,7 @@ try {
           }
         }else{
           if(this.TaskListDetail[0].progress_date.length < 1){ 
-            this.StatusBtn = "Set Status To PROGRESS LATE";
+            this.StatusBtn = "Set Status To PROGRESS LATE / Waiting To Progress (Late)";
             if(this.TaskListDetail[0].user_assign_to == this.userid) {
               this.StatusBtnisDisabled = false;
             }
@@ -2086,7 +2101,7 @@ try {
               this.StatusBtnisDisabled = true;
             }
           }else{
-            this.StatusBtn = "Set Status To DONE";
+            this.StatusBtn = "Set Status To DONE / Waiting To Done";
             if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
               this.StatusBtnisDisabled = false;
             }else{
@@ -2097,7 +2112,7 @@ try {
       }
       if (this.TaskListDetail[0].task_progress == "WARNING") {
         if(this.TaskListDetail[0].start_date.length < 1){ 
-          this.StatusBtn = "Set Status To OPEN";
+          this.StatusBtn = "Set Status To OPEN / Waiting To Open";
           if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
             this.StatusBtnisDisabled = false;
           }else{
@@ -2105,7 +2120,7 @@ try {
           }
         }else{
           if(this.TaskListDetail[0].progress_date.length < 1){ 
-            this.StatusBtn = "Set Status To PROGRESS";
+            this.StatusBtn = "Set Status To PROGRESS / Waiting To Progress";
 
             if(this.TaskListDetail[0].user_assign_to == this.userid) {
               this.StatusBtnisDisabled = false;
@@ -2115,7 +2130,7 @@ try {
               this.StatusBtnisDisabled = true;
             }
           }else{
-            this.StatusBtn = "Set Status To DONE";
+            this.StatusBtn = "Set Status To DONE / Waiting To Done";
             if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
               this.StatusBtnisDisabled = false;
             }else{
@@ -2788,13 +2803,26 @@ try {
 
     // Fix the URL format for parsing
     const cleanedURL = currentURL.replace("?Taskid?", "?Taskid=");
+    const cleanedURL_WTC = currentURL.replace("?Update?", "?Update=");
 
     // Parse and extract
     var url = new URL(cleanedURL.replace("#", ""));
+    var url = new URL(cleanedURL_WTC.replace("#", ""));
     var taskId = url.searchParams.get("Taskid");
+    var Waitingtoclose = url.searchParams.get("Update");
+    //console.log(Waitingtoclose);
     //console.log("{Catch}: ", taskId);
 
-    if (taskId != null) {
+    if (taskId != null) {cleanedURL
+      if(Waitingtoclose != null){
+        const data = {
+          task_id: taskId,
+          progresvalue: 'CLOSED',
+        };
+        const taskService = new TaskListService();
+        const UpdatingTaskStatus = await taskService.UpdateStatusTask(data);
+      }
+
       this.GetTaskID(taskId,"Direct");
     }
     if(this.ValidateUserLevel[0] == null){

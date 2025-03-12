@@ -39,6 +39,22 @@ export default class TaskListService {
       throw error; // Rethrow the error if you want the caller to handle it
     }
   }
+  async GetTaskID(Param) {
+    try {
+      // Await the API call and get the data   GetUserid?Param=GetUserName&Pin=P0124011
+      const dataTotals = await helperrr.GetMethode('api/v1/Tasklist/GetTaskID?Comment_id='+ Param);
+      
+      // Update List_Priority with the fetched data
+      RetrunValue = dataTotals || []; // Fallback to an empty array if no data is returned
+      
+      // Optionally return the updated List_Priority
+      return RetrunValue;
+    } catch (error) {
+      // Log the error in case of failure
+      console.error("Error fetching task priority data:", error);
+      throw error; // Rethrow the error if you want the caller to handle it
+    }
+  }
   async GetListData(Param,Userid,TaskID) {
     try {
       const dataTotals = await helperrr.GetMethode(`api/v1/Tasklist/GetListData?Param=${Param}&Userid=${Userid}&TaskID=${TaskID}`);

@@ -106,9 +106,11 @@ export default class Api_Generate {
 
   async postStringMethod(ApiPath, data) {
     try {
-      const response = await axios.post(contextPath + ApiPath, data, {
+      const token = await this.CreatingJWT();
+      const response = await axios.post(contextPath_Kong + ApiPath, data, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization':`Bearer ${token}`
         }
       });
       //console.log(response.data);
@@ -136,9 +138,11 @@ export default class Api_Generate {
   async postMultiPartFromDataMethod(ApiPath, formData) {
     try {
       // Send POST request with axios
-      const response = await axios.post(contextPath + ApiPath, formData, {
+      const token = await this.CreatingJWT();
+      const response = await axios.post(contextPath_Kong + ApiPath, formData, {
         headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            'Authorization':`Bearer ${token}`
         }
       });
       //console.log(response.data);

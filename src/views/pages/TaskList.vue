@@ -1487,6 +1487,7 @@ export default defineComponent({
   },
   data() {
     return {
+      currentDate: new Date().toLocaleString(),
       attchment_filename: null,
       wrapSettings: { wrapMode: 'Both' },
       radioGroupfilter:"mytask",
@@ -2022,7 +2023,11 @@ try {
         if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
           this.StatusBtnisDisabled = false;
         }else{
-          this.StatusBtnisDisabled = true;
+          if(this.TaskListDetail[0].reporter == this.userid){
+            this.StatusBtnisDisabled = false;
+          }else{
+            this.StatusBtnisDisabled = true;
+          }
         }
       }
       if (this.TaskListDetail[0].task_progress == "IN PROGRESS") {
@@ -2657,9 +2662,33 @@ try {
         }
         if (this.TaskListDetail[0].task_progress == "IN PROGRESS") {
           StatusFixed = "DONE";
+
+          this.currentDate = new Date().toLocaleString();
+          const data = {
+          task_id: this.TaskIDBinding,
+          assign_to: this.TaskListDetail[0].user_assign_to,
+          subject: this.TaskListDetail[0].subject,
+          end_date: this.currentDate,
+          addwho: this.TaskListDetail[0].reporter,
+        };
+        const taskService = new TaskListService();
+        const SendingEmailWaitingToClose = await taskService.SendingWaitingToDone(data);
+
         }
         if (this.TaskListDetail[0].task_progress == "IN PROGRESS (LATE)") {
           StatusFixed = "DONE (LATE)";
+
+          this.currentDate = new Date().toLocaleString();
+          const data = {
+          task_id: this.TaskIDBinding,
+          assign_to: this.TaskListDetail[0].user_assign_to,
+          subject: this.TaskListDetail[0].subject,
+          end_date: this.currentDate,
+          addwho: this.TaskListDetail[0].reporter,
+        };
+        const taskService = new TaskListService();
+        const SendingEmailWaitingToClose = await taskService.SendingWaitingToDone(data);
+
         }
         if (this.TaskListDetail[0].task_progress == "OUTDATE") {
           if(this.TaskListDetail[0].start_date.length < 1){

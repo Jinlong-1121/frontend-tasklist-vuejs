@@ -136,14 +136,27 @@ async mounted() {
         }
         },
         async NotifClicked(TaskUsers) {
+            var url_value = ""
             const taskService = new TaskListService();
             const data = {
                 taskid: TaskUsers.notif_value
             };
-        const Tasklist = await taskService.UpdateStatusNotifTask(data);
+            const Tasklist = await taskService.UpdateStatusNotifTask(data);
             this.fetchData();
-
-        const url = `#/tasklist?Taskid=${TaskUsers.notif_value}`;
+            if(TaskUsers.notif_category == "New Task Available"){
+                url_value = `#/tasklist?Taskid=${TaskUsers.notif_value}`
+            }
+            if(TaskUsers.notif_category == "You Have New Comments"){
+                const taskService = new TaskListService();
+                const taskid = await taskService.GetTaskID(TaskUsers.notif_value);
+                if(taskid[0].task_id != null)
+                {
+                    url_value = `#/tasklist?Taskid=${taskid[0]?.task_id || ''}`
+                }else{
+                    url_value = `#/tasklist`
+                }
+            }
+        const url = url_value;
         window.location.href = url;
         window.location.reload();
         },

@@ -2176,10 +2176,10 @@ try {
       }
       if (this.TaskListDetail[0].task_progress == "DONE" || this.TaskListDetail[0].task_progress == "DONE (LATE)") {
         if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
-          this.StatusBtn = "Need Verify Close";
+          this.StatusBtn = "Need Approval Close";
           this.StatusBtnisDisabled = false;
         }else{
-          this.StatusBtn = "Task Finished / Waiting To Close";
+          this.StatusBtn = "Task Completed / Waiting To Close";
           this.StatusBtnisDisabled = true;
         }
 

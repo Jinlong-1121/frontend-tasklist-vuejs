@@ -773,7 +773,6 @@
             </div>
           </div>
         </v-card>
-
         <v-card v-if="DialogParam === 'NewTask'">
           <v-card-title class="d-flex align-center">
             <v-icon left>mdi-clipboard-list</v-icon>
@@ -1184,7 +1183,7 @@
                                       <label
                                         >Task Duration : {{ 
                                         
-                                        new Date(Schedulerdate_monthly?.[1] || 0).getDate() - new Date(Schedulerdate_monthly?.[0] || 0).getDate()
+                                        new Date(Schedulerdate_monthly?.[1] || 0).getDate() - new Date(Schedulerdate_monthly?.[0] || 0).getDate() + 1
                                         }}
                                         Days</label
                                       >
@@ -1211,7 +1210,7 @@
                                         <input
                                           v-model="Remainder_Task"
                                           min="0"
-                                          :max="new Date(Schedulerdate_monthly?.[1] || 0).getDate() - new Date(Schedulerdate_monthly?.[0] || 0).getDate()"
+                                          :max="new Date(Schedulerdate_monthly?.[1] || 0).getDate() - new Date(Schedulerdate_monthly?.[0] || 0).getDate()+1"
                                           type="number"
                                           style="
                                             height: 15px;
@@ -1225,7 +1224,7 @@
                                         />
                                         /
                                         {{
-                                          new Date(Schedulerdate_monthly?.[1] || 0).getDate() - new Date(Schedulerdate_monthly?.[0] || 0).getDate() -
+                                          new Date(Schedulerdate_monthly?.[1] || 0).getDate() - new Date(Schedulerdate_monthly?.[0] || 0).getDate() +1 -
                                           Remainder_Task
                                         }}
                                         Days Before Due Date</label
@@ -1385,8 +1384,7 @@
             </div>
           </div>
         </v-card>
-        <v-card
-          v-if="DialogParam === 'PdfView'"
+        <v-card v-if="DialogParam === 'PdfView'"
           style="height: 900px;width: 1000px;"
         >
           <v-card-title class="d-flex align-center">
@@ -1414,6 +1412,9 @@
               />
             </div>
           </div>
+        </v-card>
+        <v-card v-if="DialogParam === 'TaskCloseForm'">
+
         </v-card>
       </v-dialog>
     </div>
@@ -2844,12 +2845,13 @@ try {
 
     if (taskId != null) {cleanedURL
       if(Waitingtoclose != null){
-        const data = {
-          task_id: taskId,
-          progresvalue: 'CLOSED',
-        };
-        const taskService = new TaskListService();
-        const UpdatingTaskStatus = await taskService.UpdateStatusTask(data);
+        //const data = {
+        //  task_id: taskId,
+        //  progresvalue: 'CLOSED',
+        //};
+        //const taskService = new TaskListService();
+        //const UpdatingTaskStatus = await taskService.UpdateStatusTask(data);
+        this.DialogParam = "TaskCloseForm";
       }
 
       this.GetTaskID(taskId,"Direct");

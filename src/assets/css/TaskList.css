@@ -722,7 +722,36 @@ box-shadow: #333333  0px 1px 2px;
   box-shadow: #333333  0px 1px 2px;
   }
 
+.TaskCloseForm{
+  margin: auto;
+}
+.TaskCloseForm-Information-Customs{
+  display: grid;
+  grid-template-rows: auto auto auto auto auto auto;
+  gap: 0;
+  background-color: #eeeeee;
+  margin: 5px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: #818181  3px 2px 5px;
 
+}
+.TaskCloseForm-Information-Customs-Label{
+  display: grid;
+  grid-template-columns: 100px 5px 320px;
+  margin: 5px;
+}
+.TaskCloseForm-Field-Costom{
+  max-width: 100%; 
+  height: auto; 
+  font-size: 10px ; 
+  margin: auto;
+}
+.TaskCloseForm-Btn-Costom{
+  width: 200px;
+  margin: 10px;
+  background-color: #FFC627;
+}
 
 
 

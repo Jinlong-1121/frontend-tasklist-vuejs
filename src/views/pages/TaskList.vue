@@ -251,11 +251,11 @@
                   <a>:</a>
                   <div class="Detail-Textbox-List-user">
                     <div class="Detail-Textbox-List" >
-                    <a
-                      >{{ TaskListDetail[0].assign_to }} -
-                      {{ TaskListDetail[0].user_assign_to }} - 
-                      {{ TaskListDetail[0].emp_name }} </a
-                    >
+                    <a>
+                        {{ (TaskListDetail[0].assign_to ? TaskListDetail[0].assign_to + "-" : "") }}
+                        {{ (TaskListDetail[0].user_assign_to ? TaskListDetail[0].user_assign_to + "-" : "") }}
+                        {{ TaskListDetail[0].emp_name || "" }}
+                    </a>
                   </div>
                   <v-btn  style="margin: auto; height: 25px; width: 25px; text-align: center;" icon="mdi-history" size="x-small" @click="ChangeUser_Void('History')"></v-btn>
                   <v-btn :disabled="changeassignto" style="margin: auto; height: 25px; width: 25px; text-align: center;" icon="mdi-account-switch" size="x-small" @click="ChangeUser_Void('User')"></v-btn>
@@ -1413,7 +1413,99 @@
             </div>
           </div>
         </v-card>
-        <v-card v-if="DialogParam === 'TaskCloseForm'">
+      </v-dialog>
+    </div>
+  </template>
+  <template>
+    <div>
+      <v-dialog v-model="dialog_1" max-width="290" style="margin: auto">
+        <v-card v-if="DialogParam === 'TaskCloseForm'"
+          style="height: auto;width: 480px;"
+        >
+        <v-card-title class="d-flex align-center">
+            <v-icon left>mdi-clipboard-list</v-icon>
+
+            Are You Sure You Want To Close This Task ?
+
+            <v-spacer></v-spacer>
+            <v-btn style="font-size: 20px" icon="mdi-arrow-left-circle" size="x-small" @click="TaskConfim_Reject"></v-btn>
+
+          </v-card-title>
+          <v-spacer></v-spacer>
+
+          <div class="TaskCloseForm">
+            <div class="TaskCloseForm-Information-Customs">
+              <div class="TaskCloseForm-Information-Customs-Label">
+                <label>Task ID</label>
+                <label>:</label>
+                <label>{{ TaskListDetail[0].task_id  }}</label>
+              </div>
+              <div class="TaskCloseForm-Information-Customs-Label">
+                <label>Subject</label>
+                <label>:</label>
+                <label>{{ TaskListDetail[0].subject }}</label>
+              </div>
+              <div class="TaskCloseForm-Information-Customs-Label">
+                <label>Assign To</label>
+                <label>:</label>
+                <label>
+                        {{ (TaskListDetail[0].assign_to ? TaskListDetail[0].assign_to + "-" : "") }}
+                        {{ (TaskListDetail[0].user_assign_to ? TaskListDetail[0].user_assign_to + "-" : "") }}
+                        {{ TaskListDetail[0].emp_name || "" }}
+                </label>
+              </div>
+              <div class="TaskCloseForm-Information-Customs-Label">
+                <label>Start Date</label>
+                <label>:</label>
+                <label>{{ TaskListDetail[0].start_date ? formatDate(TaskListDetail[0].start_date)  : ""}}</label>
+              </div>
+              <div class="TaskCloseForm-Information-Customs-Label">
+                <label>Finish Date</label>
+                <label>:</label>
+                <label>{{ TaskListDetail[0].finish_date ? formatDate(TaskListDetail[0].finish_date) : ""}}</label>
+              </div>
+              <div class="TaskCloseForm-Information-Customs-Label">
+                <label>Task Duration</label>
+                <label>:</label>
+                <label>
+                  {{ Math.round((
+                    (TaskListDetail[0].finish_date ? new Date(TaskListDetail[0].finish_date) : new Date(currentDate)) - 
+                    (TaskListDetail[0].start_date ? new Date(TaskListDetail[0].start_date) : new Date())) / (1000 * 60 * 60 * 24))
+                  }} Days 
+                </label>
+              </div>
+
+            </div>
+            <v-spacer></v-spacer>
+
+            <v-textarea
+              class="TaskCloseForm-Field-Costom"
+              label="(*Required) Add a comment here..."
+              placeholder="Add your comments here..."
+              rows="3"
+              maxlength="1000"
+              outlined
+              size="small"
+              ref="CommentsRef"
+              v-model="CommentsValue"
+            ></v-textarea>
+            <div style="margin: auto;">
+              <v-btn
+                class="TaskCloseForm-Btn-Costom"
+                density="default"
+                size="small"
+                @click="TaskConfim_Reject"
+                >Reject</v-btn
+              >
+              <v-btn
+                class="TaskCloseForm-Btn-Costom"
+                density="default"
+                size="small"
+                @click="TaskConfim_Accept"
+                >Accept</v-btn
+              >
+            </div>
+          </div>
 
         </v-card>
       </v-dialog>
@@ -1477,6 +1569,7 @@ export default defineComponent({
             openDialog,
       breadcrumbHome,
       gridRef :ref(null),
+      CommentsRef :ref(null),
       breadcrumbItems,
       DialogParam: ref(null),
       RadioBtnSetTargetBoolen: ref(false),
@@ -1546,6 +1639,7 @@ export default defineComponent({
       userid: null,
       name: null,
       dialog: false,
+      dialog_1: false,
       DownloadingAttch: false,
       DownloadingAttchText: null,
       TaskIDBinding: [],
@@ -1735,18 +1829,18 @@ export default defineComponent({
       try {
         const taskService = new TaskListService();
         const requiredFields = {
-  topic_code: this.name_Topic?.code,
-  subject: this.NewTaskSubject,
-  dept: this.Dept,
-  task_name: this.NewtTaskDesc,
-  task_category: TaskCategory?.toString(),
-  generate_every: GenerateEvery?.toString(),
-  priority: this.name_Priority?.name,
-  estimasted_time_done: DueDate?.toString(),
-  remainder_date: Reminder?.toString(),
-  assign_to: this.NewTaskAssignTo,
-  creator: this.userid,
-};
+          topic_code: this.name_Topic?.code,
+          subject: this.NewTaskSubject,
+          dept: this.Dept,
+          task_name: this.NewtTaskDesc,
+          task_category: TaskCategory?.toString(),
+          generate_every: GenerateEvery?.toString(),
+          priority: this.name_Priority?.name,
+          estimasted_time_done: DueDate?.toString(),
+          remainder_date: Reminder?.toString(),
+          assign_to: this.NewTaskAssignTo,
+          creator: this.userid,
+        };
 
 // Check if any required field is missing or empty
 const missingFields = Object.entries(requiredFields)
@@ -2081,8 +2175,14 @@ try {
         }
       }
       if (this.TaskListDetail[0].task_progress == "DONE" || this.TaskListDetail[0].task_progress == "DONE (LATE)") {
-        this.StatusBtn = "Task Finished / Waiting To Close";
-        this.StatusBtnisDisabled = true;
+        if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
+          this.StatusBtn = "Need Verify Close";
+          this.StatusBtnisDisabled = false;
+        }else{
+          this.StatusBtn = "Task Finished / Waiting To Close";
+          this.StatusBtnisDisabled = true;
+        }
+
       }
       if (this.TaskListDetail[0].task_progress == "CLOSED") {
         this.StatusBtn = "Task Closed";
@@ -2531,9 +2631,9 @@ try {
       this.selectedDays= null;
       this.selectedDays= "";
       this.Schedulerdate_monthly = null;
-        this.Schedulerdate_yearly = null;
-        this.Remainder_Task = 0;
-        this.StartDateEndDate = null;
+      this.Schedulerdate_yearly = null;
+      this.Remainder_Task = 0;
+      this.StartDateEndDate = null;
 
     },
     Closeform() {
@@ -2566,6 +2666,57 @@ try {
         },
         30 * 60 * 1000
       ); // 30 minutes  30 * 60 * 1000
+    },
+    TaskConfim_Reject(){
+      this.dialog_1 = false;
+      this.DialogParam = "ClickedRow";
+      this.dialog = true;    
+    },
+    async TaskConfim_Accept(){
+      try{
+        if (this.TaskListDetail[0].task_progress == "DONE" || this.TaskListDetail[0].task_progress == "DONE (LATE)") {
+          if(this.CommentsValue == null){
+            this.DownloadingAttchText = `Please Enter Comment`;
+            this.DownloadingAttch = true;
+            this.$nextTick(() => {
+              this.$refs.CommentsRef.focus(); // Focus on the textarea
+            });
+          }else{
+            try{
+                const data = {
+                task_id: this.TaskIDBinding,
+                progresvalue: "CLOSED",
+              };
+              const taskService = new TaskListService();
+              const UpdatingTaskStatus = await taskService.UpdateStatusTask(data);
+              this.DownloadingAttchText = `Status Updated`;
+              this.DownloadingAttch = true;
+            }catch (error) {
+              console.error("Error Set Task To CLOSED..!:", error);
+            }
+            try{
+              const dataComment = {
+                Task_ID: this.TaskIDBinding,
+                Comments: this.CommentsValue,
+                Emp_ID: this.userid,
+                Content_Name: "",
+                File_Path: "",
+              };
+              const InsertingComments = await taskService.InsertingCommentsData(dataComment);
+              await this.GetCommentsList(this.TaskIDBinding);
+            }catch (error) {
+              console.error("Error Inserting Comment CLOSED Task..!:", error);
+            }
+          
+            this.CommentsValue = null;
+            this.dialog_1 = false;
+            this.DialogParam = "ClickedRow";
+            this.dialog = true;          
+          }
+        }
+      }catch (error) {
+        console.error("Error fetching task summary:", error);
+      }
     },
     triggerFileInput() {
       this.$refs.fileInput.click(); // Trigger the hidden file input
@@ -2650,8 +2801,11 @@ try {
     },
     async SaveEditStatus() {
       try {
-        var StatusFixed = "";
-
+        if (this.TaskListDetail[0].task_progress == "DONE" || this.TaskListDetail[0].task_progress == "DONE (LATE)") {
+          this.DialogParam = "TaskCloseForm";
+          this.dialog_1 = true;
+        }else{
+          var StatusFixed = "";
         if (this.TaskListDetail[0].task_progress == "NEW") {
           StatusFixed = "OPEN";
         }
@@ -2662,18 +2816,18 @@ try {
           StatusFixed = "IN PROGRESS (LATE)";
         }
         if (this.TaskListDetail[0].task_progress == "IN PROGRESS") {
-          StatusFixed = "DONE";
+            StatusFixed = "DONE";
 
-          this.currentDate = new Date().toLocaleString();
-          const data = {
-          task_id: this.TaskIDBinding,
-          assign_to: this.TaskListDetail[0].user_assign_to,
-          subject: this.TaskListDetail[0].subject,
-          end_date: this.currentDate,
-          addwho: this.TaskListDetail[0].reporter,
-        };
-        const taskService = new TaskListService();
-        const SendingEmailWaitingToClose = await taskService.SendingWaitingToDone(data);
+            this.currentDate = new Date().toLocaleString();
+            const data = {
+            task_id: this.TaskIDBinding,
+            assign_to: this.TaskListDetail[0].user_assign_to,
+            subject: this.TaskListDetail[0].subject,
+            end_date: this.currentDate,
+            addwho: this.TaskListDetail[0].reporter,
+          };
+          const taskService = new TaskListService();
+          const SendingEmailWaitingToClose = await taskService.SendingWaitingToDone(data);
 
         }
         if (this.TaskListDetail[0].task_progress == "IN PROGRESS (LATE)") {
@@ -2726,6 +2880,7 @@ try {
         await this.GetDataList("SetDataSummaryTaskList", "");
         //console.log("Formatted priority list:", this.priorityList);
         this.dialog = false;
+        }
       } catch (error) {
         console.error("Error fetching task summary:", error);
       }
@@ -2842,19 +2997,35 @@ try {
     var Waitingtoclose = url.searchParams.get("Update");
     //console.log(Waitingtoclose);
     //console.log("{Catch}: ", taskId);
-
+    this.TaskIDBinding = taskId;
     if (taskId != null) {cleanedURL
       if(Waitingtoclose != null){
+        this.GetTaskID(taskId,"Direct");
+      
+        // if(this.TaskListDetail[0].task_progress != "DONE" && this.TaskListDetail[0].task_progress != "DONE (LATE)"){
+        //   this.DownloadingAttchText = `Task is not Done Yet`;
+        //   this.DownloadingAttch = true;
+        //   window.location.href = `#/tasklist`;
+        //   this.TaskListDetail = [];
+        // }else{
+        //   this.DialogParam = "TaskCloseForm";
+        //   this.dialog = true;
+        //   this.TaskIDBinding = taskId;
+        // }
+
         //const data = {
         //  task_id: taskId,
         //  progresvalue: 'CLOSED',
         //};
         //const taskService = new TaskListService();
         //const UpdatingTaskStatus = await taskService.UpdateStatusTask(data);
-        this.DialogParam = "TaskCloseForm";
-      }
+          // this.DialogParam = "ClickedRow";
+          // this.dialog = true;
+          // this.TaskIDBinding = taskId;
 
-      this.GetTaskID(taskId,"Direct");
+      }else{
+        this.GetTaskID(taskId,"Direct");
+      }
     }
     if(this.ValidateUserLevel[0] == null){
       this.Addbtnenableordisable = true;

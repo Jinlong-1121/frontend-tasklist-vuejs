@@ -110,6 +110,14 @@
           </div>
 
           <div class="Summary-Item-Box">
+            <div class="Summary-Item-List" @click="updateStatus('CLOSED')">
+              <a style="font-size: 12px; font-weight: bold">CLOSED</a>
+
+              <a>{{ TaskListSummary[0].closed }}</a>
+            </div>
+          </div>
+
+          <div class="Summary-Item-Box">
             <div class="Summary-Item-List" @click="updateStatus('')">
               <a style="font-size: 12px; font-weight: bold">TOTAL</a>
 
@@ -136,6 +144,7 @@
             <e-column field='start_date' headerText='START DATE' textAlign='left' type='date' :format='formatOptions' width=auto ></e-column>
             <e-column field='progress_date' headerText='PROGRESS DATE' textAlign='left' type='date' width=auto :format='formatOptions'></e-column>
             <e-column field='finish_date' headerText='FINISH DATE' textAlign='left' type='date' width=auto :format='formatOptions'></e-column>
+            <e-column field='close_date' headerText='CLOSE DATE' textAlign='left' type='date' width=auto :format='formatOptions'></e-column>
             <e-column :visible='false' field='kpi_option' headerText='KPI OPTION' textAlign='left' width=auto :filter='filter1'></e-column>
             <e-column :visible='false' field='task_id' headerText='TASK ID' textAlign='left' width=auto :filter='filter1'></e-column>
             <e-column :visible='false' field='task_id_parent_of' headerText='PARENT ID' textAlign='left' width=auto :filter='filter1'></e-column>
@@ -321,22 +330,39 @@
                   </div>
                 </div>
               </div>
+              <div style="display: grid;grid-template-columns: 270px 270px;margin: auto;">
+                  <div class="Subject-Inner-Box">
+                  <div class="Detail-Inner-List">
+                    <a>Finish Date</a>
 
-              <div class="Subject-Inner-Box">
-                <div class="Detail-Inner-List">
-                  <a>Finish Date</a>
+                    <a>:</a>
 
-                  <a>:</a>
+                    <div class="Detail-Textbox-List">
+                      <a v-if="TaskListDetail[0].finish_date == ''">{{ "" }}</a>
 
-                  <div class="Detail-Textbox-List">
-                    <a v-if="TaskListDetail[0].finish_date == ''">{{ "" }}</a>
+                      <a v-else>{{
+                        formatDate(TaskListDetail[0].finish_date)
+                      }}</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="Subject-Inner-Box">
+                  <div class="Detail-Inner-List">
+                    <a>Close Date</a>
 
-                    <a v-else>{{
-                      formatDate(TaskListDetail[0].finish_date)
-                    }}</a>
+                    <a>:</a>
+
+                    <div class="Detail-Textbox-List">
+                      <a v-if="TaskListDetail[0].close_date == ''">{{ "" }}</a>
+
+                      <a v-else>{{
+                        formatDate(TaskListDetail[0].close_date)
+                      }}</a>
+                    </div>
                   </div>
                 </div>
               </div>
+              
 
               <!-- <div class="Subject-Inner-Box">
                 <div class="Detail-Inner-List">
@@ -2667,12 +2693,8 @@ try {
         30 * 60 * 1000
       ); // 30 minutes  30 * 60 * 1000
     },
-    TaskConfim_Reject(){
-      this.dialog_1 = false;
-      this.DialogParam = "ClickedRow";
-      this.dialog = true;    
-    },
-    async TaskConfim_Accept(){
+    async TaskConfim_Reject(){
+      const taskService = new TaskListService();
       try{
         if (this.TaskListDetail[0].task_progress == "DONE" || this.TaskListDetail[0].task_progress == "DONE (LATE)") {
           if(this.CommentsValue == null){
@@ -2685,9 +2707,8 @@ try {
             try{
                 const data = {
                 task_id: this.TaskIDBinding,
-                progresvalue: "CLOSED",
+                progresvalue: "IN PROGRESS",
               };
-              const taskService = new TaskListService();
               const UpdatingTaskStatus = await taskService.UpdateStatusTask(data);
               this.DownloadingAttchText = `Status Updated`;
               this.DownloadingAttch = true;
@@ -2711,7 +2732,59 @@ try {
             this.CommentsValue = null;
             this.dialog_1 = false;
             this.DialogParam = "ClickedRow";
+            this.GetTaskID(this.TaskIDBinding,"Direct");
+            this.CallFirstData();
             this.dialog = true;          
+            
+          }
+        }
+      }catch (error) {
+        console.error("Error fetching task summary:", error);
+      }
+    },
+    async TaskConfim_Accept(){
+      const taskService = new TaskListService();
+      try{
+        if (this.TaskListDetail[0].task_progress == "DONE" || this.TaskListDetail[0].task_progress == "DONE (LATE)") {
+          if(this.CommentsValue == null){
+            this.DownloadingAttchText = `Please Enter Comment`;
+            this.DownloadingAttch = true;
+            this.$nextTick(() => {
+              this.$refs.CommentsRef.focus(); // Focus on the textarea
+            });
+          }else{
+            try{
+                const data = {
+                task_id: this.TaskIDBinding,
+                progresvalue: "CLOSED",
+              };
+              const UpdatingTaskStatus = await taskService.UpdateStatusTask(data);
+              this.DownloadingAttchText = `Status Updated`;
+              this.DownloadingAttch = true;
+            }catch (error) {
+              console.error("Error Set Task To CLOSED..!:", error);
+            }
+            try{
+              const dataComment = {
+                Task_ID: this.TaskIDBinding,
+                Comments: this.CommentsValue,
+                Emp_ID: this.userid,
+                Content_Name: "",
+                File_Path: "",
+              };
+              const InsertingComments = await taskService.InsertingCommentsData(dataComment);
+              await this.GetCommentsList(this.TaskIDBinding);
+            }catch (error) {
+              console.error("Error Inserting Comment CLOSED Task..!:", error);
+            }
+          
+            this.CommentsValue = null;
+            this.dialog_1 = false;
+            this.DialogParam = "ClickedRow";
+            this.GetTaskID(this.TaskIDBinding,"Direct");
+            this.CallFirstData();
+            this.dialog = true;          
+            
           }
         }
       }catch (error) {
@@ -2950,6 +3023,19 @@ try {
       }
       
     },
+    async CallFirstData(){
+        var values = this.userid;
+          //values.forEach(val => {
+          await this.$refs.gridRef.filterByColumn('assign_to','contains',values)
+
+      await this.GetDataList("GetDataHeaderTaskList", "");
+      if (this.$refs.gridRef.value) {
+        this.$refs.gridRef.value.autoFitColumns();
+    }
+
+      await this.GetDataList("SetDataSummaryTaskList", "");
+      await this.GetDataList("ValidateUserLevel", "");
+    },
   },
   async mounted() {
     this.scrollToBottom();
@@ -2958,7 +3044,7 @@ try {
         window.location.reload();
       },
       30 * 60 * 1000
-    ); // 30 minutes  30 * 60 * 1000
+    ); // 30 minutes  30 * 60 * 1000CallFirstData
     this.Dept = JSON.parse(dataLocal).divisi_alias;
     // this.userid = JSON.parse(dataLocal).pin;
     try {
@@ -2973,17 +3059,7 @@ try {
     } catch (error) {
       console.error("Error fetching task summary:", error);
     }
-    var values = this.userid;
-        //values.forEach(val => {
-        await this.$refs.gridRef.filterByColumn('assign_to','contains',values)
-
-    await this.GetDataList("GetDataHeaderTaskList", "");
-    if (this.$refs.gridRef.value) {
-      this.$refs.gridRef.value.autoFitColumns();
-  }
-
-    await this.GetDataList("SetDataSummaryTaskList", "");
-    await this.GetDataList("ValidateUserLevel", "");
+    this.CallFirstData();
     const currentURL = window.location.href;
 
     // Fix the URL format for parsing

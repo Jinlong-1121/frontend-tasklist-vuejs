@@ -415,7 +415,7 @@ grid-template-columns: 2% auto auto;
 .Comments-Box-Header{
   display: grid;
   grid-template-columns: auto 35%;
-  height: 30px;
+  height: 55px;
   margin: auto;
   text-align: right;
 }
@@ -777,7 +777,18 @@ box-shadow: #333333  0px 1px 2px;
   font-size: 12px;
 }
 
+.chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: -10px;
+  height: 10px;
+}
 
+.v-chip {
+  margin-left: 4px;
+  margin-top: -15px;
+  height: 10px;
+}
 
 
 
@@ -1252,7 +1263,7 @@ box-shadow: #333333  0px 1px 2px;
   .Comments-Box-Header{
     display: grid;
     grid-template-columns: auto 35%;
-    height: 30px;
+    height: 55px;
     margin: auto;
     text-align: right;
   }
@@ -1838,7 +1849,7 @@ box-shadow: #333333  0px 1px 2px;
   .Comments-Box-Header{
     display: grid;
     grid-template-columns: auto 35%;
-    height: 30px;
+    height: 55px;
     margin: auto;
     text-align: right;
   }

@@ -721,20 +721,61 @@
                   </v-chip-group>
                 </div>
               </div>
-
-              <div class="Add-Comments-Box">
-                <v-textarea
-                  style="max-width: 100%; height: 130px; font-size: 10px"
-                  label="Add a comment here..."
-                  placeholder="Add your comments here..."
-                  rows="4"
-                  maxlength="1000"
-                  outlined
-                  size="small"
-                  v-model="CommentsValue"
-                ></v-textarea>
+              <div class="chip-container">
+                <v-chip style="height: 25px;"
+                            v-for="(user, index) in mentionedUsers"
+                            :key="index"
+                            close
+                            @click="removeUser(index)"
+                          >
+                            {{ user.emp_name }} 
+                          </v-chip>
               </div>
+              <div class="Add-Comments-Box">
 
+                <div style="position: relative;">
+                  <v-menu
+                      v-if="showUserSuggestions"
+                        v-model="showUserSuggestions"
+                        :position-x="x"
+                        :position-y="y"
+                        absolute
+                        offset-y
+                        style="overflow-y: scroll;max-height: 200px;width: 200px;"
+                        :style="{ position: 'absolute', left: x + 'px', top: y + 'px', background: 'transparent', padding: '10px' }">
+                        <v-card>
+                          <title>User Suggestions</title>
+                        </v-card>
+                        <v-list>
+                          <v-list-item
+                            v-for="(ListDataAssignTo, index) in filteredUsers"
+                            :key="index"
+                            @click="selectUser(ListDataAssignTo)"
+                          >
+                            <v-list-item-title>{{ ListDataAssignTo.emp_name }}</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+
+                      <v-textarea
+                        ref="commentBox"
+                        style="max-width: 100%; height: 130px; font-size: 10px"
+                        label="Add a comment here..."
+                        placeholder="Add your comments here..."
+                        rows="4"
+                        maxlength="1000"
+                        outlined
+                        size="small"
+                        v-model="CommentsValue"
+                        @input="handleInput"
+                        @click="detectCursorPosition"
+                      >
+                    </v-textarea>
+
+    
+                </div>
+              </div>
+              
               <div class="Btn-Group-Comments-Base">
                 <div class="Btn-Group-Comments">
                   <input
@@ -1607,6 +1648,12 @@ export default defineComponent({
   },
   data() {
     return {
+      mentionedUsers: [],
+      finalmentionedUsers:[],
+      showUserSuggestions: false, // Controls visibility of user suggestions dropdown
+      filteredUsers: [], // Filtered list of users based on input
+      x: 0, // X position for dropdown
+      y: 0, // Y position for dropdown
       currentDate: new Date().toLocaleString(),
       attchment_filename: null,
       wrapSettings: { wrapMode: 'Both' },
@@ -1720,6 +1767,75 @@ export default defineComponent({
     };
   },
   methods: {
+    async handleInput(event) {
+      const text = this.CommentsValue;
+      const cursorPosition = event.target.selectionStart; // Get cursor position
+
+      // Check if the last typed character is '@'
+      if (text[cursorPosition - 1] === "@") {
+        await this.GetDataList("GetDataAssignToALL", "-");
+        this.showUserSuggestions = true;
+        this.filteredUsers = this.ListDataAssignTo; // Show all users initially
+        console.log(this.filteredUsers);
+        this.setDropdownPosition(event); // Set dropdown position
+      } else {
+        this.showUserSuggestions = false;
+      }
+    },
+    setDropdownPosition(event) {
+      const textarea = event.target;
+      const rect = textarea.getBoundingClientRect();
+      const cursorPosition = textarea.selectionStart;
+
+      const tempElement = document.createElement("span");
+      tempElement.style.position = "absolute";
+      tempElement.style.visibility = "hidden";
+      tempElement.style.whiteSpace = "pre-wrap";
+      tempElement.style.font = window.getComputedStyle(textarea).font;
+      tempElement.textContent = this.CommentsValue.substring(0, cursorPosition);
+
+      document.body.appendChild(tempElement);
+
+      const cursorX = tempElement.offsetWidth;
+      document.body.removeChild(tempElement);
+
+      const textBeforeCursor = this.CommentsValue.substring(0, cursorPosition);
+      const textLines = textBeforeCursor.split("\n");
+      const lineHeight = parseInt(window.getComputedStyle(textarea).lineHeight) || 18;
+      const cursorY = textLines.length * lineHeight;
+
+      this.x = rect.left + cursorX + window.scrollX;
+      this.y = rect.top + cursorY + window.scrollY;
+      },
+    selectUser(user) {
+        this.mentionedUsers.push(user);
+        const text = this.CommentsValue;
+        const atIndex = text.lastIndexOf("@");
+        if (atIndex !== -1) {
+        this.CommentsValue =
+          this.CommentsValue.substring(0, atIndex) +
+          ` @${user.emp_name} ` +
+          this.CommentsValue.substring(atIndex + 1);
+      }
+      //this.mentionedUsers.map(user => user.emp_no);
+
+        // Replace '@' with the selected username
+       this.showUserSuggestions = false; // Hide dropdown after selection
+    },
+    removeUser(index) {
+      const removedUser = this.mentionedUsers[index].emp_name;
+      this.mentionedUsers.splice(index, 1);
+      this.CommentsValue = this.CommentsValue.replace(new RegExp(`@${removedUser}`, "g"), "");
+      console.log(this.mentionedUsers.map(user => user.emp_no));
+
+    },
+    getCursorPosition() {
+      let sel = window.getSelection();
+      return sel.focusOffset;
+    },
+    detectCursorPosition() {
+      this.getCursorPosition();
+    },
     downloadBase64() {
       const base64String = this.pdfUrl
       const fileName = this.generateFileName(); // Panggil fungsi untuk buat nama file
@@ -2140,7 +2256,7 @@ try {
         this.TaskListDetail[0].task_progress == "NEW" ||
         this.TaskListDetail[0].task_progress == "HOLD"
       ) {
-        this.StatusBtn = "Set Status To OPEN / Waiting To Open";
+        this.StatusBtn = "Set Status To OPEN";
         if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
           this.StatusBtnisDisabled = false;
         }else{
@@ -2152,7 +2268,7 @@ try {
         }
       }
       if (this.TaskListDetail[0].task_progress == "IN PROGRESS") {
-        this.StatusBtn = "Set Status To DONE / Waiting To Done";
+        this.StatusBtn = "Set Status To COMPLETE";
         if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
           this.StatusBtnisDisabled = false;
         }else{
@@ -2166,7 +2282,7 @@ try {
         }      
       }
       if (this.TaskListDetail[0].task_progress == "IN PROGRESS (LATE)") {
-        this.StatusBtn = "Set Status To DONE LATE / Waiting To Done (Late)";
+        this.StatusBtn = "Set Status To COMPLETE LATE";
         if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
           this.StatusBtnisDisabled = false;
         }else{
@@ -2179,7 +2295,7 @@ try {
         }      
       }
       if (this.TaskListDetail[0].task_progress == "OPEN") {
-        this.StatusBtn = "Set Status To PROGRESS / Waiting To Progress";
+        this.StatusBtn = "Set Status To PROGRESS";
 
         if(this.TaskListDetail[0].user_assign_to == this.userid) {
           this.StatusBtnisDisabled = false;
@@ -2190,7 +2306,7 @@ try {
         }
       }
       if (this.TaskListDetail[0].task_progress == "OPEN (LATE)") {
-        this.StatusBtn = "Set Status To PROGRESS LATE / Waiting To Progress (Late)";
+        this.StatusBtn = "Set Status To PROGRESS LATE";
 
         if(this.TaskListDetail[0].user_assign_to == this.userid) {
           this.StatusBtnisDisabled = false;
@@ -2205,7 +2321,7 @@ try {
           this.StatusBtn = "Need Approval Close";
           this.StatusBtnisDisabled = false;
         }else{
-          this.StatusBtn = "Task Completed / Waiting To Close";
+          this.StatusBtn = "Task Completed";
           this.StatusBtnisDisabled = true;
         }
 
@@ -2216,7 +2332,7 @@ try {
       }
       if (this.TaskListDetail[0].task_progress == "OUTDATE") {
         if(this.TaskListDetail[0].start_date.length < 1){ 
-          this.StatusBtn = "Set Status To OPEN LATE / Waiting To Open (Late)";
+          this.StatusBtn = "Set Status To OPEN LATE";
           if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
             this.StatusBtnisDisabled = false;
           }else{
@@ -2224,7 +2340,7 @@ try {
           }
         }else{
           if(this.TaskListDetail[0].progress_date.length < 1){ 
-            this.StatusBtn = "Set Status To PROGRESS LATE / Waiting To Progress (Late)";
+            this.StatusBtn = "Set Status To PROGRESS LATE";
             if(this.TaskListDetail[0].user_assign_to == this.userid) {
               this.StatusBtnisDisabled = false;
             }
@@ -2233,7 +2349,7 @@ try {
               this.StatusBtnisDisabled = true;
             }
           }else{
-            this.StatusBtn = "Set Status To DONE / Waiting To Done";
+            this.StatusBtn = "Set Status To COMPLETE";
             if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
               this.StatusBtnisDisabled = false;
             }else{
@@ -2244,7 +2360,7 @@ try {
       }
       if (this.TaskListDetail[0].task_progress == "WARNING") {
         if(this.TaskListDetail[0].start_date.length < 1){ 
-          this.StatusBtn = "Set Status To OPEN / Waiting To Open";
+          this.StatusBtn = "Set Status To OPEN";
           if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
             this.StatusBtnisDisabled = false;
           }else{
@@ -2252,7 +2368,7 @@ try {
           }
         }else{
           if(this.TaskListDetail[0].progress_date.length < 1){ 
-            this.StatusBtn = "Set Status To PROGRESS / Waiting To Progress";
+            this.StatusBtn = "Set Status To PROGRESS";
 
             if(this.TaskListDetail[0].user_assign_to == this.userid) {
               this.StatusBtnisDisabled = false;
@@ -2262,7 +2378,7 @@ try {
               this.StatusBtnisDisabled = true;
             }
           }else{
-            this.StatusBtn = "Set Status To DONE / Waiting To Done";
+            this.StatusBtn = "Set Status To COMPLETE";
             if(this.ValidateUserLevel[0].direct_spv_no.length > 0){
               this.StatusBtnisDisabled = false;
             }else{
@@ -2816,6 +2932,8 @@ try {
       this.CommentsValue = null;
       this.file = null;
       this.buttonText = "Select Attachment";
+      this.mentionedUsers = [];
+
     },
     async SubmitComment() {
       if (this.CommentsValue == null) {
@@ -2831,12 +2949,26 @@ try {
           } else {
             summary = "";
           }
+          var finalmentionedUsers = [];
+          if (this.mentionedUsers == [] || this.mentionedUsers == null || this.mentionedUsers.length <= 0) {
+            if(this.TaskListDetail[0].user_assign_to != this.userid){
+              finalmentionedUsers.push(this.TaskListDetail[0].user_assign_to);
+              console.log("User Assign To:",finalmentionedUsers);
+            }else{
+              finalmentionedUsers.push(this.TaskListDetail[0].userid);
+              console.log("User Assign To:",finalmentionedUsers);
+            }
+          }else{
+            finalmentionedUsers = this.mentionedUsers.map(user => user.emp_no);
+          }
+
           const data = {
             Task_ID: this.TaskIDBinding,
             Comments: this.CommentsValue,
             Emp_ID: this.userid,
             Content_Name: this.file?.name || "",
             File_Path: summary,
+            Tagging_User : finalmentionedUsers,
           };
           const InsertingComments =
             await taskService.InsertingCommentsData(data);
@@ -2844,6 +2976,7 @@ try {
           this.CommentsValue = null;
           this.buttonText = "Select Attachment"; // Reset to default if no file is selected
           this.file = "";
+          this.mentionedUsers = [];
           await this.GetCommentsList(this.TaskIDBinding);
           //console.log("Formatted priority list:", this.priorityList);
 
@@ -3043,7 +3176,7 @@ try {
       () => {
         window.location.reload();
       },
-      30 * 60 * 1000
+      60 * 60 * 1000
     ); // 30 minutes  30 * 60 * 1000CallFirstData
     this.Dept = JSON.parse(dataLocal).divisi_alias;
     // this.userid = JSON.parse(dataLocal).pin;
@@ -3129,6 +3262,11 @@ try {
         console.error("Error fetching data:", error);
       }
       return this.listtask;
+    },
+    filteredUsers() {
+      return this.users.filter((user) =>
+        user.emp_name.toLowerCase().includes(this.CommentsValue.toLowerCase())
+      );
     },
   },
 });

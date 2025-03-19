@@ -96,6 +96,7 @@ data() {
     snackbar:false,
     TaskCount:0,
     TaskUser:[],
+    TaskUserFinal:[],
     TaskCount:null
   }  
 },
@@ -124,6 +125,7 @@ async mounted() {
                 let newStatusCount = 0;
                 for (let i = 0; i < this.TaskUser.length; i++) {
                     if (this.TaskUser[i].notif_status === "NEW") {
+                        this.TaskUserFinal.push(this.TaskUser[i]);
                         newStatusCount++;
                     }
                 }
@@ -203,13 +205,13 @@ async mounted() {
                 height="500px"
                 >
                     <template v-slot:activator="{ props }" >
-                        <v-badge :content="TaskCount"  style="margin-right: auto;" >
-                            <v-icon class="Notifinprofile" icon="mdi-bell" v-bind="props"  size="x-large" ></v-icon>
+                        <v-badge :content="TaskCount"  style="margin-right: auto;" v-bind="props">
+                            <v-icon class="Notifinprofile" icon="mdi-bell" v-bind="props"  style="font-size: 25px;" ></v-icon>
                         </v-badge>
                     </template>
-                    <v-list style="width: 290px;height: auto;max-height: 500px;">
+                    <v-list style="width: auto;height: auto;max-height: 500px;padding: 10px;">
                         <v-list-item v-if="TaskCount > 0"
-                        v-for="(TaskUsers, index) in TaskUser"
+                        v-for="(TaskUsers, index) in TaskUserFinal"
                         :key="index"
                         :value="index"
                         @click="NotifClicked(TaskUsers)"
@@ -229,7 +231,9 @@ async mounted() {
                                 </div>
                                 <div style="display: grid;grid-template-columns: 60px auto;">
                                     <a>Subject</a>
-                                    <a>: <a>{{ TaskUsers.subject }}</a></a>
+                                    <div style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ TaskUsers.subject }}">
+                                        : {{ TaskUsers.subject }}
+                                    </div>
                                 </div>
                                 <a style="text-align: center;">Click Here To Show Detail</a>
                             </div>
@@ -278,7 +282,7 @@ async mounted() {
     cursor:pointer;
 }
 .Notif-Item{
-    width: 250px;
+    max-width: 300px;
     border: 2px solid #FFC627;
     border-top-left-radius: 20px;
     border-bottom-right-radius: 20px;
@@ -291,7 +295,7 @@ async mounted() {
     color: #ffffff;
     background-color: #868686;
     border-top-left-radius: 20px;
-    width: 100%;
+    width: auto;
     height: 20px;
     text-align: center;
     margin: auto
@@ -301,7 +305,6 @@ async mounted() {
 // }
 .Notif-Item-Detail{
     background-color: #ffffff;
-
     border-bottom-right-radius: 20px;
     display: grid;
     grid-template-rows: auto auto auto;

@@ -113,7 +113,7 @@
             <div class="Summary-Item-List" @click="updateStatus('CLOSED')">
               <a style="font-size: 12px; font-weight: bold">CLOSED</a>
 
-              <a>{{ TaskListSummary[0].closed }}</a>
+              <a>{{ TaskListSummary[0].close }}</a>
             </div>
           </div>
 
@@ -1495,7 +1495,7 @@
             Are You Sure You Want To Close This Task ?
 
             <v-spacer></v-spacer>
-            <v-btn style="font-size: 20px" icon="mdi-arrow-left-circle" size="x-small" @click="TaskConfim_Reject"></v-btn>
+            <v-btn style="font-size: 20px" icon="mdi-arrow-left-circle" size="x-small" @click="TaskConfim_Back"></v-btn>
 
           </v-card-title>
           <v-spacer></v-spacer>
@@ -1535,10 +1535,10 @@
                 <label>Task Duration</label>
                 <label>:</label>
                 <label>
-                  {{ Math.round((
-                    (TaskListDetail[0].finish_date ? new Date(TaskListDetail[0].finish_date) : new Date(currentDate)) - 
-                    (TaskListDetail[0].start_date ? new Date(TaskListDetail[0].start_date) : new Date())) / (1000 * 60 * 60 * 24))
-                  }} Days 
+                  {{ Math.ceil(
+                      ((new Date(TaskListDetail?.[0]?.finish_date || currentDate).getTime()) - 
+                      (new Date(TaskListDetail?.[0]?.start_date || new Date()).getTime())) / (1000 * 60 * 60 * 24)
+                  ) }} Days
                 </label>
               </div>
 
@@ -1651,7 +1651,7 @@ export default defineComponent({
       mentionedUsers: [],
       finalmentionedUsers:[],
       showUserSuggestions: false, // Controls visibility of user suggestions dropdown
-      filteredUsers: [], // Filtered list of users based on input
+      filteredUsers:[], // Filtered list of users based on input
       x: 0, // X position for dropdown
       y: 0, // Y position for dropdown
       currentDate: new Date().toLocaleString(),
@@ -1776,7 +1776,7 @@ export default defineComponent({
         await this.GetDataList("GetDataAssignToALL", "-");
         this.showUserSuggestions = true;
         this.filteredUsers = this.ListDataAssignTo; // Show all users initially
-        console.log(this.filteredUsers);
+        //console.log(this.filteredUsers);
         this.setDropdownPosition(event); // Set dropdown position
       } else {
         this.showUserSuggestions = false;
@@ -1826,7 +1826,7 @@ export default defineComponent({
       const removedUser = this.mentionedUsers[index].emp_name;
       this.mentionedUsers.splice(index, 1);
       this.CommentsValue = this.CommentsValue.replace(new RegExp(`@${removedUser}`, "g"), "");
-      console.log(this.mentionedUsers.map(user => user.emp_no));
+      //console.log(this.mentionedUsers.map(user => user.emp_no));
 
     },
     getCursorPosition() {
@@ -2907,6 +2907,12 @@ try {
         console.error("Error fetching task summary:", error);
       }
     },
+    async TaskConfim_Back(){
+     // this.GetTaskID(this.TaskIDBinding,"Direct");
+      this.dialog_1 = false;
+      this.dialog = true;
+      this.DialogParam = "ClickedRow";
+    },
     triggerFileInput() {
       this.$refs.fileInput.click(); // Trigger the hidden file input
     },
@@ -3263,11 +3269,11 @@ try {
       }
       return this.listtask;
     },
-    filteredUsers() {
-      return this.users.filter((user) =>
-        user.emp_name.toLowerCase().includes(this.CommentsValue.toLowerCase())
-      );
-    },
+    // filteredUsers() {
+    //   return this.users.filter((user) =>
+    //     user.emp_name.toLowerCase().includes(this.CommentsValue.toLowerCase())
+    //   );
+    // },
   },
 });
 </script>

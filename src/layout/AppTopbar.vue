@@ -203,13 +203,14 @@ async mounted() {
                 transition="slide-y-transition"
                 width="auto"
                 height="500px"
+                
                 >
                     <template v-slot:activator="{ props }" >
                         <v-badge :content="TaskCount"  style="margin-right: auto;" v-bind="props">
                             <v-icon class="Notifinprofile" icon="mdi-bell" v-bind="props"  style="font-size: 25px;" ></v-icon>
                         </v-badge>
                     </template>
-                    <v-list style="width: auto;height: auto;max-height: 500px;padding: 10px;">
+                    <v-list style="width: auto;height: auto;max-height: 500px;padding: 5px;border: 1px solid #EEEEEE;">
                         <v-list-item v-if="TaskCount > 0"
                         v-for="(TaskUsers, index) in TaskUserFinal"
                         :key="index"
@@ -221,7 +222,7 @@ async mounted() {
                                 <a>{{ TaskUsers.notif_category }}</a>
                             </div>
                             <div
-                            :style="{ backgroundColor: TaskUsers.notif_status === 'NEW' ? '#b8b8b8' : TaskUsers.notif_status === 'Clicked' ? '#ffffff':''}"
+                            :style="{ backgroundColor: TaskUsers.notif_status === 'NEW' ? '#EEEEEE' : TaskUsers.notif_status === 'Clicked' ? '#ffffff':''}"
                             class="Notif-Item-Detail"
                             
                             >
@@ -231,7 +232,7 @@ async mounted() {
                                 </div>
                                 <div style="display: grid;grid-template-columns: 60px auto;">
                                     <a>Subject</a>
-                                    <div style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ TaskUsers.subject }}">
+                                    <div style="max-width: 230px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ TaskUsers.subject }}">
                                         : {{ TaskUsers.subject }}
                                     </div>
                                 </div>
@@ -241,8 +242,8 @@ async mounted() {
                         </div>
                         
                         </v-list-item>
-                        <div v-else style="height: 20px;">
-                            <div style="text-align: center;">
+                        <div v-else style="height: auto;">
+                            <div style="text-align: center;font-size: 15px;padding: 10px;font-weight: bolder;">
                                 <a>No Notification Available</a>
                             </div>
                         </div>
@@ -277,15 +278,15 @@ async mounted() {
 
 <style lang="scss" scoped>
 
-
 .Notifinprofile:hover{
     cursor:pointer;
 }
 .Notif-Item{
-    max-width: 300px;
-    border: 2px solid #FFC627;
-    border-top-left-radius: 20px;
-    border-bottom-right-radius: 20px;
+    max-width: 250px;
+    //border: 1px solid #FFC627;
+    //border-top-left-radius: 20px;
+    //border-bottom-right-radius: 20px;
+    border-bottom: 5px solid #ffbb00;
     margin: auto;
 }
 .Notif-Item :hover{
@@ -293,8 +294,10 @@ async mounted() {
 }
 .Notif-Item-Header{
     color: #ffffff;
-    background-color: #868686;
-    border-top-left-radius: 20px;
+    font-weight: bolder;
+    font-size: 15px;
+    background-color: #595959;
+    //border-top-left-radius: 20px;
     width: auto;
     height: 20px;
     text-align: center;
@@ -305,18 +308,21 @@ async mounted() {
 // }
 .Notif-Item-Detail{
     background-color: #ffffff;
-    border-bottom-right-radius: 20px;
+    //border-bottom-right-radius: 20px;
     display: grid;
     grid-template-rows: auto auto auto;
+    padding: 5px;
 }
 .Notif-Item-Detail :hover{
     background-color: #868686;
+
 }
 .Notif-Item-Detail a:hover{
     background-color: transparent;
 }
 .Notif-Item-Detail div:hover{
     background-color: transparent;
+    
 }
 
 </style>

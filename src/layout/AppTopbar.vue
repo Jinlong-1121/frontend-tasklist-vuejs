@@ -182,28 +182,23 @@ async mounted() {
             <!-- <img :src="logoUrl" alt="logo" /> -->
             <span>SiPAM{{ Clicked }}</span>
         </router-link>
-
         <button class="p-link layout-menu-button layout-topbar-button" @click="onMenuToggle()">
             <i class="pi pi-bars"></i>
         </button>
-        
         <button class="p-link layout-topbar-menu-button layout-topbar-button" @click="onTopBarMenuButton()">
             <i class="pi pi-ellipsis-v"></i>
         </button>
-
         <div class="layout-topbar-menu" :class="topbarMenuClasses">
             <!-- <button @click="onTopBarMenuButton()" class="p-link layout-topbar-button">
                 <i class="pi pi-calendar"></i>
                 <span>Calendar</span>
             </button> -->
-            
             <div style="align-self: center;display: grid;grid-template-columns: auto auto;width: 300px;">
                 <v-menu class="Notif-Box"
                 location="bottom"
                 transition="slide-y-transition"
                 width="auto"
                 height="500px"
-                
                 >
                     <template v-slot:activator="{ props }" >
                         <v-badge :content="TaskCount"  style="margin-right: auto;" v-bind="props">
@@ -224,7 +219,6 @@ async mounted() {
                             <div
                             :style="{ backgroundColor: TaskUsers.notif_status === 'NEW' ? '#EEEEEE' : TaskUsers.notif_status === 'Clicked' ? '#ffffff':''}"
                             class="Notif-Item-Detail"
-                            
                             >
                                 <div style="display: grid;grid-template-columns: 60px auto;">
                                     <a>ID</a>
@@ -238,9 +232,7 @@ async mounted() {
                                 </div>
                                 <a style="text-align: center;">Click Here To Show Detail</a>
                             </div>
-
                         </div>
-                        
                         </v-list-item>
                         <div v-else style="height: auto;">
                             <div style="text-align: center;font-size: 15px;padding: 10px;font-weight: bolder;">

@@ -271,8 +271,8 @@ const addChild = (data) => {
     inputData.value.parent = data.account_no
     // inputData.value.level = lvl
     inputData.value.account_type = data.account_type
-    console.log(data.account_no, "data");
-    console.log(inputData.value, "data input");
+    // console.log(data.account_no, "data");
+    // console.log(inputData.value, "data input");
 };
 
 const addAccountHeader = () => {
@@ -284,7 +284,7 @@ const addAccountHeader = () => {
     inputData.value.account_cost = account.value.account_cost
     inputData.value.cost_center = account.value.cost_center
     inputData.value.status = account.value.status
-    console.log(inputData.value, "data input");
+    // console.log(inputData.value, "data input");
     // AccountService.createAccount(inputData.value).then(() => {
     //     hideDialog()
     //     AccountService.getList().then((data) => (products.value = data));
@@ -300,7 +300,7 @@ const addAccount = () => {
     inputData.value.account_cost = account.value.account_cost
     inputData.value.cost_center = account.value.cost_center
     inputData.value.status = account.value.status
-    console.log(inputData.value, "data input");
+    // console.log(inputData.value, "data input");
     AccountService.createAccount(inputData.value).then(() => {
         hideDialog()
         AccountService.getList().then((data) => (products.value = data));

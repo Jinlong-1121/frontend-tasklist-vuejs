@@ -23,20 +23,95 @@ export default class AuthService {
         try {
             const response = await fetch(contextPath + `login`, requestOptions);
             // if (!response.ok) {
-            //     console.log(response);
+            //     // console.log(response);
             //     authService.authLogout();
             //     // throw new Error(`Error! status: ${response.status}`);
             // }
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
+        }
+    }
+
+    async forgotPassword(params) {
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            headers: myHeaders,
+            body: JSON.stringify(params)
+        };
+        
+        try {
+            const response = await fetch(contextPath + `forgot-password`, requestOptions);
+            // if (!response.ok) {
+            //     // console.log(response);
+            //     authService.authLogout();
+            //     // throw new Error(`Error! status: ${response.status}`);
+            // }
+            const result = await response.json();
+            // console.log(result);
+            return result;
+        } catch (error) {
+            // console.log(error, "errornya");
+        }
+    }
+
+    async cekForgotPassword(params) {
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            headers: myHeaders,
+            body: JSON.stringify(params)
+        };
+        
+        try {
+            const response = await fetch(contextPath + `review-forgot-password`, requestOptions);
+            // if (!response.ok) {
+            //     // console.log(response);
+            //     authService.authLogout();
+            //     // throw new Error(`Error! status: ${response.status}`);
+            // }
+            const result = await response.json();
+            // console.log(result);
+            return result;
+        } catch (error) {
+            // console.log(error, "errornya");
+        }
+    }
+
+    async updatePassword(params) {
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        const requestOptions = {
+            method: 'PUT',
+            mode: 'cors',
+            headers: myHeaders,
+            body: JSON.stringify(params)
+        };
+        
+        try {
+            const response = await fetch(contextPath + `update-password`, requestOptions);
+            // if (!response.ok) {
+            //     // console.log(response);
+            //     authService.authLogout();
+            //     // throw new Error(`Error! status: ${response.status}`);
+            // }
+            const result = await response.json();
+            // console.log(result);
+            return result;
+        } catch (error) {
+            // console.log(error, "errornya");
         }
     }
 
     authLogout() {
-        console.log(router);
+        // console.log(router);
         router.push('/auth/login');
     }
 

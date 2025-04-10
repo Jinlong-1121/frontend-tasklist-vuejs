@@ -11,133 +11,133 @@ const model = ref([]);
 const menu = ref([]);
 const dataLocal = localStorage.getItem('sipam');
 
-// // const menu = [
-// //     {
-// //         "id": 1,
-// //         "name": "Home",
-// //         "alias": "home",
-// //         "url": "",
-// //         "icon": "",
-// //         "parent": 0,
-// //         "status": "1",
-// //         "created_at": "2023-06-20T13:39:21.715+07:00",
-// //         "updated_at": "2023-06-20T13:39:21.716+07:00"
-// //       },
-// //       {
-// //         "id": 2,
-// //         "name": "Dashboard",
-// //         "alias": "dashboard",
-// //         "url": "/",
-// //         "icon": "pi pi-fw pi-home",
-// //         "parent": 1,
-// //         "status": "1",
-// //         "created_at": "2023-06-20T13:40:45.793+07:00",
-// //         "updated_at": "2023-06-20T13:40:45.793+07:00"
-// //       },
-// //       {
-// //         "id": 3,
-// //         "name": "Modul",
-// //         "alias": "modul",
-// //         "url": "",
-// //         "icon": "",
-// //         "parent": 0,
-// //         "status": "1",
-// //         "created_at": "2023-06-21T15:53:17.966+07:00",
-// //         "updated_at": "2023-06-21T15:53:17.966+07:00"
-// //       },
-// //       {
-// //         "id": 4,
-// //         "name": "Absen",
-// //         "alias": "absen",
-// //         "url": "",
-// //         "icon": "pi pi-fw pi-check-square",
-// //         "parent": 3,
-// //         "status": "1",
-// //         "created_at": "2023-06-21T15:59:24.415+07:00",
-// //         "updated_at": "2023-06-21T15:59:24.415+07:00"
-// //       },
-// //       {
-// //         "id": 5,
-// //         "name": "List Absen",
-// //         "alias": "list-absen",
-// //         "url": "/absen/list",
-// //         "icon": "pi pi-chevron-circle-right",
-// //         "parent": 4,
-// //         "status": "1",
-// //         "created_at": "2023-06-21T15:59:24.415+07:00",
-// //         "updated_at": "2023-06-21T15:59:24.415+07:00"
-// //       },
-// //       {
-// //         "id": 4,
-// //         "name": "List Cuti",
-// //         "alias": "list-cuti",
-// //         "url": "/cuti/list",
-// //         "icon": "pi pi-chevron-circle-right",
-// //         "parent": 4,
-// //         "status": "1",
-// //         "created_at": "2023-06-21T15:59:24.415+07:00",
-// //         "updated_at": "2023-06-21T15:59:24.415+07:00"
-// //       }
-// // ];
+// const menu = [
+//     {
+//         "id": 1,
+//         "name": "Home",
+//         "alias": "home",
+//         "url": "",
+//         "icon": "",
+//         "parent": 0,
+//         "status": "1",
+//         "created_at": "2023-06-20T13:39:21.715+07:00",
+//         "updated_at": "2023-06-20T13:39:21.716+07:00"
+//       },
+//       {
+//         "id": 2,
+//         "name": "Dashboard",
+//         "alias": "dashboard",
+//         "url": "/",
+//         "icon": "pi pi-fw pi-home",
+//         "parent": 1,
+//         "status": "1",
+//         "created_at": "2023-06-20T13:40:45.793+07:00",
+//         "updated_at": "2023-06-20T13:40:45.793+07:00"
+//       },
+//       {
+//         "id": 3,
+//         "name": "Modul",
+//         "alias": "modul",
+//         "url": "",
+//         "icon": "",
+//         "parent": 0,
+//         "status": "1",
+//         "created_at": "2023-06-21T15:53:17.966+07:00",
+//         "updated_at": "2023-06-21T15:53:17.966+07:00"
+//       },
+//       {
+//         "id": 4,
+//         "name": "Absen",
+//         "alias": "absen",
+//         "url": "",
+//         "icon": "pi pi-fw pi-check-square",
+//         "parent": 3,
+//         "status": "1",
+//         "created_at": "2023-06-21T15:59:24.415+07:00",
+//         "updated_at": "2023-06-21T15:59:24.415+07:00"
+//       },
+//       {
+//         "id": 5,
+//         "name": "List Absen",
+//         "alias": "list-absen",
+//         "url": "/absen/list",
+//         "icon": "pi pi-chevron-circle-right",
+//         "parent": 4,
+//         "status": "1",
+//         "created_at": "2023-06-21T15:59:24.415+07:00",
+//         "updated_at": "2023-06-21T15:59:24.415+07:00"
+//       },
+//       {
+//         "id": 4,
+//         "name": "List Cuti",
+//         "alias": "list-cuti",
+//         "url": "/cuti/list",
+//         "icon": "pi pi-chevron-circle-right",
+//         "parent": 4,
+//         "status": "1",
+//         "created_at": "2023-06-21T15:59:24.415+07:00",
+//         "updated_at": "2023-06-21T15:59:24.415+07:00"
+//       }
+// ];
 
-// const getChild = (id) => {
-//     return menu.value.filter(item => item.parent === id);
-// }
+const getChild = (id) => {
+    return menu.value.filter(item => item.parent === id);
+}
 
-// const getParent = () => {
-//     return menu.value.filter(item => item.parent === 0);
-// }
-// // const parent = menu.filter(item => item.parent === 0);
+const getParent = () => {
+    return menu.value.filter(item => item.parent === 0);
+}
+// const parent = menu.filter(item => item.parent === 0);
 
-// let count = 0;
-// const genArr = (arr) => {
-//     let dataArr = [];
-//     // count++;
-//     // if (count === 5) {
-//     //     return
-//     // }
-//     arr.forEach( (item, i) => {
-//         // console.log(i, arr);
-//         let obj = {};
-//         let child = getChild(item.id);
+let count = 0;
+const genArr = (arr) => {
+    let dataArr = [];
+    // count++;
+    // if (count === 5) {
+    //     return
+    // }
+    arr.forEach( (item, i) => {
+        // // console.log(i, arr);
+        let obj = {};
+        let child = getChild(item.id);
 
-//         if(item.name) obj.label = item.name;
-//         if(item.icon) obj.icon = item.icon;
-//         if(item.url) obj.to = item.url;
-//         if (child.length > 0) obj.items = genArr(child);
-//         dataArr.push(obj);
-//     });
-//     return dataArr;
-// }
+        if(item.name) obj.label = item.name;
+        if(item.icon) obj.icon = item.icon;
+        if(item.url) obj.to = item.url;
+        if (child.length > 0) obj.items = genArr(child);
+        dataArr.push(obj);
+    });
+    return dataArr;
+}
 
-// onMounted(() => {
-//     // const dataLocal = localStorage.getItem('sipam');
-//     const userDivisi = JSON.parse(dataLocal).divisi;
-//     console.log(JSON.parse(dataLocal));
-//     let params ={
-//         divisi : userDivisi
-//     }
-//     menuService.getListMenuDivisi(params).then((data) => {
-//         menu.value = data;
-//         console.log(menu);
-//         let fs = genArr(getParent());
-//         if (userDivisi!==1) {
-//             model.value = fs;
-//         } else {
-//             model.value = nav.value;
-//         }
-//     })
-// // Log to console
-// })
+onMounted(() => {
+    // const dataLocal = localStorage.getItem('sipam');
+    const userDivisi = JSON.parse(dataLocal).divisi;
+    // console.log(JSON.parse(dataLocal));
+    let params ={
+        divisi : userDivisi
+    }
+    menuService.getListMenuDivisi(params).then((data) => {
+        menu.value = data;
+        // console.log(menu);
+        let fs = genArr(getParent());
+        if (userDivisi!==1) {
+            model.value = fs;
+        } else {
+            model.value = nav.value;
+        }
+    })
+// Log to console
+})
 
 const nav = ref([
     {
         label: 'Home',
-        items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
-    },
-    {
-        label: 'TaskList',
-        items: [{ label: 'TaskLiast', icon: 'pi pi-fw pi-home', to: '/Tasklist' }]
+        items: [
+        { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
+        { label: 'Informasi Izin & Cuti', icon: 'pi pi-fw pi-info', to: '/employee-leave-today' },
+        { label: 'Task List', icon: 'pi pi pi-fw pi-align-center', to: '/tasklist' }
+        ]
     },
     {
         label: 'Modul',
@@ -147,9 +147,10 @@ const nav = ref([
                 icon: 'pi pi-fw pi-file',
                 items: [
                     // { label: 'External', icon: 'pi pi-fw pi-eye', to: '/surat-external/list', badge: 'NEW' },
-                    { label: 'External', icon: 'pi pi-fw pi-eye', to: '/surat-external/list' },
-                    { label: 'Internal', icon: 'pi pi-fw pi-eye', to: '/surat-internal/list' },
+                    { label: 'Surat External', icon: 'pi pi-fw pi-eye', to: '/surat-external/list' },
+                    { label: 'Surat Internal', icon: 'pi pi-fw pi-eye', to: '/surat-internal/list' },
                     { label: 'Surat Masuk', icon: 'pi pi-fw pi-eye', to: '/surat-masuk/list' },
+                    { label: 'Signer External', icon: 'pi pi-fw pi-user-edit', to: '/signer-external' },
                 ]
             },
             {
@@ -157,35 +158,52 @@ const nav = ref([
                 icon: 'pi pi-fw pi-check-square',
                 // to: '/absen/list'
                 items: [
-                    { label: 'List Absen', icon: 'pi pi-chevron-circle-right', to: '/absen/list', badge: 'NEW' },
-                    { label: 'List Cuti', icon: 'pi pi-chevron-circle-right', to: '/cuti/list' },
-                    { label: 'List Izin', icon: 'pi pi-chevron-circle-right', to: '/izin/list' },
+                    { label: 'Absensi', icon: 'pi pi-chevron-circle-right', to: '/absen/list', badge: 'NEW' },
+                    { label: 'Cuti', icon: 'pi pi-chevron-circle-right', to: '/cuti/list' },
+                    { label: 'Izin Karyawan', icon: 'pi pi-chevron-circle-right', to: '/izin/list' },
+                    { label: 'List Alpa', icon: 'pi pi-chevron-circle-right', to: '/alpa/list' },
+                    { label: 'Leave Balance', icon: 'pi pi-chevron-circle-right', to: '/cuti/informasi'},     
                 ]
             },
-            {
-                label: 'Accounting',
-                icon: 'pi pi-fw pi-check-square',
-                // to: '/absen/list'
-                items: [
-                    { label: 'Account List', icon: 'pi pi-chevron-circle-right', to: '/accounting/account-list', badge: 'NEW' },
-                //     { label: 'List Cuti', icon: 'pi pi-chevron-circle-right', to: '/cuti/list' },
-                //     { label: 'List Izin', icon: 'pi pi-chevron-circle-right', to: '/izin/list' },
-                ]
-            },
+            
+            // {
+            //     label: 'Accounting',
+            //     icon: 'pi pi-fw pi-check-square',
+            //     // to: '/absen/list'
+            //     items: [
+            //         { label: 'Account List', icon: 'pi pi-chevron-circle-right', to: '/accounting/account-list', badge: 'NEW' },
+            //     //     { label: 'List Cuti', icon: 'pi pi-chevron-circle-right', to: '/cuti/list' },
+            //     //     { label: 'List Izin', icon: 'pi pi-chevron-circle-right', to: '/izin/list' },
+            //     ]
+            // },
             {
                 label: 'Scheduler',
                 icon: 'pi pi-fw pi-stopwatch',
                 to: '/scheduler/list'
             },
             {
-                label: 'Signer External',
-                icon: 'pi pi-fw pi-user-edit',
-                to: '/signer-external'
+                label: 'Meeting Room',
+                icon: 'pi pi-fw pi-book',
+                to: '/booking/list'
             },
             {
                 label: 'Webinar',
                 icon: 'pi pi-fw pi-desktop',
                 to: '/webinar/list'
+            },
+            {
+                label: 'Data Karyawan',
+                icon: 'pi pi-users',
+                to: '/data/karyawan'
+            },
+            {
+                label: 'Key Performance Indicator',
+                icon: 'pi pi-chart-bar',
+                items: [
+                    { label: 'Data KPI', icon: 'pi pi-fw pi-eye', to: '/data/kpi' },
+                    { label: 'Template KPI', icon: 'pi pi-fw pi-eye', to: '/data/kpi/template' },
+                    
+                ]
             },
             // {
             //     label: 'Absensi',
@@ -359,6 +377,7 @@ const nav = ref([
 </script>
 
 <template>
+    <meta name=viewport content="width=900,initial-scale=0.2">
     <ul class="layout-menu">
         <template v-for="(item, i) in model" :key="item">
             <app-menu-item v-if="!item.separator" :item="item" :index="i"></app-menu-item>

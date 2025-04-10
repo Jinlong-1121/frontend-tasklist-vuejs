@@ -9,14 +9,49 @@ const router = createRouter({
             component: AppLayout,
             children: [
                 {
+                    path: '/user/access',
+                    name: 'user-access',
+                    component: () => import('@/views/user-access/UserAccess.vue')
+                },
+                {
+                    path: '/user/profile',
+                    name: 'user-profile',
+                    component: () => import('@/views/profile-user/ProfileUser.vue')
+                },
+                {
                     path: '/',
                     name: 'dashboard',
                     component: () => import('@/views/pages/Welcome.vue')
                 },
                 {
-                    path: '/Tasklist',
-                    name: 'TaskList',
-                    component: () => import('@/views/pages/TaskList.vue')
+                    path: '/booking/list',
+                    name: 'booking-list',
+                    component: () => import('@/views/booking/BookingList.vue'),
+                    children: [
+                        {
+                            path: '/booking/list',
+                            component: () => import('@/views/booking/BookingCalender.vue'),
+                            meta: {
+                                actionSearching: {
+                                    methodName: "getListData",
+                                }
+                            }
+                        },
+                        {
+                            path: '/booking/informasi',
+                            component: () => import('@/views/booking/InformasiBooking.vue')
+                        }
+                    ]
+                },
+                {
+                    path: '/employee-leave-today',
+                    name: 'employee-leave-today',
+                    component: () => import('@/views/pages/EmployeeLeaveToday.vue')
+                },
+                {
+                    path: '/tasklist',
+                    name: 'tasklist',
+                    component: () => import('@/views/tasklist/TaskList.vue')
                 },
                 {
                     path: '/admin/divisi',
@@ -80,15 +115,66 @@ const router = createRouter({
                     component: () => import('@/views/absen/IzinList.vue')
                 },
                 {
+                    path: '/alpa/list',
+                    name: 'alpa-list',
+                    component: () => import('@/views/absen/AlpaList.vue')
+                },
+                // {
+                //     path: '/izin/leave-balance',
+                //     name: 'izin-leave-balance',
+                //     component: () => import('@/views/absen/IzinLeaveBalance.vue')
+                // },
+                {
+                    path: '/cuti/informasi',
+                    name: 'cuti-informasi',
+                    component: () => import('@/views/cuti/CutiList.vue'),
+                    children: [
+                        {
+                            path: '/cuti/informasi',
+                            component: () => import('@/views/cuti/LeaveAdjustment.vue'),
+                            meta: {
+                                actionSearching: {
+                                    methodName: "getListData",
+                                }
+                            }
+                        },
+                        {
+                            path: '/cuti/informasi/leave-balances',
+                            component: () => import('@/views/cuti/LeaveBalances.vue')
+                        }
+                    ]
+                },
+                {
                     path: '/absen/detail/:id',
                     name: 'absen-detail',
                     component: () => import('@/views/absen/AbsenDetail.vue')
+                },
+                {
+                    path: '/absen/detail/user/:id',
+                    name: 'absen-detail-user',
+                    component: () => import('@/views/absen/AbsenDetailUser.vue')
                 },
                 //Route Scheduler
                 {
                     path: '/scheduler/list',
                     name: 'scheduler-list',
                     component: () => import('@/views/scheduler/JobList.vue')
+                },
+                //Route Data Karyawan
+                {
+                    path: '/data/karyawan',
+                    name: 'data-karyawan',
+                    component: () => import('@/views/data-karyawan/KaryawanList.vue')
+                },
+                {
+                    path: '/data/kpi',
+                    name: 'data-kpi',
+                    component: () => import('@/views/kpi/KpiList.vue')
+                },
+                {
+                    path: '/data/kpi/template',
+                    name: 'kpi-template',
+                    component: () => import('@/views/kpi/TemplateKpiList.vue')
                 },
                 // Route webinar
                 {
@@ -227,6 +313,14 @@ const router = createRouter({
                         {
                             path: '/surat-internal/list/signer',
                             component: () => import('@/views/surat-internal/list/SuratNeedSign.vue')
+                        },
+                        {
+                            path: '/surat-internal/list/upload-documents',
+                            component: () => import('@/views/surat-internal/list/SuratUploadDocuments.vue')
+                        },
+                        {
+                            path: '/surat-internal/list/surat-cancel',
+                            component: () => import('@/views/surat-internal/list/SuratCancel.vue')
                         }
                     ]
                 },
@@ -269,7 +363,7 @@ const router = createRouter({
                         {
                             path: '/surat/internal/edit/:id/preview',
                             component: () => import('@/views/surat-internal/edit/EditSuratPreview.vue')
-                        }
+                        },
                     ]
                 },
                 {
@@ -277,16 +371,11 @@ const router = createRouter({
                     name: 'surat-internal',
                     component: () => import('@/views/surat-internal/SuratPreview.vue'),
                 },
-                {
-                    path: '/signer-external',
-                    name: 'signer-external',
-                    component: () => import('@/views/signer-external/SignerExternalList.vue'),
-                },
-                {
-                    path: '/accounting/account-list',
-                    name: 'account-list',
-                    component: () => import('@/views/accounting/AccountRecord.vue'),
-                },
+                // {
+                //     path: '/accounting/account-list',
+                //     name: 'account-list',
+                //     component: () => import('@/views/accounting/AccountRecord.vue'),
+                // },
                 // END SURAT INTERNAL ROUTES
 
                 // SURAT MASUK ROUTES
@@ -347,6 +436,12 @@ const router = createRouter({
                         }
                     ]
                 },
+
+                {
+                    path: '/signer-external',
+                    name: 'signer-external',
+                    component: () => import('@/views/signer-external/SignerExternalList.vue'),
+                },
                 // {
                 //     path: '/surat/masuk/page',
                 //     name: 'surat-masuk-page',
@@ -405,6 +500,16 @@ const router = createRouter({
             component: () => import('@/views/auth/Login.vue')
         },
         {
+            path: '/auth/forgot-password',
+            name: 'forgot-password',
+            component: () => import('@/views/auth/Password.vue')
+        },
+        {
+            path: '/auth/update-password',
+            name: 'update-password',
+            component: () => import('@/views/auth/UpdatePassword.vue')
+        },
+        {
             path: '/auth/access',
             name: 'accessDenied',
             component: () => import('@/views/auth/Access.vue')
@@ -419,21 +524,13 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
     const isAuthenticated = localStorage.getItem('sipam');
-    if (to.name !== 'login' && !isAuthenticated){
-        if (to.name === 'surat-masuk-page') next()
-        else  next({ name: 'login' })
-    } 
-    else next()
-    // redirect to login page if not logged in and trying to access a restricted page
-    // const publicPages = ['/login'];
-    // const authRequired = !publicPages.includes(to.path);
-    // const auth = useAuthStore();
 
-    // if (authRequired && !auth.user) {
-    //     auth.returnUrl = to.fullPath;
-    //     return '/login';
-    // }
-    // console.log(to);
+    if (!['login', 'forgot-password', 'update-password'].includes(to.name) && !isAuthenticated) {
+        localStorage.setItem('redirectTo', to.fullPath);
+        next({ name: 'login' });
+    } else {
+        next();
+    }
 });
 
 export default router;

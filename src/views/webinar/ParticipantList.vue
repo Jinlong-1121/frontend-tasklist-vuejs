@@ -50,11 +50,11 @@ onMounted(() => {
     getListData(page);
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -81,7 +81,7 @@ const editWebinar = (data) => {
 const saveWebinar = () => {
     submitted.value = true;
     if (webinar.value.name.trim()) {
-        console.log(webinar.value.id, typeof(webinar.value.id));
+        // console.log(webinar.value.id, typeof(webinar.value.id));
         if (typeof(webinar.value.id) === "undefined") {
             webinar.value.status = '1';
             saveListData(webinar.value)
@@ -123,21 +123,19 @@ const dowloadFile = (page) => {
 
 const saveListData = (params) => {
     webinarService.saveListData(params).then((data) => {
-        console.log(data);
         getListData(1);
     });
 };
 
 const updateListData = (params, id) => {
     webinarService.updateListData(params, id).then((data) => {
-        console.log(data);
         getListData(1);
     });
 };
 
 // const runScheduler = () => {
 //     webinarService.runScheduler().then((data) => {
-//         console.log(data);
+//         // console.log(data);
 //         // getListData(1);
 //     });
 // };
@@ -145,7 +143,7 @@ const updateListData = (params, id) => {
 const accessData = () => {
     var page = (first.value/10)+1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
 const forceFileDownload = (response, title) => {

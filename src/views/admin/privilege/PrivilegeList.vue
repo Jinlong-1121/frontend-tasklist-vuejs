@@ -55,11 +55,11 @@ onMounted(() => {
     getListDataDivisi();
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -87,7 +87,7 @@ const editPrivilege = (prod) => {
 const savePrivilege = () => {
     submitted.value = true;
     if (privilege.value.name.trim()) {
-        console.log(privilege.value.id, typeof(privilege.value.id));
+        // console.log(privilege.value.id, typeof(privilege.value.id));
         if (typeof(privilege.value.id) === "undefined") {
             privilege.value.status = '1';
             saveListData(privilege.value)
@@ -125,14 +125,14 @@ const getListDataDivisi = () => {
 
 const saveListData = (params) => {
     privilegeService.saveListData(params).then((data) => {
-        console.log(data);
+        // console.log(data);
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'New data privilege saved', life: 3000 });
     });
 };
 
 const updateListData = (params, id) => {
-    console.log(params, id);
+    // console.log(params, id);
     privilegeService.updateListData(params, id).then((data) => {
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Data privilege updated', life: 3000 });
@@ -141,7 +141,7 @@ const updateListData = (params, id) => {
 
 const runPrivilege = () => {
     privilegeService.runPrivilege().then((data) => {
-        console.log(data);
+        // console.log(data);
         // getListData(1);
     });
 };
@@ -149,7 +149,7 @@ const runPrivilege = () => {
 const accessData = () => {
     var page = (first.value/10)+1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
 
@@ -270,7 +270,7 @@ const columns = [
 ];
 const selectedDivisi = ref(1);
 const selectDivisi = () => {
-    console.log(selectedDivisi.value);
+    // console.log(selectedDivisi.value);
     var page = (first.value/10)+1;
     getListData(page);
 }
@@ -279,7 +279,7 @@ const onRowEditSave = (event) => {
     let { newData, index } = event;
 
     Privileges.value[index] = newData;
-    console.log(newData.divisi_id);
+    // console.log(newData.divisi_id);
     const sendData = {
         menu_id: newData.menu_id,
         divisi: selectedDivisi.value,

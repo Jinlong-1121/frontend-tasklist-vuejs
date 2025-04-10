@@ -19,7 +19,7 @@ onMounted(() => {
 });
 
 const handleEventClick = () => {
-    console.log("hello");
+    // console.log("hello");
 }
 
 const INITIAL_EVENTS = [

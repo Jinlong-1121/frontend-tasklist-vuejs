@@ -14,7 +14,7 @@ const breadcrumbHome = ref({ icon: 'pi pi-home', to: '/' });
 const breadcrumbItems = ref([{ label: 'Category' }, { label: 'List' }]);
 
 
-const dataItemUser = JSON.parse(localStorage.getItem("sipam")) 
+const dataItemUser = JSON.parse(localStorage.getItem("sipam"))
 
 const Categories = ref(null);
 const Rows = ref(null);
@@ -36,9 +36,9 @@ const selectedDivisi = ref();
 const divisiList = ref([]);
 
 const typeSuratList = ref([
-    {name: "External", id: '1'},
-    {name: "Internal", id: '2'},
-    {name: "Masuk", id: '3'}
+    { name: "External", id: '1' },
+    { name: "Internal", id: '2' },
+    { name: "Masuk", id: '3' }
 ]);
 
 const selectedStatus = ref({});
@@ -61,16 +61,16 @@ onBeforeMount(() => {
     initFilters();
 });
 onMounted(() => {
-    var page = (first.value/10)+1;
+    var page = (first.value / 10) + 1;
     getListData(page);
     getListDivisi();
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -93,7 +93,7 @@ const hideDialog = () => {
 // DIVISI
 const getListDivisi = () => {
     divisiService.getListAll().then((data) => {
-        console.log(data);
+        // console.log(data);
         divisiList.value = data;
     });
 };
@@ -102,7 +102,7 @@ const setDivisi = (event) => {
 };
 
 const editCategory = (prod) => {
-    category.value = {...prod};
+    category.value = { ...prod };
     selectedStatus.value = category.value.status;
     categoryDialog.value = true;
     selectedDivisi.value = category.value.divisi;
@@ -111,8 +111,8 @@ const editCategory = (prod) => {
 const saveCategory = () => {
     submitted.value = true;
     if (category.value.name.trim()) {
-        console.log(category.value.id, typeof(category.value.id));
-        if (typeof(category.value.id) === "undefined") {
+        // console.log(category.value.id, typeof(category.value.id));
+        if (typeof (category.value.id) === "undefined") {
             category.value.status = '1';
             category.value.divisi = parseInt(selectedDivisi.value);
             saveListData(category.value)
@@ -164,9 +164,9 @@ const runCategory = () => {
 };
 
 const accessData = () => {
-    var page = (first.value/10)+1;
+    var page = (first.value / 10) + 1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
 const setDivisiFilter = (data) => {
@@ -211,7 +211,7 @@ const setDivisiFilter = (data) => {
 // };
 
 const filterMonthEvent = () => {
-    var page = (first.value/10)+1;
+    var page = (first.value / 10) + 1;
     getListData(page);
 };
 
@@ -249,7 +249,7 @@ const getTypeColor = (typeSurat) => {
     switch (typeSurat) {
         case '1':
             return 'info';
-            
+
         case '2':
             return 'primary';
 
@@ -264,7 +264,7 @@ const getTypeLabel = (typeSurat) => {
     switch (typeSurat) {
         case '1':
             return 'External';
-            
+
         case '2':
             return 'Internal';
 
@@ -301,21 +301,16 @@ const columns = [
                     <template v-slot:start>
                         <div class="my-2">
                             <!-- <span class="p-float-label"> -->
-                                <!-- <Calendar inputId="inputMont" v-model="filterMonth" view="month" dateFormat="MM yy" @date-select="filterMonthEvent"/> -->
-                                <!-- <label for="inputMont">Pilih Bulan</label> -->
+                            <!-- <Calendar inputId="inputMont" v-model="filterMonth" view="month" dateFormat="MM yy" @date-select="filterMonthEvent"/> -->
+                            <!-- <label for="inputMont">Pilih Bulan</label> -->
                             <!-- </span> -->
-                            <Button label="New Category" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
+                            <Button label="New Category" icon="pi pi-plus" class="p-button-success mr-2"
+                                @click="openNew" />
                             <!-- <Button label="Run" icon="pi pi-caret-right" class="p-button-warning mr-2" @click="runCategory" /> -->
                             <!-- <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="confirmDeleteSelected" :disabled="!selectedCategories || !selectedCategories.length" /> -->
-                            <Dropdown
-                                inputId="class"
-                                v-model="selectedDivisiFilter"
-                                :options="divisiList"
-                                @change="setDivisiFilter($event)"
-                                optionLabel="name"
-                                optionValue="id"
-                                placeholder="Filter Divisi"
-                            />
+                            <Dropdown inputId="class" v-model="selectedDivisiFilter" :options="divisiList"
+                                @change="setDivisiFilter($event)" optionLabel="name" optionValue="id"
+                                placeholder="Filter Divisi" />
                         </div>
                     </template>
 
@@ -334,66 +329,67 @@ const columns = [
                     </template>
                 </Toolbar>
                 <DataTable ref="dt" :value="Categories" responsiveLayout="scroll">
+                    <template #empty>
+                        <div class="text-center p-2">
+                            <p class="text-lg font-semibold">No Data Available</p>
+                        </div>
+                    </template>
                     <Column header="Action" :exportable="false" headerStyle="width:3%;">
                         <template #body="slotProps">
-                            <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editCategory(slotProps.data)" />
+                            <Button icon="pi pi-pencil" outlined rounded class="mr-2"
+                                @click="editCategory(slotProps.data)" />
                             <!-- <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteCategory(slotProps.data)" /> -->
                         </template>
                     </Column>
-                    <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header" headerStyle="width:20%; min-width:10rem;"></Column>
-                    <Column field="type_surat" header="Type" :sortable="false" headerStyle="width:10%; min-width:10rem;">
+                    <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header"
+                        headerStyle="width:20%; min-width:10rem;"></Column>
+                    <Column field="type_surat" header="Type" :sortable="false"
+                        headerStyle="width:10%; min-width:10rem;">
                         <template #body="slotProps">
-                            <Tag :value="getTypeLabel(slotProps.data.type_surat)" :severity="getTypeColor(slotProps.data.type_surat)" />
+                            <Tag :value="getTypeLabel(slotProps.data.type_surat)"
+                                :severity="getTypeColor(slotProps.data.type_surat)" />
                         </template>
                     </Column>
                     <Column field="status" header="Status" :sortable="false" headerStyle="width:14%; min-width:10rem;">
                         <template #body="slotProps">
                             <!-- <span class="p-column-title">Status</span>
                             <span :class="'item-badge status-' + (slotProps.data.status==='1' ? 'active' : 'deactive')">{{ (slotProps.data.status==='1' ? 'Active' : 'Stop') }}</span> -->
-                            <Tag :value="slotProps.data.status==='1' ? 'Active' : 'No Active'" :severity="getStatusLabel(slotProps.data.status)" />
+                            <Tag :value="slotProps.data.status === '1' ? 'Active' : 'No Active'"
+                                :severity="getStatusLabel(slotProps.data.status)" />
                         </template>
                     </Column>
                     <template #footer>
-                        <Paginator v-model:first="first" :rows="10" :totalRecords="Rows" @click="accessData"></Paginator>
+                        <Paginator v-model:first="first" :rows="10" :totalRecords="Rows" @click="accessData">
+                        </Paginator>
                     </template>
                 </DataTable>
             </div>
 
-            <Dialog v-model:visible="categoryDialog" :style="{width: '450px'}" header="Category Category" :modal="true" class="p-fluid">
+            <Dialog v-model:visible="categoryDialog" :style="{ width: '450px' }" header="Category Category" :modal="true"
+                class="p-fluid">
                 <div class="field">
                     <label for="name">Name</label>
-                    <InputText id="name" v-model.trim="category.name" required="true" autofocus :class="{'p-invalid': submitted && !category.name}" />
+                    <InputText id="name" v-model.trim="category.name" required="true" autofocus
+                        :class="{ 'p-invalid': submitted && !category.name }" />
                     <small class="p-error" v-if="submitted && !category.name">Name is required.</small>
                 </div>
                 <div class="field">
                     <label for="alias">Alias</label>
-                    <InputText id="alias" v-model.trim="category.alias" required="true" autofocus :class="{'p-invalid': submitted && !category.alias}" />
+                    <InputText id="alias" v-model.trim="category.alias" required="true" autofocus
+                        :class="{ 'p-invalid': submitted && !category.alias }" />
                     <small class="p-error" v-if="submitted && !category.alias">Alias is required.</small>
                 </div>
                 <div class="field">
                     <label for="type_surat">Type Surat</label>
-                    <Dropdown
-                        inputId="class"
-                        v-model.trim="category.type_surat"
-                        :options="typeSuratList"
-                        optionLabel="name"
-                        optionValue="id"
-                        placeholder="Type Surat"
-                    />
+                    <Dropdown inputId="class" v-model.trim="category.type_surat" :options="typeSuratList"
+                        optionLabel="name" optionValue="id" placeholder="Type Surat" />
                     <!-- <InputText id="type_surat" v-model.trim="category.type_surat" required="true" autofocus /> -->
                 </div>
                 <div class="field">
                     <label for="divisi">Divisi</label>
-                    <Dropdown
-                        inputId="class"
-                        v-model="selectedDivisi"
-                        :options="divisiList"
-                        @change="setDivisi($event)"
-                        optionLabel="name"
-                        optionValue="id"
-                        placeholder="Select a Divisi"
-                        required="true" autofocus :class="{'p-invalid': submitted && !selectedDivisi}"
-                    />
+                    <Dropdown inputId="class" v-model="selectedDivisi" :options="divisiList" @change="setDivisi($event)"
+                        optionLabel="name" optionValue="id" placeholder="Select a Divisi" required="true" autofocus
+                        :class="{ 'p-invalid': submitted && !selectedDivisi }" />
                     <small class="p-error" v-if="submitted && !selectedDivisi">Divisi is required.</small>
                 </div>
                 <div class="field">
@@ -403,22 +399,24 @@ const columns = [
 
                 <div class="field">
                     <label for="status" class="mb-3">Status</label>
-                    <Dropdown id="status" v-model="selectedStatus" :options="statuses" optionLabel="label" placeholder="Select a Status">
+                    <Dropdown id="status" v-model="selectedStatus" :options="statuses" optionLabel="label"
+                        placeholder="Select a Status">
                         <template #value="slotProps">
                             <div v-if="slotProps.value && slotProps.value.value">
                                 <Tag :value="slotProps.value.label" :severity="getStatusLabel(slotProps.value.value)" />
                             </div>
                             <div v-else-if="slotProps.value && !slotProps.value.value">
-                                <Tag :value="slotProps.value==='1' ? 'Active' : 'No Active'" :severity="getStatusLabel(slotProps.value)" />
+                                <Tag :value="slotProps.value === '1' ? 'Active' : 'No Active'"
+                                    :severity="getStatusLabel(slotProps.value)" />
                             </div>
                             <span v-else>
-                                {{slotProps.placeholder}}
+                                {{ slotProps.placeholder }}
                             </span>
                         </template>
                     </Dropdown>
                 </div>
                 <template #footer>
-                    <Button label="Cancel" icon="pi pi-times" text @click="hideDialog"/>
+                    <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
                     <Button label="Save" icon="pi pi-check" text @click="saveCategory" />
                 </template>
             </Dialog>

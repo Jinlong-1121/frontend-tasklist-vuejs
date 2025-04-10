@@ -49,11 +49,11 @@ onMounted(() => {
     getListData(page);
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -80,7 +80,7 @@ const editWebinar = (data) => {
 const saveWebinar = () => {
     submitted.value = true;
     if (webinar.value.webinar_id.trim()) {
-        console.log(webinar.value.id, typeof(webinar.value.id));
+        // console.log(webinar.value.id, typeof(webinar.value.id));
         if (typeof(webinar.value.id) === "undefined") {
             webinar.value.webinar_id = webinar.value.webinar_id.replaceAll(/\s/g,'')
             webinar.value.tanggal = dateDayMonthYear(webinar.value.tanggal)
@@ -118,23 +118,19 @@ const getListData = (page) => {
 };
 
 const saveListData = (params) => {
-    // console.log(params);
     webinarService.saveListData(params).then((data) => {
-        console.log(data);
         getListData(1);
     });
 };
 
 const updateListData = (params, id) => {
     webinarService.updateListData(params, id).then((data) => {
-        console.log(data);
         getListData(1);
     });
 };
 
 const runScheduler = () => {
     webinarService.runScheduler().then((data) => {
-        console.log(data);
         // getListData(1);
     });
 };
@@ -142,7 +138,7 @@ const runScheduler = () => {
 const accessData = () => {
     var page = (first.value/10)+1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
 

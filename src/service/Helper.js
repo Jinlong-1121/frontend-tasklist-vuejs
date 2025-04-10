@@ -1,9 +1,5 @@
 import CryptoJS from 'crypto-js'
-import {userModul} from '@/service/ConstantaService';
-import axios from 'axios';
-import { TaskList } from './ConstantaService';
 
-const contextPath = localhost;
 const key = 'mySecretKey'
 export const HelperFunc = {
     encryption(inputText) {
@@ -19,7 +15,7 @@ export const HelperFunc = {
           alert('Nothing to decrypt!')
           return
         }
-        console.log(outputText, "HHH");
+        // console.log(outputText, "HHH");
         try {
           const decryptedText = CryptoJS.AES.decrypt(outputText, key).toString(CryptoJS.enc.Utf8)
           return decryptedText
@@ -27,7 +23,5 @@ export const HelperFunc = {
           alert('Error decrypting text!')
           return
         }
-      },
-
-
+      }
 }

@@ -12,6 +12,7 @@ const toast = useToast();
 const breadcrumbHome = ref({ icon: 'pi pi-home', to: '/' });
 const breadcrumbItems = ref([{ label: 'Cuti' }, { label: 'List' }]);
 
+const maxDate = ref(new Date());
 
 const Absens = ref(null);
 // const Rows = ref(null);
@@ -61,11 +62,11 @@ onMounted(() => {
     // });
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -75,7 +76,7 @@ const getListData = (date) => {
     }
     absenService.getListCuti(params).then((data) => {
         Absens.value = data.data;
-        console.log(Absens.value);
+        // console.log(Absens.value);
     });
 };
 
@@ -89,7 +90,7 @@ const sendEmail = () => {
     //     loading.value = false;
     //     toast.add({ severity: 'success', summary: 'Successful', detail: 'Absen Deleted', life: 3000 });
     // }, 2000);
-    // console.log(params);
+    // // console.log(params);
     absenService.sendEmailCuti(params).then((data) => {
         // Absens.value = data.data;
         if (!data.error) {
@@ -99,7 +100,7 @@ const sendEmail = () => {
             loading.value = false;
             toast.add({ severity: 'danger', summary: 'Error', detail: 'Gagal kirim', life: 3000 });
         }
-        console.log(data);
+        // console.log(data);
     });
 };
 
@@ -107,19 +108,19 @@ const accessData = () => {
     // var page = (first.value/10)+1;
     var selectedDate = dateMonthYear(filterMonth.value);
     getListData(selectedDate)
-    // console.log(row);
+    // // console.log(row);
 };
 
 const filterMonthEvent = () => {
     // var page = (first.value/10)+1;
     var selectedDate = dateMonthYear(filterMonth.value);
     getListData(selectedDate);
-    // console.log(dateMonthYear(filterMonth.value));
+    // // console.log(dateMonthYear(filterMonth.value));
 };
 
 const dateMonthYear = (dateString) => {
     var date = new Date(dateString);
-    var dateFormat = date.getFullYear() + "-" +(String((date.getMonth()+1)).length != 2 ? "0" + (date.getMonth() + 1) : (date.getMonth()+1));
+    var dateFormat = date.getFullYear() + "-" + (String((date.getMonth() + 1)).length != 2 ? "0" + (date.getMonth() + 1) : (date.getMonth() + 1));
     return dateFormat;
 }
 
@@ -168,8 +169,9 @@ const columns = [
                     <template v-slot:start>
                         <div class="my-2">
                             <!-- <span class="p-float-label"> -->
-                                <Calendar inputId="inputMont" v-model="filterMonth" view="month" dateFormat="MM yy" @date-select="filterMonthEvent"/>
-                                <!-- <label for="inputMont">Pilih Bulan</label> -->
+                            <Calendar inputId="inputMont" v-model="filterMonth" view="month" dateFormat="MM yy"
+                                @date-select="filterMonthEvent" />
+                            <!-- <label for="inputMont">Pilih Bulan</label> -->
                             <!-- </span> -->
                             <!-- <Button label="Filter" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" /> -->
                             <!-- <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="confirmDeleteSelected" :disabled="!selectedAbsens || !selectedAbsens.length" /> -->
@@ -181,28 +183,37 @@ const columns = [
                         <Button label="Send Email" icon="pi pi-upload" class="p-button-help" @click="toggle" />
                         <OverlayPanel ref="op" appendTo="body">
                             <!-- <template> -->
-                                <div class="flex justify-content-center p-fluid">
-                                    <div v-focustrap class="cards">
-                                        <!-- <div class="field">
+                            <div class="flex justify-content-center p-fluid">
+                                <div v-focustrap class="cards">
+                                    <!-- <div class="field">
                                             <label><b>Tambah Tujuan Baru</b></label>
                                         </div> -->
-                                        <div class="field">
-                                            <InputText id="input" v-model="email" type="text" placeholder="Email" autofocus />
-                                        </div>
-                                        <Button type="submit" label="Send" class="mt-2" :loading="loading" @click="sendEmail"/>
+                                    <div class="field">
+                                        <InputText id="input" v-model="email" type="text" placeholder="Email"
+                                            autofocus />
                                     </div>
+                                    <Button type="submit" label="Send" class="mt-2" :loading="loading"
+                                        @click="sendEmail" />
                                 </div>
+                            </div>
                             <!-- </template> -->
                         </OverlayPanel>
                     </template>
                 </Toolbar>
                 <DataTable ref="dt" :value="Absens" responsiveLayout="scroll">
+                    <template #empty>
+                        <div class="text-center p-2">
+                            <p class="text-lg font-semibold">No Data Available</p>
+                        </div>
+                    </template>
+
                     <!-- <Column field="username" header="Nama Karyawan" headerStyle="width:14%; min-width:10rem;">
                         <template #body="slotProps">
                             <router-link :to="{ name: 'absen-detail', params: { id: slotProps.data.pin }}">{{ slotProps.data.username }}</router-link>
                         </template>
                     </Column> -->
-                    <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header" headerStyle="width:14%; min-width:10rem;"></Column>
+                    <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header"
+                        headerStyle="width:14%; min-width:10rem;"></Column>
                     <!-- <template #footer>
                         <Paginator v-model:first="first" :rows="10" :totalRecords="Rows" @click="accessData"></Paginator>
                     </template> -->

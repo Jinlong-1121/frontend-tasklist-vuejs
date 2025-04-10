@@ -48,13 +48,13 @@ const getDataDetail = () => {
         id: paramId
     }
     suratService.getDetail(param).then((data) => {
-      console.log(data, "DATA GET");
+      // console.log(data, "DATA GET");
       dataDraft.value = data
       getCategory(data.document_type);
       selectedCategory.value = JSON.parse(data.category)
       getTemplate(selectedCategory);
       selectedTemplate.value = JSON.parse(data.template)
-      console.log(dataDraft.value, "OOO");
+      // console.log(dataDraft.value, "OOO");
       if (dataDraft.value.need_attach === '1') {
         switchTandatanganBasah.value = true
       }
@@ -88,7 +88,7 @@ const getTemplate = (data) => {
 }
 
 const actionCategory = (event) => {
-  // console.log(dataDraft, "AAAA");
+  // // console.log(dataDraft, "AAAA");
   dataDraft.value.need_attach = '0'
   switchTandatanganBasah.value = false
   selectedTemplate.value = {}
@@ -140,7 +140,7 @@ const checkValidate = () => {
 
 const nextPage = () => {
   const check = checkValidate()
-  console.log(dataDraft.value.need_attach, "OOOO");
+  // console.log(dataDraft.value.need_attach, "OOOO");
   submitted.value = true
   if (check !== false) {
     if (Object.keys(selectedTemplate.value).length !== 0) {
@@ -344,9 +344,35 @@ const nextPage = () => {
   background-color: antiquewhite !important;
   /* border-width: 2px !important; */
 }
+
 :deep(.active) {
   border-color: rgb(242, 151, 39) !important;
   background-color: antiquewhite !important;
   /* border-width: 2px !important; */
+}
+</style>
+
+<style>
+.radio-custom {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #000000;
+  border-radius: 50%;
+  outline: none;
+  box-shadow: none;
+  background-color: #fff;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.radio-custom:checked {
+  background-color: #FFC107;
+  border-color: #FFC107;
+}
+
+.radio-custom:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.4);
 }
 </style>

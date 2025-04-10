@@ -1,15 +1,23 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { useLayout } from '@/layout/composables/layout';
 import { useRouter } from 'vue-router';
+import ActivityLogService from '@/service/ActivityLogService';
+
 import TaskListService, { RetrunValue } from "@/service/TaskListService";
 const { layoutConfig, onMenuToggle, contextPath } = useLayout();
 
 const outsideClickListener = ref(null);
 const topbarMenuActive = ref(false);
 const router = useRouter();
+const activityLogService = new ActivityLogService();
+const dataUser = JSON.parse(localStorage.getItem('sipam'));
+
+const swal = inject('$swal')
+
 const dataItemUser = JSON.parse(localStorage.getItem("sipam")) 
 const Clicked = ref("");
+const activityLog = ref({});
 const items= [
         { title: 'Click Me' },
         { title: 'Click Me' },
@@ -18,7 +26,25 @@ const items= [
 
 onMounted(() => {
     bindOutsideClickListener();
+    checkTimeLogin(); // Cek saat pertama kali load
+    // setInterval(checkTimeLogin, 60000); // Cek setiap 1 menit
 });
+
+const checkTimeLogin = () => {
+    if (dataUser && dataUser.time_login) {
+        const timeLogin = new Date(dataUser.time_login);
+        const now = new Date();
+
+        // Gunakan Math.abs untuk memastikan hasil positif
+        const hoursDiff = Math.abs(now - timeLogin) / 36e5; // 36e5 = 1000 * 60 * 60
+
+
+        if (hoursDiff >= 6) {
+            localStorage.removeItem("sipam");
+            router.push('/auth/login');
+        }
+    }
+};
 
 onBeforeUnmount(() => {
     unbindOutsideClickListener();
@@ -67,13 +93,64 @@ const isOutsideClicked = (event) => {
     return !(sidebarEl.isSameNode(event.target) || sidebarEl.contains(event.target) || topbarEl.isSameNode(event.target) || topbarEl.contains(event.target));
 };
 
-// Handle Logout
+const activityLogLogin = (params) => {
+    activityLogService.postActivityLogLogin(params).then((data) => {
+
+    });
+};
+
 const handleLogout = () => {
-    localStorage.removeItem("sipam")
-    router.push('/auth/login');
-}
+    const swalWithBootstrapButtons = swal.mixin({
+        customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+        },
+        buttonsStyling: false
+    });
 
+    swalWithBootstrapButtons.fire({
+        title: 'Logout!',
+        text: 'Are you sure you want to log out?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Logout',
+        cancelButtonText: 'Cancel',
+        allowOutsideClick: false, // Bisa tutup modal dengan klik di luar
+        allowEscapeKey: true, // Bisa tutup modal dengan tekan Esc
+        showCloseButton: false, // Menampilkan tombol X untuk menutup modal
+        focusCancel: true // Fokuskan ke tombol Cancel agar lebih aman
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Data untuk log logout
+            const logData = {
+                table_name: "users",
+                system_name: "SIPAM - Logout",
+                action: "POST",
+                entity_data: "User logged out",
+                id_user: dataUser.target, // Pastikan dataUser berisi ID pengguna
+                username: dataUser.user_name,
+                record_id: dataUser.target,
+                status: 3,
+                note: "Logout successful"
+            };
 
+            // Kirim log sebelum logout
+            activityLogLogin(logData);
+
+            // Hapus token dan redirect ke login
+            localStorage.removeItem("sipam");
+            router.push('/auth/login');
+        }
+    });
+};
+
+const handAccess = () => {
+    router.push('/user/access');
+};
+
+const handProfile = () => {
+    router.push('/user/profile');
+};
 
 // End Handle Logout
 
@@ -182,18 +259,17 @@ async mounted() {
             <!-- <img :src="logoUrl" alt="logo" /> -->
             <span>SiPAM{{ Clicked }}</span>
         </router-link>
+
         <button class="p-link layout-menu-button layout-topbar-button" @click="onMenuToggle()">
             <i class="pi pi-bars"></i>
         </button>
+        
         <button class="p-link layout-topbar-menu-button layout-topbar-button" @click="onTopBarMenuButton()">
             <i class="pi pi-ellipsis-v"></i>
         </button>
-        <div class="layout-topbar-menu" :class="topbarMenuClasses">
-            <!-- <button @click="onTopBarMenuButton()" class="p-link layout-topbar-button">
-                <i class="pi pi-calendar"></i>
-                <span>Calendar</span>
-            </button> -->
-            <div style="align-self: center;display: grid;grid-template-columns: auto auto;width: 300px;">
+
+        <div class="layout-topbar-menu" :class="topbarMenuClasses" >     
+            <div style="align-self: center;display: grid;grid-template-columns: auto auto; width: 220px;">
                 <v-menu class="Notif-Box"
                 location="bottom"
                 transition="slide-y-transition"
@@ -205,8 +281,7 @@ async mounted() {
                             <v-icon class="Notifinprofile" icon="mdi-bell" v-bind="props"  style="font-size: 25px;" ></v-icon>
                         </v-badge>
                     </template>
-                    <v-list style="width: auto;height: auto;max-height: 500px;padding: 5px;border: 1px solid #EEEEEE;">
-                        <v-list-item v-if="TaskCount > 0"
+                    <v-list style="width: auto;height: auto;max-height: 500px;padding: 5px;border: 1px solid #EEEEEE;">                        <v-list-item v-if="TaskCount > 0"
                         v-for="(TaskUsers, index) in TaskUserFinal"
                         :key="index"
                         :value="index"
@@ -214,14 +289,15 @@ async mounted() {
                         >
                         <div  class="Notif-Item">
                             <div class="Notif-Item-Header">
-                                <a>{{ TaskUsers.notif_category }}</a>
+                                <a>New Task Available</a>
                             </div>
                             <div
                             :style="{ backgroundColor: TaskUsers.notif_status === 'NEW' ? '#EEEEEE' : TaskUsers.notif_status === 'Clicked' ? '#ffffff':''}"
                             class="Notif-Item-Detail"
+                            
                             >
                                 <div style="display: grid;grid-template-columns: 60px auto;">
-                                    <a>ID</a>
+                                    <a>Task ID</a>
                                     <a>: <a>{{ TaskUsers.notif_value }}</a></a>
                                 </div>
                                 <div style="display: grid;grid-template-columns: 60px auto;">
@@ -232,7 +308,9 @@ async mounted() {
                                 </div>
                                 <a style="text-align: center;">Click Here To Show Detail</a>
                             </div>
+
                         </div>
+                        
                         </v-list-item>
                         <div v-else style="height: auto;">
                             <div style="text-align: center;font-size: 15px;padding: 10px;font-weight: bolder;">
@@ -243,6 +321,17 @@ async mounted() {
                     </v-menu>
                 <p class="mb-0" style="font-weight: bold;">{{ dataItemUser.user_name }} </p>
             </div>
+
+            <button @click="handProfile()" class="p-link layout-topbar-button">
+                <i class="pi pi-user"></i>
+                <span>Profile User</span>
+            </button>
+
+            <button @click="handAccess()" class="p-link layout-topbar-button">
+                <i class="pi pi-key"></i>
+                <span>Akses User</span>
+            </button>
+
             <button @click="handleLogout()" class="p-link layout-topbar-button">
                 <i class="pi pi-sign-out"></i>
                 <span>Logout</span>
@@ -269,6 +358,7 @@ async mounted() {
 </template>
 
 <style lang="scss" scoped>
+
 
 .Notifinprofile:hover{
     cursor:pointer;

@@ -1,7 +1,10 @@
 <script setup>
 import { inject, ref, onMounted, onUpdated } from "vue";
 import { useRoute, useRouter } from 'vue-router';
+
 import SuratService from '@/service/SuratService';
+import AbsenService from '@/service/AbsenService';
+
 import VuePdfEmbed from 'vue-pdf-embed'
 
 const swal = inject('$swal')
@@ -11,6 +14,8 @@ const route = useRoute();
 const paramId = route.params.id;
 
 const suratService = new SuratService();
+const absenService = new AbsenService();
+
 const dataPdf = ref();
 const page = ref(null);
 const pdfSource = ref("https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf");
@@ -32,7 +37,7 @@ onMounted(() => {
 });
 
 onUpdated(() => {
-    console.log('update', props.formData.data_form, props.formData);
+    // console.log('update', props.formData.data_form, props.formData);
     const form = new FormData();
     form.append("content", props.formData.content)
     form.append("document_id", props.formData.document_id)
@@ -57,14 +62,14 @@ const prevPage = () => {
 };
 
 // Handle Complete or Submit
-const handleComplete = () => {
+const handleComplete = async () => {
     const swalWithBootstrapButtons = swal.mixin({
         customClass: {
             confirmButton: 'btnCustomSweetalert bg-yellow-500',
             cancelButton: 'btnCustomSweetalert bg-red-500'
         },
         buttonsStyling: false
-    })
+    });
 
     swalWithBootstrapButtons.fire({
         title: 'Buat Surat!',
@@ -73,58 +78,194 @@ const handleComplete = () => {
         showCancelButton: true,
         confirmButtonText: 'Submit',
         cancelButtonText: 'Cancel',
-        // reverseButtons: true
-    }).then((result) => {
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+            try {
+                const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"));
 
-        if (result.isConfirmed) {
-            emit('complete');
-            delete props.formData.draftStore
-            delete props.formData.update_at
-            let dataTemp = props.formData
-            props.formData.category = JSON.stringify(dataTemp.category)
-            props.formData.template = JSON.stringify(dataTemp.template)
-            props.formData.divisi = JSON.stringify(dataTemp.divisi)
-            props.formData.data_form = JSON.stringify(dataTemp.data_form)
-            // props.formData.receiver[0].is_read = "0"
-            props.formData.status = "2"
-            
-            suratService.putSurat(dataTemp).then((res) => {
-                if (props.formData.attachment.length !== 0) {
-                    const formAttach = new FormData();
-                    formAttach.append("document_id", res.data.id)
-                    for (let i = 0; i < props.formData.attachment.length; i++) {
-                        formAttach.append("attachment[]", props.formData.attachment[i])
-                    }
-                    suratService.postAttachment(formAttach).then((rest) => {
-                        swalWithBootstrapButtons.fire(
-                            'Success!',
-                            'Surat anda berhasil dibuat.',
-                            'success'
-                        )
-                        router.push('/surat-internal/list/waiting');
-                    })
+                emit('complete');
+                delete props.formData.total_cuti;
+                let dataTemp = props.formData;
+                let tempDataCheckTypeTemplate = props.formData.template;
+                let tempDataFormCuti = [];
+
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Template Izin Cuti') {
+                    tempDataFormCuti = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[0] ? tempDataCheckTypeTemplate.parameter[0] : [];
                 }
-                swalWithBootstrapButtons.fire(
-                    'Success!',
-                    'Surat anda berhasil dibuat.',
-                    'success'
-                )
-                router.push('/surat-internal/list/waiting');
-            });
+
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Izin Sakit') {
+                    tempDataFormCuti = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[0] ? tempDataCheckTypeTemplate.parameter[0] : [];
+                }
+
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Permohonan Cuti') {
+                    tempDataFormCuti = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[2] ? tempDataCheckTypeTemplate.parameter[2] : [];
+                }
+
+                props.formData.category = JSON.stringify(dataTemp.category);
+                props.formData.template = JSON.stringify(dataTemp.template);
+                props.formData.divisi = JSON.stringify(dataTemp.divisi);
+                props.formData.data_form = JSON.stringify(dataTemp.data_form);
+                props.formData.document_nature = JSON.stringify(dataTemp.document_nature)
+                props.formData.status = "2";
+
+                const res = await suratService.postSurat(dataTemp);
+
+                // POST SURAT CUTI
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Template Izin Cuti') {
+                    for (let date of tempDataFormCuti.value || []) {
+                        let d = new Date(date),
+                            bulan = '' + (d.getMonth() + 1),
+                            tanggal = '' + d.getDate(),
+                            tahun = d.getFullYear();
+
+                        if (bulan.length < 2) bulan = '0' + bulan;
+                        if (tanggal.length < 2) tanggal = '0' + tanggal;
+
+                        const dataAbsen = {
+                            type: 1,
+                            pin: dataLocalStorage.pin,
+                            date: [tahun, bulan, tanggal].join('-'),
+                            times: '',
+                            keterangan: 'Izin Cuti',
+                            doc_id: `${res.data.id}`,
+                            status: '1'
+                        };
+
+                        await absenService.postSuratSisaCuti(dataAbsen);
+                    }
+                }
+                // END POST SURAT CUTI
+
+                // POST SURAT IZIN SAKIT
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Izin Sakit') {
+                    for (let date of tempDataFormCuti.value || []) {
+                        let d = new Date(date),
+                            bulan = '' + (d.getMonth() + 1),
+                            tanggal = '' + d.getDate(),
+                            tahun = d.getFullYear();
+
+                        if (bulan.length < 2) bulan = '0' + bulan;
+                        if (tanggal.length < 2) tanggal = '0' + tanggal;
+
+                        const keterangan = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[1] ? `Izin Sakit ${tempDataCheckTypeTemplate.parameter[1].value}` : 'Izin Sakit';
+
+                        const dataAbsen = {
+                            type: 4,
+                            pin: dataLocalStorage.pin,
+                            date: [tahun, bulan, tanggal].join('-'),
+                            times: '',
+                            keterangan: keterangan,
+                            doc_id: `${res.data.id}`,
+                            status: '1'
+                        };
+
+                        await absenService.postSuratSisaCuti(dataAbsen);
+                    }
+                }
+                // END POST SURAT IZIN SAKIT
+
+                // POST SURAT PEMOHONAN CUTI PANJANG
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Permohonan Cuti Panjang') {
+                    // Ambil nilai type dari parameter[2] dan konversi ke integer
+                    const typeStr = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[2] ? `${tempDataCheckTypeTemplate.parameter[2].value.type}` : '0';
+                    const type = parseInt(typeStr, 10); // Konversi string ke integer
+
+                    // Ambil dan format tanggal dari parameter[0].value
+                    const tanggalValue = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[0] ? new Date(tempDataCheckTypeTemplate.parameter[0].value) : new Date();
+                    let bulan = '' + (tanggalValue.getMonth() + 1),
+                        tanggal = '' + tanggalValue.getDate(),
+                        tahun = tanggalValue.getFullYear();
+
+                    if (bulan.length < 2) bulan = '0' + bulan;
+                    if (tanggal.length < 2) tanggal = '0' + tanggal;
+
+                    const formattedDate = [tahun, bulan, tanggal].join('-');
+
+                    const keterangan = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[1] ? `Izin: ${tempDataCheckTypeTemplate.parameter[1].value}` : 'Izin';
+
+                    const dataAbsen = {
+                        pin: dataLocalStorage.pin,
+                        type: type,
+                        effective_date: formattedDate,
+                        qty: parseInt(tempDataCheckTypeTemplate.parameter[2].value.default_qty),
+                        keterangan: keterangan,
+                        doc_id: `${res.data.id}`,
+                    };
+                    await absenService.sendLeaveAdjustment(dataAbsen);
+                }
+                // END POST SURAT PEMOHONAN CUTI PANJANG
+
+                // POST SURAT PEMOHONAN CUTI
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Permohonan Cuti') {
+                    // Ambil nilai type dari parameter[2] dan konversi ke integer
+                    const typeStr = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[0] ? `${tempDataCheckTypeTemplate.parameter[0].value.type}` : '0';
+                    const type = parseInt(typeStr, 10); // Konversi string ke integer
+
+                    for (let date of tempDataFormCuti.value || []) {
+                        let d = new Date(date),
+                            bulan = '' + (d.getMonth() + 1),
+                            tanggal = '' + d.getDate(),
+                            tahun = d.getFullYear();
+
+                        if (bulan.length < 2) bulan = '0' + bulan;
+                        if (tanggal.length < 2) tanggal = '0' + tanggal;
+
+                        const keterangan = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[1] ? `Izin: ${tempDataCheckTypeTemplate.parameter[1].value}` : 'Izin';
+                        const dataAbsen = {
+                            pin: dataLocalStorage.pin,
+                            type: type,
+                            effective_date: [tahun, bulan, tanggal].join('-'),
+                            qty: tempDataCheckTypeTemplate.parameter[2].value.length,
+                            keterangan: keterangan,
+                            doc_id: `${res.data.id}`,
+                        };
+
+                        // console.log("dataAbsen", dataAbsen);
+
+                        await absenService.sendLeaveAdjustment(dataAbsen);
+                    }
+                }
+
+                // END POST SURAT PEMOHONAN CUTI
+
+                if (props.formData.attachment && props.formData.attachment.length !== 0) {
+                    const formAttach = new FormData();
+                    formAttach.append("document_id", res.data.id);
+                    for (let i = 0; i < props.formData.attachment.length; i++) {
+                        formAttach.append("attachment[]", props.formData.attachment[i]);
+                    }
+                    await suratService.postAttachment(formAttach);
+                }
+
+                return res.data;
+            } catch (error) {
+                swalWithBootstrapButtons.showValidationMessage(`Request failed: ${error}`);
+            }
+        },
+        allowOutsideClick: () => !swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            swalWithBootstrapButtons.fire(
+                'Success!',
+                'Surat anda berhasil dibuat.',
+                'success'
+            );
+            router.push('/surat-internal/list/waiting');
         }
-    })
-} 
+    });
+};
+
 // End Handle Complete or Submit
 
 // Handle Draft
-const handleDraft = () => {
+const handleDraft = async () => {
     const swalWithBootstrapButtons = swal.mixin({
         customClass: {
             confirmButton: 'btnCustomSweetalert bg-yellow-500',
             cancelButton: 'btnCustomSweetalert bg-red-500'
         },
         buttonsStyling: false
-    })
+    });
 
     swalWithBootstrapButtons.fire({
         title: 'Draft Surat!',
@@ -133,44 +274,49 @@ const handleDraft = () => {
         showCancelButton: true,
         confirmButtonText: 'Submit',
         cancelButtonText: 'Cancel',
-        // reverseButtons: true
-    }).then((result) => {
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+            try {
+                emit('draft');
+                delete props.formData.type;
 
-        if (result.isConfirmed) {
-            emit('draft');
-            delete props.formData.type
-            let dataTemp = props.formData
-            props.formData.category = JSON.stringify(dataTemp.category)
-            props.formData.template = JSON.stringify(dataTemp.template)
-            props.formData.divisi = JSON.stringify(dataTemp.divisi)
-            props.formData.status = "0"
+                let dataTemp = { ...props.formData };
+                dataTemp.category = JSON.stringify(dataTemp.category);
+                dataTemp.template = JSON.stringify(dataTemp.template);
+                dataTemp.divisi = JSON.stringify(dataTemp.divisi);
+                props.formData.data_form = JSON.stringify(dataTemp.data_form);
+                dataTemp.status = "0";
 
-            suratService.putSurat(dataTemp).then((res) => {
+                const res = await suratService.putSurat(dataTemp);
+
                 if (props.formData.attachment.length !== 0) {
                     const formAttach = new FormData();
-                    formAttach.append("document_id", res.data.id)
+                    formAttach.append("document_id", res.data.id);
                     for (let i = 0; i < props.formData.attachment.length; i++) {
-                        formAttach.append("attachment[]", props.formData.attachment[i])
+                        formAttach.append("attachment[]", props.formData.attachment[i]);
                     }
-                    suratService.postAttachment(formAttach).then((rest) => {
-                        swalWithBootstrapButtons.fire(
-                            'Success!',
-                            'Surat anda berhasil di draft.',
-                            'success'
-                        )
-                        router.push('/surat-internal/list/draft');
-                    })
+                    await suratService.postAttachment(formAttach);
                 }
-                swalWithBootstrapButtons.fire(
-                    'Success!',
-                    'Surat anda berhasil di draft.',
-                    'success'
-                )
-                router.push('/surat-internal/list/draft');
-            });
+
+                return res.data; // Resolves the promise
+            } catch (error) {
+                swalWithBootstrapButtons.showValidationMessage(`Request failed: ${error}`);
+                throw error; // Rethrows the error to prevent successful SweetAlert resolution
+            }
+        },
+        allowOutsideClick: () => !swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            swalWithBootstrapButtons.fire(
+                'Success!',
+                'Surat anda berhasil di draft.',
+                'success'
+            );
+            router.push('/surat-internal/list/draft');
         }
-    })
-} 
+    });
+};
+
 // End Handle Draft
 
 </script>
@@ -187,9 +333,14 @@ const handleDraft = () => {
                             <!-- <div class="flex align-items-center">
                                 <i class="pi pi-key mr-2"></i>
                             </div> -->
-                            <label for="Perihal">Nomor</label>
+                            <label for="Perihal">Nomor Surat</label>
                             <br>
                             <b>{{formData.document_no}}</b>
+                        </div>
+                        <div class="field col-12 mb-0">
+                            <label for="Perihal">Sifat Surat</label>
+                            <br>
+                            <b>{{formData.document_nature.name_document_nature}}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <!-- <div class="flex align-items-center">
@@ -247,6 +398,13 @@ const handleDraft = () => {
                                     <Chip :label="item.user_name" />
                                 </template>
                             </div> -->
+                        </div>
+                        <div class="field col-12 mb-0">
+                            <label for="Tujuan">Jenis Tandatangan</label>
+                            <br>
+                            <b>{{ formData.need_sign === '1' ? 'Tandatangan Digital (VIDA)' :
+                                (formData.need_sign === '0' ?
+                                    'Tandatangan Basah' : '') }}</b>
                         </div>
                         <!-- <label for="class">Data</label>
                         <br>

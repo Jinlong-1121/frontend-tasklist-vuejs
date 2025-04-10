@@ -67,6 +67,7 @@ const handleComplete = () => {
         showCancelButton: true,
         confirmButtonText: 'Submit',
         cancelButtonText: 'Cancel',
+        allowOutsideClick: () => !swal.isLoading(), // Tidak bisa klik luar saat loading
         // reverseButtons: true
     }).then((result) => {
 
@@ -76,6 +77,7 @@ const handleComplete = () => {
             props.formData.category = JSON.stringify(dataTemp.category)
             props.formData.template = JSON.stringify(dataTemp.template)
             props.formData.data_form = JSON.stringify(dataTemp.data_form)
+            props.formData.document_nature = JSON.stringify(dataTemp.document_nature)
             props.formData.receiver[0].up = props.formData.up
             props.formData.receiver[0].is_read = "0"
             props.formData.status = "2"
@@ -135,6 +137,7 @@ const handleDraft = () => {
             let dataTemp = props.formData
             props.formData.category = JSON.stringify(dataTemp.category)
             props.formData.template = JSON.stringify(dataTemp.template)
+            props.formData.document_nature = JSON.stringify(dataTemp.document_nature)
             props.formData.receiver[0].up = props.formData.up
             props.formData.receiver[0].is_read = "0"
             props.formData.status = "0"
@@ -169,6 +172,7 @@ const handleDraft = () => {
 
 </script>
 <template>
+    {{ console.log("form", formData) }}
     <div class="stepsdemo-content">
         <Card class="mt-3">
             <template v-slot:title>
@@ -181,6 +185,11 @@ const handleDraft = () => {
                             <label for="Perihal">Nomor Surat</label>
                             <br>
                             <b>{{formData.document_no}}</b>
+                        </div>
+                        <div class="field col-12 mb-0">
+                            <label for="Perihal">Sifat Surat</label>
+                            <br>
+                            <b>{{formData.document_nature.name_document_nature}}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Perihal">Kategori</label>
@@ -223,6 +232,13 @@ const handleDraft = () => {
                         <div class="field col-12 mb-0">
                             <label for="Tujuan">Verificator</label><br>
                             <b>{{formData.verificator.user_name}}</b>
+                        </div>
+                        <div class="field col-12 mb-0">
+                            <label for="Tujuan">Jenis Tandatangan</label>
+                            <br>
+                            <b>{{ formData.need_sign === '1' ? 'Tandatangan Digital (VIDA)' :
+                                (formData.need_sign === '0' ?
+                                    'Tandatangan Basah' : '') }}</b>
                         </div>
                     </div>
                     <div class="field col-12 md:col-9">

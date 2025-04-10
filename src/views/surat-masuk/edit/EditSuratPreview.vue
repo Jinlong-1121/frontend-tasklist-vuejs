@@ -26,14 +26,14 @@ onUpdated(() => {
 
 async function convertFileToBase64() {
     const attach = props.formData.attachment;
-    dataPdf.value = 'data:application/pdf;base64,'+ props.formData.content;
+    dataPdf.value = 'data:application/pdf;base64,' + props.formData.content;
     if (attach.length > 0) {
         const arrayBuffer = await readFileAsArrayBuffer(props.formData.attachment[0]);
         const base64Data = arrayBufferToBase64(arrayBuffer);
         props.formData.content = base64Data;
-        dataPdf.value = 'data:application/pdf;base64,'+base64Data;
+        dataPdf.value = 'data:application/pdf;base64,' + base64Data;
     }
-    
+
 }
 const readFileAsArrayBuffer = (file) => {
     return new Promise((resolve, reject) => {
@@ -56,7 +56,7 @@ const prevPage = () => {
     // for (let i = 0; i < selectedPenandatanganExternal.value.length; i++) {
     //     inputForm.signer.push(selectedPenandatanganExternal.value[i])
     // }
-    emit('prev-page', {pageIndex: 1});
+    emit('prev-page', { pageIndex: 1 });
 };
 
 // Handle Complete or Submit
@@ -89,8 +89,7 @@ const handleComplete = () => {
             props.formData.data_form = JSON.stringify(dataTemp.data_form)
             props.formData.status = "2"
             
-            suratService.postSurat(dataTemp).then((res) => {
-                console.log(res, "RESPONSE");
+            suratService.putSurat(dataTemp).then((res) => {
                 swalWithBootstrapButtons.fire(
                     'Success!',
                     'Surat anda berhasil dibuat.',
@@ -130,10 +129,10 @@ const handleDraft = () => {
             props.formData.category = JSON.stringify(dataTemp.category)
             props.formData.template = JSON.stringify(dataTemp.template)
             props.formData.divisi = JSON.stringify(dataTemp.divisi)
+            props.formData.divisi = JSON.stringify(dataTemp.divisi)
             props.formData.status = "0"
-            
+
             suratService.postSurat(props.formData).then((res) => {
-                console.log(res, "RESPON");
                 swalWithBootstrapButtons.fire(
                     'Success!',
                     'Surat anda berhasil di draft.',
@@ -163,45 +162,45 @@ const getCategoryName = () => {
                         <div class="field col-12 mb-0">
                             <label for="Perihal">Nomor Surat</label>
                             <br>
-                            <b>{{formData.document_no}}</b>
+                            <b>{{ formData.document_no }}</b>
+                        </div>
+                        <div class="field col-12 mb-0">
+                            <label for="Perihal">Sifat Surat</label>
+                            <br>
+                            <b>{{ formData.document_nature.name_document_nature }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Perihal">Kategori</label>
                             <br>
-                            <b>{{getCategoryName()}}</b>
+                            <b>{{ getCategoryName() }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Perihal">Perihal</label>
                             <br>
-                            <b>{{formData.perihal}}</b>
+                            <b>{{ formData.perihal }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Tujuan">Tujuan</label><br>
                             <template v-for="item, idxTujuan in formData.receiver" :key="idxTujuan">
-                                <Chip :label="item.user_name" class="mb-2 mr-2"/>
+                                <Chip :label="item.user_name" class="mb-2 mr-2" />
                             </template>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Tujuan">Verificator</label><br>
-                            <b>{{formData.verificator.user_name}}</b>
+                            <b>{{ formData.verificator.user_name }}</b>
                         </div>
                     </div>
                     <div class="field col-12 md:col-9">
-                            <br>
-                            <div class="bg-gray-300">
+                        <br>
+                        <div class="bg-gray-300">
 
-                                <ScrollPanel style="width: 100%; height: 1300px" class="custombar1">
-                                    <div class="p-8">
-                                        <vue-pdf-embed
-                                            ref="pdfRef"
-                                            :source="dataPdf"
-                                            :page="page"
-                                            @password-requested="handlePasswordRequest"
-                                            @rendered="handleDocumentRender"
-                                        />
-                                    </div>
-                                </ScrollPanel>
-                            </div>
+                            <ScrollPanel style="width: 100%; height: 1300px" class="custombar1">
+                                <div class="p-8">
+                                    <vue-pdf-embed ref="pdfRef" :source="dataPdf" :page="page"
+                                        @password-requested="handlePasswordRequest" @rendered="handleDocumentRender" />
+                                </div>
+                            </ScrollPanel>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -211,8 +210,9 @@ const getCategoryName = () => {
                         <Button label="Back" @click="prevPage()" icon="pi pi-angle-left" />
                     </div>
                     <div>
-                        <Button label="Draft" @click="handleDraft()" icon="pi pi-file-edit" iconPos="right" class="p-button-secondary mr-2"/>
-                        <Button label="Submit" @click="handleComplete()" icon="pi pi-check" iconPos="right" class="p-button-success"/>
+                        <!-- <Button label="Draft" @click="handleDraft()" icon="pi pi-file-edit" iconPos="right" class="p-button-secondary mr-2"/> -->
+                        <Button label="Submit" @click="handleComplete()" icon="pi pi-check" iconPos="right"
+                            class="p-button-success" />
                     </div>
                 </div>
             </template>

@@ -39,6 +39,7 @@ const selectedTemplate = ref();
 const selectedDivisi = ref();
 const selectedTujuan = ref();
 const selectedPenandatangan = ref();
+const selectedSifatSurat = ref({});
 const selectedPenandatanganExternal = ref();
 const selectedVerificator = ref();
 const listEmailTujuan = ref();
@@ -52,6 +53,7 @@ const optionTujuanTemp = ref([]);
 const optionSigner = ref([]);
 const optionVerif = ref([]);
 const optionTembusan = ref([]);
+const optionSifatSurat = ref([]);
 // END OPTIONS DROPDOWN
 
 const dataForm = ref([]);
@@ -74,8 +76,9 @@ const inputForm = reactive({
     status: '1',
     is_reply: "1",
     need_attach: "0",
-    need_sign: "1",
-    document_type: "2"
+    document_nature: "",
+    need_sign: "0",
+    document_type: "3"
 });
 const sender = ref({});
 
@@ -102,7 +105,6 @@ onUpdated(() => {
 
 const loadData = async () => {
     submitted.value = false
-    console.log(props.formData);
     if (props.formData.is_used) {
         enabledForm.value = true;
         disabledBtnPost.value = true;
@@ -111,13 +113,13 @@ const loadData = async () => {
     getListTujuan();
     getListDivisi();
     getListVerif();
+    getDocumentNatures();
     // getListTembusan();
     sender.value = setSender();
     setData();
 }
 
 const setData = () => {
-    console.log(typeof props.formData.category, props.formData.category, "lklklk");
     if (props.formData.category!=="") {
         const categoryJson = JSON.parse(props.formData.category);
         isReply.value = categoryJson.is_reply;
@@ -133,10 +135,12 @@ const setData = () => {
         inputForm.document_no = props.formData.document_no
         inputForm.perihal = props.formData.perihal
 
+        var documentNature = props.formData.document_nature;
+        selectedSifatSurat.value = JSON.parse(documentNature);
+
         selectedVerificator.value = props.formData.verificator
 
-        getTemplate(categoryJson.id);
-        console.log(inputForm, selectedVerificator.value, "GGGG");
+        // getTemplate(categoryJson.id);
     }
     props.formData.receiver.map(item => {
         delete item.document_id
@@ -153,21 +157,11 @@ const setData = () => {
     delete verifData.document_id
     delete verifData.id
     
-    props.formData.verificator = verifData
-    
-    console.log(props.formData, "LLLLL");
-    
+    props.formData.verificator = verifData    
     
     inputForm.divisi = JSON.parse(props.formData.divisi)
-    selectedDivisi.value = JSON.parse(props.formData.divisi);
-    // const thirdArray = optionTujuanTemp.value.filter((elem) => {
-    //     return selectedDivisi.value.some((ele) => {
-    //         return elem.up == ele.id;
-    //     });
-    // });
-    // optionTujuan.value = thirdArray
-    // selectedTujuan.value = props.formData.receiver;
-    
+    selectedDivisi.value = props.formData.divisi;
+ 
 }
 
 
@@ -175,7 +169,6 @@ const setValFlag = () => {
     selectedCategoryTemp.value.is_reply = isReply.value;
     selectedCategoryTemp.value.is_finance = isFinance.value;
     selectedCategoryTemp.value.is_secret = isSecret.value;
-    console.log(selectedCategory.value, "KKKK");
 }
 
 // SETGET OPTIONS LIST CATEGORY
@@ -188,13 +181,12 @@ const getCategory = () => {
   categoryService.getListCategoryAll(params).then((data) => (optionCategory.value = data));
 };
 const setCategory = (event) => {
-    console.log(selectedCategory.value.alias, "PPPP");
     // need_attach.value = '0'
     selectedCategory.value = event.value
     selectedCategoryTemp.value = event.value
     setValFlag();
     // validateSelectedCategory.value = event.value
-    getTemplate(event.value.id);
+    // getTemplate(event.value.id);
 
     let currentTime  = new Date();
     inputForm.document_no = `{no}/${props.formData.type.code}.${selectedCategory.value.alias}/DIR/${helpers.romanize(currentTime.getMonth() + 1)}/${currentTime.getFullYear()}`
@@ -203,28 +195,36 @@ const setCategory = (event) => {
     //     inputForm.document_no = inputForm.document_no;
     // }
 };
-const getTemplate = (id) => {
-  const params = {
-    type: id
-  }
-  templateService.getListTemplateAll(params).then((data) => {
-    selectedTemplate.value = data[0];
-    dataForm.value = selectedTemplate.value.parameter;
-    console.log(dataForm.value, "HAHAHA");
-  });
-}
+
+// const getTemplate = (id) => {
+//   const params = {
+//     type: id
+//   }
+//   templateService.getListTemplateAll(params).then((data) => {
+//     selectedTemplate.value = data[0];
+//     dataForm.value = selectedTemplate.value.parameter;
+//   });
+// }
 // END SETGET OPTIONS LIST CATEGORY
 
 // SETGET OPTIONS LIST TUJUAN
+
 const getListDivisi = () => {
     divisiService.getListAll().then((data) => {
         optionDivisi.value = data;
+        optionTembusan.value = data.map((item) => {
+            const container = {};
+            container.user_name = item.name;
+            container.user_id = item.id;
+            container.user_type = "1";
+
+            return container;
+        })
     });
 }
 const setDivisi = (event) => {
     inputForm.receiver = []
     selectedTujuan.value = []
-    listEmailTujuan.value = []
     inputForm.divisi = event.value
     selectedDivisi.value = event.value
     const thirdArray = optionTujuanTemp.value.filter((elem) => {
@@ -251,24 +251,11 @@ const getListTujuan = () => {
         }
         const result = props.formData.receiver.map(({id,...rest}) => ({...rest}));
         selectedTujuan.value = result;
-        console.log(optionTujuan.value, result, "balalala");
     });
 }
 const setTujuan = (event) => {
-    selectedTujuan.value = [];
-    const dataTujuan = event.value;
-    const emailTujuan = dataTujuan.map(({email, user_name}) => ({email, user_name}))
-    listEmailTujuan.value = emailTujuan;
-    inputForm.receiver = dataTujuan
-    selectedTujuan.value = dataTujuan
-    inputForm.receiver.map(item => {
-        delete item.document_id
-        delete item.id
-    })
-    selectedTujuan.value.receiver.map(item => {
-        delete item.document_id
-        delete item.id
-    })
+    // inputForm.receiver = event.value
+    selectedTujuan.value = event.value
 };
 // SETGEN GET OPTIONS LIST TUJUAN
 
@@ -295,9 +282,19 @@ const setTujuan = (event) => {
 const getListVerif = () => {
     userService.getListVerif().then((data) => (optionVerif.value = data));
 }
+
+const getDocumentNatures = () => {
+    suratService.getDocumentNatures(2).then((data) => (optionSifatSurat.value = data));
+}
+
 const setVerificator = (event) => {
     inputForm.verificator = event.value
     selectedVerificator.verificator = event.value
+};
+
+const setSifatSurat = (event) => {
+    inputForm.document_nature = event.value;  // Simpan ID ke database
+    selectedSifatSurat.value = event.value;      // Simpan objek terpilih
 };
 // END SETGET OPTIONS LIST VERIFICATOR
 
@@ -313,60 +310,58 @@ const setSender = () => {
 // END SET SENDER
 
 // SET CONTENT PREVIEW PDF
-const setContent = () => {
-    console.log(selectedTemplate.value, "OOO");
-    const contentTemplate = selectedTemplate.value.content;
-    let contentDoc = contentTemplate;
-    let dataUsersCuti = JSON.parse(localStorage.getItem('sipam'));
+// const setContent = () => {
+//     const contentTemplate = selectedTemplate.value.content;
+//     let contentDoc = contentTemplate;
+//     let dataUsersCuti = JSON.parse(localStorage.getItem('sipam'));
 
-    contentDoc = contentDoc.replace('{perihal}', inputForm.perihal);
-    contentDoc = contentDoc.replaceAll('{tujuan}', inputForm.receiver.length > 1 ? "Tujuan Terlampir" : `${inputForm.receiver[0].user_name} (${inputForm.receiver[0].address})`);
-    contentDoc = contentDoc.replaceAll('{alamat}', inputForm.receiver.length > 1 ? "" : inputForm.receiver[0].address);
-    contentDoc = contentDoc.replace('{tanggal}', helpers.setFormatDate());
-    contentDoc = contentDoc.replace('{nomor}', inputForm.document_no);
-    contentDoc = contentDoc.replace('{lampiran}', inputForm.attachment.length === 0 ? '-' : inputForm.attachment.length);
-    contentDoc = contentDoc.replace('{tembusan}', inputForm.tembusan.length === 0 ? '' : helpers.setTextList(inputForm.tembusan));
-    contentDoc = contentDoc.replace('{up}', inputForm.up);
-    contentDoc = contentDoc.replace('{signer}', helpers.setTextSigner(inputForm.signer));
-    contentDoc = contentDoc.replaceAll('{tujuan_terlampir}', inputForm.receiver.length > 1 ? setTextTujuan(inputForm.receiver) : "");
-    // contentDoc = contentDoc.replace('{{signer}}', setTextTable(inputForm.signer));
-    for (let i = 0; i < dataForm.value.length; i++) {
-        const element = dataForm.value[i];
-        const inputType = dataForm.value[i].type
-        switch (inputType) {
-            case "1":
-                contentDoc = contentDoc.replace('{'+element.param+'}', element.value);
-                break;
+//     contentDoc = contentDoc.replace('{perihal}', inputForm.perihal);
+//     contentDoc = contentDoc.replaceAll('{tujuan}', inputForm.receiver.length > 1 ? "Tujuan Terlampir" : `${inputForm.receiver[0].user_name} (${inputForm.receiver[0].address})`);
+//     contentDoc = contentDoc.replaceAll('{alamat}', inputForm.receiver.length > 1 ? "" : inputForm.receiver[0].address);
+//     contentDoc = contentDoc.replace('{tanggal}', helpers.setFormatDate());
+//     contentDoc = contentDoc.replace('{nomor}', inputForm.document_no);
+//     contentDoc = contentDoc.replace('{lampiran}', inputForm.attachment.length === 0 ? '-' : inputForm.attachment.length);
+//     contentDoc = contentDoc.replace('{tembusan}', inputForm.tembusan.length === 0 ? '' : helpers.setTextList(inputForm.tembusan));
+//     contentDoc = contentDoc.replace('{up}', inputForm.up);
+//     contentDoc = contentDoc.replace('{signer}', helpers.setTextSigner(inputForm.signer));
+//     contentDoc = contentDoc.replaceAll('{tujuan_terlampir}', inputForm.receiver.length > 1 ? setTextTujuan(inputForm.receiver) : "");
+//     // contentDoc = contentDoc.replace('{{signer}}', setTextTable(inputForm.signer));
+//     for (let i = 0; i < dataForm.value.length; i++) {
+//         const element = dataForm.value[i];
+//         const inputType = dataForm.value[i].type
+//         switch (inputType) {
+//             case "1":
+//                 contentDoc = contentDoc.replace('{'+element.param+'}', element.value);
+//                 break;
 
-            case "2":
-                contentDoc = contentDoc.replace('{'+element.param+'}', helpers.setFormatDateOnly(element.value));
-                break;
+//             case "2":
+//                 contentDoc = contentDoc.replace('{'+element.param+'}', helpers.setFormatDateOnly(element.value));
+//                 break;
 
-            case "3":
-                contentDoc = contentDoc.replace('{'+element.param+'}', helpers.setTextTable(element.value));
-                break;
+//             case "3":
+//                 contentDoc = contentDoc.replace('{'+element.param+'}', helpers.setTextTable(element.value));
+//                 break;
 
-            case "5":
-                contentDoc = contentDoc.replace('{'+element.param+'}', helpers.setFormatDate(element.value));
-                break;
+//             case "5":
+//                 contentDoc = contentDoc.replace('{'+element.param+'}', helpers.setFormatDate(element.value));
+//                 break;
                 
-            case "8":
-                contentDoc = contentDoc.replace('{'+element.param+'}', helpers.setFormatDateLooping(element.value));
-                break;
+//             case "8":
+//                 contentDoc = contentDoc.replace('{'+element.param+'}', helpers.setFormatDateLooping(element.value));
+//                 break;
         
-            default:
-                contentDoc = contentDoc.replace('{'+element.param+'}', element.value);
-                break;
-        }
-        // contentDoc = contentDoc.replace('{{'+element.parameter+'}}', element.value);
-    }
-    return contentDoc
-}
+//             default:
+//                 contentDoc = contentDoc.replace('{'+element.param+'}', element.value);
+//                 break;
+//         }
+//         // contentDoc = contentDoc.replace('{{'+element.parameter+'}}', element.value);
+//     }
+//     return contentDoc
+// }
 // END SET CONTENT PREVIEW PDF
 
 // FILE
 const onRemoveTemplatingFile = (file, removeFileCallback, index) => {
-    // console.log(removeFileCallback());
     // removeFileCallback(index);
     if (index >= 0 && index < inputForm.attachment.length) {
         inputForm.attachment.splice(index, 1);
@@ -391,7 +386,8 @@ const checkValidate = () => {
         !inputForm.perihal ||
         !selectedDivisi.value ||
         !selectedTujuan.value ||
-        !selectedVerificator.value
+        !selectedVerificator.value ||
+        !selectedSifatSurat
     ) {
         return false
     }else {
@@ -422,7 +418,6 @@ const nextPage = () => {
     }
     let check = true
     if (!props.formData.is_used) {
-        console.log("lolos cek", props.formData.is_used);
         check = checkValidate()
         
     }
@@ -432,19 +427,21 @@ const nextPage = () => {
         const contentDoc = props.formData.content;
         emit("next-page", {
             formData: {
+                document_id: paramId,
                 document_type: "3",
                 sender: sender.value,
                 document_no: inputForm.document_no,
                 divisi: inputForm.divisi,
-                receiver: inputForm.receiver,
-                verificator: inputForm.verificator,
+                receiver: selectedTujuan,
+                verificator: selectedVerificator,
                 perihal: inputForm.perihal,
                 attachment: inputForm.attachment,
-                category: selectedCategoryTemp.value,
+                category: selectedCategory,
                 template: selectedTemplate.value,
                 content: contentDoc,
                 status: '1',
                 is_reply: "1",
+                document_nature: selectedSifatSurat,
                 need_attach: "0",
                 need_sign: "0",
                 data_form: dataForm
@@ -516,7 +513,6 @@ const editAction = () => {
     setData();
     updateData();
     suratService.editActionAccess(props.formData, "edit").then((data) => {
-        console.log(data);
         disabledBtnCreate.value = true
         disabledBtnPost.value = false
         enabledForm.value = false
@@ -526,7 +522,6 @@ const postAction = () => {
     setData();
     updateData();
     suratService.postActionAccess(props.formData, "edit").then((data) => {
-        console.log(data);
         disabledBtnCreate.value = false
     disabledBtnPost.value = true
     enabledForm.value = true
@@ -537,10 +532,10 @@ const postAction = () => {
 <template>
     <Toast />
     <div class="stepsdemo-content">
-        <div class="card flex justify-content-start flex-wrap gap-3">
+        <!-- <div class="card flex justify-content-start flex-wrap gap-3">
             <Button label="Edit" icon="pi pi-check" :disabled="disabledBtnCreate" @click="editAction"/>
             <Button label="Post" icon="pi pi-send" :disabled="disabledBtnPost" @click="postAction" />
-        </div>
+        </div> -->
         <Card class="mt-3">
             <template v-slot:title>
                 Input Form
@@ -643,6 +638,15 @@ const postAction = () => {
                             />
                         <small class="p-error" v-if="submitted && !selectedVerificator">Verificator is required.</small>
                     </div>
+
+                    <div class="field col-12 md:col-6">
+                        <label for="document_nature">Sifat Surat</label>
+                        <Dropdown inputId="document_nature" v-model="selectedSifatSurat" display="chip"
+                            :options="optionSifatSurat" @change="setSifatSurat($event)" optionLabel="name_document_nature"
+                            placeholder="Pilih Sifat Surat" required="true" autofocus
+                            :class="{ 'p-invalid': submitted && !selectedSifatSurat }" />
+                        <small class="p-error" v-if="submitted && !selectedSifatSurat">Sifat Surat is required.</small>
+                    </div>
                     
                     <!-- INPUT ATTACHMENT -->
                     <div v-if="dataForm[0]?.type !== '6'" class="field col-12">
@@ -700,22 +704,21 @@ const postAction = () => {
                     <!-- END INPUT ATTACHMENT -->
                     
                     <!-- TEMPLATE -->
-                    <template v-for="(item, idx) in dataForm" :key="idx" >
+                    <template v-for="(item, idx) in dataForm" :key="idx">
                         <div class="field col-12 md:col-6">
-                            <label v-if="item.type!=='7'" :for="item.parameter">{{ item.label }}</label>
-                            <InputText v-if="item.type==='1'" :id="item.parameter" type="text" v-model="item.value" :disabled="enabledForm"/>
-                            <Calendar v-if="item.type==='2' || item.type==='5'" :id="item.parameter" v-model="item.value" :disabled="enabledForm"/>
-                            <Calendar v-if="item.type==='2' && item.type==='8'" :id="item.parameter" v-model="item.value" selectionMode="multiple" @date-select="validasiLimitTanggalCuti(item.value)" :disabled="enabledForm"/>
-                            <MultiSelect
-                                v-if="item.type==='3'"
-                                :inputId="item.parameter"
-                                v-model="item.value"
-                                display="chip"
-                                :options="optionSigner"
-                                optionLabel="user_name"
-                                placeholder="Pilih User"
-                                :disabled="enabledForm"
-                            />
+                            <label v-if="item.type !== '7'" :for="item.parameter">{{ item.label }}</label>
+                            <InputText v-if="item.type === '1'" :id="item.parameter" type="text" v-model="item.value"
+                                :disabled="enabledForm" autofocus :class="{'p-invalid': submitted && !item.value}"/>
+                            <Calendar v-if="item.type === '2' || item.type === '5'" :id="item.parameter"
+                                v-model="item.value" :disabled="enabledForm" autofocus :class="{'p-invalid': submitted && !item.value}"/>
+                            <Calendar v-if="item.type === '2' && item.type === '8'" :id="item.parameter"
+                                v-model="item.value" selectionMode="multiple"
+                                @date-select="validasiLimitTanggalCuti(item.value)" :disabled="enabledForm" autofocus :class="{'p-invalid': submitted && !item.value}"/>
+                            <MultiSelect v-if="item.type === '3'" :inputId="item.parameter" v-model="item.value"
+                                display="chip" :options="optionSigner" optionLabel="user_name" placeholder="Pilih User"
+                                :disabled="enabledForm" autofocus :class="{'p-invalid': submitted && !item.value}"/>
+
+                            <small class="p-error" v-if="submitted && !item.value">{{ item.label }} is required.</small>
                         </div>
                     </template>
                     <!-- END TEMPLATE -->

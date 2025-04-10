@@ -36,7 +36,7 @@ onMounted(() => {
 });
 
 onUpdated(() => {
-    console.log('update', props.formData.data_form, props.formData);
+    // console.log('update', props.formData.data_form, props.formData);
     const form = new FormData();
     form.append("content", props.formData.content)
     form.append("document_id", props.formData.document_id)
@@ -112,6 +112,7 @@ const handleComplete = () => {
                     props.formData.category = JSON.stringify(dataTemp.category)
                     props.formData.template = JSON.stringify(dataTemp.template)
                     props.formData.data_form = JSON.stringify(dataTemp.data_form)
+                    props.formData.document_nature = JSON.stringify(dataTemp.document_nature)
                     props.formData.receiver[0].up = props.formData.up
                     props.formData.receiver[0].is_read = "0"
                     props.formData.status = "2"
@@ -190,6 +191,7 @@ const handleDraft = () => {
                     let dataTemp = props.formData
                     props.formData.category = JSON.stringify(dataTemp.category)
                     props.formData.template = JSON.stringify(dataTemp.template)
+                    props.formData.document_nature = JSON.stringify(dataTemp.document_nature)
                     props.formData.receiver[0].up = props.formData.up
                     props.formData.receiver[0].is_read = "0"
                     props.formData.status = "0"
@@ -238,9 +240,14 @@ const handleDraft = () => {
                             <!-- <div class="flex align-items-center">
                                 <i class="pi pi-key mr-2"></i>
                             </div> -->
-                            <label for="Perihal">Nomor</label>
+                            <label for="Perihal">Nomor Surat</label>
                             <br>
                             <b>{{formData.document_no}}</b>
+                        </div>
+                        <div class="field col-12 mb-0">
+                            <label for="Perihal">Sifat Surat</label>
+                            <br>
+                            <b>{{formData.document_nature.name_document_nature}}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <!-- <div class="flex align-items-center">
@@ -301,6 +308,13 @@ const handleDraft = () => {
                                     <Chip :label="item.user_name" />
                                 </template>
                             </div> -->
+                        </div>
+                        <div class="field col-12 mb-0">
+                            <label for="Tujuan">Jenis Tandatangan</label>
+                            <br>
+                            <b>{{ formData.need_sign === '1' ? 'Tandatangan Digital (VIDA)' :
+                                (formData.need_sign === '0' ?
+                                    'Tandatangan Basah' : '') }}</b>
                         </div>
                         <!-- <label for="class">Data</label>
                         <br>

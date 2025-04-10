@@ -5,6 +5,7 @@ import VuePdfEmbed from 'vue-pdf-embed';
 import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
 import { useRoute, useRouter } from "vue-router";
+import { useConfirm } from "primevue/useconfirm";
 import { useToast } from 'primevue/usetoast';
 
 const swal = inject('$swal')
@@ -26,7 +27,9 @@ const dataPdf = ref();
 const tempTemplateDataPdf = ref()
 const dataSinglePreview = ref({});
 const dataCategoryPreview = ref({});
+const dataSifatSurat = ref({});
 const dataSignerUser = ref({})
+const dataReferenceUser = ref({})
 // const statusSign = reactive(false)
 const visibleModalSign = ref(false);
 const visible = ref(false);
@@ -51,14 +54,7 @@ onMounted(() => {
 
 onUpdated(() => {
     getListSingleData();
-    console.log(qrcode.value);
-    // console.log('update', dataSinglePreview.data_form, dataSinglePreview);
-    // const form = new FormData();
-    // form.append("content", dataSinglePreview.formData.content)
-    // for (let i = 0; i < dataSinglePreview.formData.attachment.length; i++) {
-    //     form.append("attachment[]", dataSinglePreview.formData.attachment[i])
-    // }
-    // generatePDF(form);
+    // console.log(qrcode.value);
 });
 
 const generatePreviewPDF = (data) => {
@@ -82,7 +78,7 @@ const getListSingleData = async () => {
                 if (data.asset_upload !== '' && data.status === '6') {
                     let parseTemplate = JSON.parse(data.template)
                     dataPdf.value = parseTemplate.parameter[0].value
-                }else {
+                } else {
                     dataPdf.value = data.asset_upload
                 }
                 let parseTemplate = JSON.parse(data.template)
@@ -92,12 +88,52 @@ const getListSingleData = async () => {
                 dataPdf.value = parseTemplate.parameter[0].value
             }
             generateQRCode(data.link_url)
-        }else {
-            generatePreviewPDF(data);
+        } else {
+            if (data.status === '3' || data.status === '4') {
+                
+            } else {
+                generatePreviewPDF(data);
+
+            }
         }
         dataSinglePreview.value = data;
         dataCategoryPreview.value = JSON.parse(data.category)
+
+        if (data.document_nature) {
+            try {
+                dataSifatSurat.value = JSON.parse(data.document_nature);
+            } catch (error) {
+                dataSifatSurat.value = null; // Jika parsing gagal, set menjadi null
+            }
+        } else {
+            dataSifatSurat.value = null; // Jika tidak ada data, set menjadi null
+        }
+        
         setUserIDSigner(data.signer)
+        setUserIDReference(data.reference)
+
+        // Check if any of the conditions is true
+        // Check if the user_id from signer matches dataLocalStorage.target
+        const isSignerMatch = dataSinglePreview.value.signer.some(signer => signer.user_id === dataLocalStorage.target);
+        const isTembusanMatch = dataSinglePreview.value.tembusan.some(tembusan => tembusan.user_id === dataLocalStorage.target);
+
+        // Check other conditions
+        const isVerificatorMatch = dataLocalStorage.target === dataSinglePreview.value.verificator.user_id;
+        const isSenderMatch = dataLocalStorage.target === dataSinglePreview.value.sender.user_id;
+        const isDivisiMatch = dataLocalStorage.divisi === 1;
+        const isDireksiMatch = dataLocalStorage.divisi === 2;
+        const isKomiteInvestasiMatch = dataLocalStorage.divisi === 3;
+
+        // Determine if showTemplate should be called
+        const shouldShowTemplate =
+            (!isSignerMatch && !isTembusanMatch && !isVerificatorMatch && !isSenderMatch && !isDivisiMatch && !isDireksiMatch && !isKomiteInvestasiMatch);
+
+        // Show template if all conditions are false and isSignerMatch is false
+        var accessFitur = JSON.parse(data.document_nature)
+
+        if (shouldShowTemplate) {
+            showTemplate();
+        }
     });
 };
 // END GET SURAT EXTERNAL
@@ -105,11 +141,11 @@ const getListSingleData = async () => {
 // USER ID
 const setUserIDVerif = () => {
     const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
-    if(dataSinglePreview.value.verificator?.user_id === dataLocalStorage.target && dataSinglePreview.value.status === "2") {
+    if (dataSinglePreview.value.verificator?.user_id === dataLocalStorage.target && dataSinglePreview.value.status === "2") {
         return true
-    }else {
+    } else {
         return false
-    } 
+    }
 }
 const setUserIDSigner = (dataParam) => {
     const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
@@ -119,17 +155,27 @@ const setUserIDSigner = (dataParam) => {
         }
     })
 }
+
+const setUserIDReference = (dataParam) => {
+    const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
+    dataParam.map(item => {
+        if (item.user_id === dataLocalStorage.target) {
+            dataReferenceUser.value = item
+        }
+    })
+}
+
 // END USER ID
 
 // COPY
 const onCopy = async (data) => {
     if (navigator.clipboard) {
         try {
-            console.log(navigator);
+            // console.log(navigator);
             await navigator.clipboard.writeText(data);
             toast.add({ severity: 'success', summary: 'Success', detail: 'Copied', life: 2000 });
         } catch (err) {
-            toast.add({ severity: 'error', summary: 'Failed!', detail: 'Copy Failed '+err, life: 2000 });
+            toast.add({ severity: 'error', summary: 'Failed!', detail: 'Copy Failed ' + err, life: 2000 });
         }
     } else {
         const textArea = document.createElement("textarea");
@@ -152,15 +198,15 @@ const onCopy = async (data) => {
 
 // COPY QR IMAGE
 const onCopyQR = async () => {
-  const contentElement = qrimage.value;
-  try {
+    const contentElement = qrimage.value;
+    try {
         const canvas = await html2canvas(contentElement);
         if (navigator.clipboard) {
             await canvas.toBlob((blob) => {
                 const clipboardItem = new ClipboardItem({ 'image/png': blob });
 
                 navigator.clipboard.write([clipboardItem]).then(() => {
-                toast.add({ severity: 'success', summary: 'Success', detail: 'Copied', life: 2000 });
+                    toast.add({ severity: 'success', summary: 'Success', detail: 'Copied', life: 2000 });
                 });
             });
         } else {
@@ -168,19 +214,17 @@ const onCopyQR = async () => {
             const imgs = document.createElement('img');
             imgs.src = imgData;
 
-            const bodys = document.body ;
+            const bodys = document.body;
             bodys.appendChild(imgs);
-            
+
             let myrange;
-            if (document.createRange)  
-            {
+            if (document.createRange) {
                 myrange = document.createRange();
                 myrange.setStartBefore(imgs);
                 myrange.setEndAfter(imgs);
                 myrange.selectNode(imgs);
             }
-            else
-            {
+            else {
                 toast.add({ severity: 'error', summary: 'Failed!', detail: 'Copy Failed, CreateRange NOT work', life: 2000 });
             }
 
@@ -196,9 +240,9 @@ const onCopyQR = async () => {
 
             bodys.removeChild(imgs);
         }
-  } catch (error) {
+    } catch (error) {
         toast.add({ severity: 'error', summary: 'Failed!', detail: 'Copy Failed', life: 2000 });
-  }
+    }
 };
 //END COPY QR IMAGE
 
@@ -222,9 +266,9 @@ const handleVerif = () => {
         showLoaderOnConfirm: true,
         preConfirm: () => {
             dataSinglePreview.value.verificator.is_verification = "1"
-            if(dataSinglePreview.value.need_attach === '1' && dataSinglePreview.value.asset_upload === '') {
-                dataSinglePreview.value.status = "6" 
-            }else {
+            if (dataSinglePreview.value.need_attach === '1' && dataSinglePreview.value.asset_upload === '') {
+                dataSinglePreview.value.status = "6"
+            } else {
                 dataSinglePreview.value.status = "3"
             }
             statusSign.value = true
@@ -235,23 +279,32 @@ const handleVerif = () => {
                         'Surat berhasil diverifikasi.',
                         'success'
                     )
-                    if(dataSinglePreview.value.need_attach === '1' && dataSinglePreview.value.status === "6") {
+                    if (dataSinglePreview.value.need_attach === '1' && dataSinglePreview.value.status === "6") {
                         router.push('/surat-external/list/upload-documents');
-                    }else {
+                    } else {
                         router.push('/surat-external/list/signer');
                     }
-                }else {
-                    toast.add({ severity: 'error', summary: 'Failed!', detail: res.data, life: 2000 });
-                    dataSinglePreview.value.status = "2"
-                    dataSignerUser.value.is_sign = "0"
-                    statusSign.value = true
+                } else {
+                    if (res.code === 400) {
+                        throw new Error(res.data);
+                    } else {
+                        toast.add({ severity: 'error', summary: 'Failed!', detail: res.data, life: 2000 });
+                        dataSinglePreview.value.status = "2"
+                        dataSignerUser.value.is_sign = "0"
+                        statusSign.value = true
+                    }
                 }
-            })
+            }).catch((error) => {
+                toast.add({ severity: 'error', summary: 'Failed!', detail: "Belum Melakukan Validasi User", life: 4000 });
+                setTimeout(() => {
+                    window.location.reload();
+                }, 5000);
+            });
         },
         allowOutsideClick: () => !swal.isLoading()
     }).then((result) => {
         if (result.isConfirmed) {
-            
+
         }
     })
 }
@@ -282,7 +335,7 @@ const handleUpload = () => {
                 }
                 // dataSinglePreview.value.status = "1"
                 return suratService.uploadFileTTDBasah(JSON.stringify(sendData)).then((res) => {
-                    if (typeof(res) === "undefined") {
+                    if (typeof (res) === "undefined") {
                         toast.add({ severity: 'error', summary: 'Failed!', detail: res, life: 2000 });
                     } else {
                         swalWithBootstrapButtons.fire(
@@ -292,19 +345,19 @@ const handleUpload = () => {
                         )
                         router.push('/surat-external/list/waiting');
                     }
-                }).catch( err => {
+                }).catch(err => {
                     toast.add({ severity: 'error', summary: 'Failed!', detail: err, life: 2000 });
                 });
             },
             allowOutsideClick: () => !swal.isLoading()
         }).then((result) => {
-            if (result.isConfirmed) { 
+            if (result.isConfirmed) {
             }
         })
     } else {
         toast.add({ severity: 'error', summary: 'Failed!', detail: 'File tanda tangan basah kosong', life: 2000 });
     }
-    
+
 }
 // END HANDLE VERIF TTD BASAH
 
@@ -346,11 +399,42 @@ const handleRevisi = () => {
         allowOutsideClick: () => !swal.isLoading()
     }).then((result) => {
         if (result.isConfirmed) {
-            
+
         }
     })
 }
 // END HANDLE REVISI
+
+const showTemplate = () => {
+    const swalWithBootstrapButtons = swal.mixin({
+        customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+        },
+        buttonsStyling: false
+    });
+
+    swalWithBootstrapButtons.fire({
+        title: 'Information Akses!',
+        html: `<p>Anda tidak bisa melihat surat ini</p>`,
+        icon: 'warning',
+        cancelButtonText: 'Cancel',
+        showLoaderOnConfirm: true,
+        allowOutsideClick: false, // Prevent closing by clicking outside
+        allowEscapeKey: false,    // Prevent closing with Escape key
+        willOpen: () => {
+            // Add blur class to background element, not the body
+            document.getElementById('app').classList.add('blur-background');
+        },
+        willClose: () => {
+            // Remove blur class when modal closes
+            document.getElementById('app').classList.remove('blur-background');
+        },
+        preConfirm: () => {
+            router.push('/surat-external/list');
+        }
+    });
+};
 
 // HANDLE SIGNER
 const handleSigner = () => {
@@ -370,51 +454,316 @@ const handleSigner = () => {
         cancelButtonText: 'Cancel'
     }).then((result) => {
         if (result.isConfirmed) {
+            // const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
+            // let sendData = {
+            //     user_id: dataLocalStorage.target,
+            //     document_id: dataSinglePreview.value.id,
+            //     ref_id: dataSinglePreview.value.ref_id
+            // }
+            // // dataSinglePreview.value.status = "1"
+            // suratService.postSign(sendData).then((res) => {
+            //     visibleModalSign.value = true;
+            //     viewSignValidate(res.data)
+            // });
             const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
             let sendData = {
                 user_id: dataLocalStorage.target,
-                document_id: dataSinglePreview.value.id,
-                ref_id: dataSinglePreview.value.ref_id
+                document_id: dataSinglePreview.value.id
             }
             // dataSinglePreview.value.status = "1"
-            suratService.postSign(sendData).then((res) => {
+            suratService.postSignNew(sendData).then((res) => {
                 visibleModalSign.value = true;
-                viewSignValidate(res.data)
+                // if (res.data === "valid") {
+
+                // }
+                // viewSignValidate(res.data)
             });
         }
     })
 }
+
+const handleSignerVIDAViaEmail = () => {
+    const swalWithBootstrapButtons = swal.mixin({
+        customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+        },
+        buttonsStyling: false
+    });
+
+    if (dataLocalStorage.status_vida === "0" || dataLocalStorage.status_vida === "") {
+        swalWithBootstrapButtons.fire({
+            title: 'Perhatian!',
+            text: 'Harap validasi User VIDA sebelum melanjutkan proses ini.',
+            icon: 'error'
+        });
+    } else {
+        swalWithBootstrapButtons.fire({
+            title: 'Validasi Surat!',
+            text: "Anda akan validasi surat melalui VIDA lewat email?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Signer',
+            cancelButtonText: 'Cancel',
+            showLoaderOnConfirm: true, // Tampilkan loading indicator saat tombol "Signer" diklik
+            preConfirm: () => {
+                return new Promise((resolve) => {
+                    const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"));
+                    let sendData = {
+                        user_id: dataLocalStorage.target,
+                        document_id: dataSinglePreview.value.id,
+                    };
+
+                    suratService.postSignValidasi(sendData)
+                        .then((res) => {
+                            resolve(res); // Resolve promise dengan respons API
+                        })
+                        .catch((err) => {
+                            console.error('API call error:', err);
+                            // Handle error here, misalnya dengan menampilkan pesan error
+                            toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal proses sign surat.', life: 3000 });
+                        });
+                });
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Toast atau tampilkan pesan sukses setelah berhasil
+                swalWithBootstrapButtons.fire({
+                    title: 'Lanjutkan Melalui Email Anda!',
+                    text: 'Silahkan cek email anda untuk validasi surat',
+                    icon: 'warning'
+                }).then(() => {
+                    // Setelah pengguna menutup modal sukses, navigasi ke halaman signer
+                    router.push('/surat-external/list/signer');
+                });
+            }
+        });
+    }
+};
+
+// Function to initialize and clear PIN inputs
+function initializePINInputs() {
+    [...Array(6)].forEach((_, i) => {
+        const input = document.getElementById(`pin-access-${i}`);
+        if (input) {
+            input.value = ''; // Clear the value
+        }
+    });
+}
+
+function handlePINInput(event, index) {
+    const input = event.target;
+    const nextInput = document.getElementById(`pin-access-${index + 1}`);
+    const prevInput = document.getElementById(`pin-access-${index - 1}`);
+
+    if (input.value.length === 1 && nextInput) {
+        nextInput.focus();
+    } else if (input.value.length === 0 && prevInput) {
+        prevInput.focus();
+    }
+}
+
+function handlePINKeyDown(event, index) {
+    const input = event.target;
+    const prevInput = document.getElementById(`pin-access-${index - 1}`);
+
+    if (event.key === "Backspace" && input.value === "" && prevInput) {
+        prevInput.focus();
+    }
+}
+// Main function to handle signer via PIN
+const handleSignerVIDAViaPIN = () => {
+    const swalWithBootstrapButtons = swal.mixin({
+        customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+        },
+        buttonsStyling: false
+    });
+
+    if (dataLocalStorage.status_vida === "0" || dataLocalStorage.status_vida === "") {
+        swalWithBootstrapButtons.fire({
+            title: 'Perhatian!',
+            text: 'Harap validasi User VIDA sebelum melanjutkan proses ini.',
+            icon: 'error'
+        });
+    } else {
+        swalWithBootstrapButtons.fire({
+            title: 'Validasi Surat!',
+            html: `
+                <p>Anda akan validasi surat melalui VIDA lewat PIN?</p>
+                <div style="display: flex; justify-content: center;">
+                    ${[...Array(6)].map((_, i) => `
+                        <input id="pin-access-${i}" 
+                            class="swal2-input pin-input" 
+                            maxlength="1" 
+                            type="text" 
+                            style="width: 40px; margin: 0 5px; text-align: center;" 
+                            autocomplete="off">
+                    `).join('')}
+                </div>
+                `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Signer',
+            cancelButtonText: 'Cancel',
+            showLoaderOnConfirm: true,
+            didOpen: () => {
+                // Attach event listeners programmatically
+                [...Array(6)].forEach((_, i) => {
+                    const input = document.getElementById(`pin-access-${i}`);
+                    input.addEventListener('input', (event) => handlePINInput(event, i));
+                    input.addEventListener('keydown', (event) => handlePINKeyDown(event, i));
+                });
+            },
+            preConfirm: () => {
+                return new Promise((resolve) => {
+                    const pinAccess = [...Array(6)].map((_, i) => document.getElementById(`pin-access-${i}`).value).join('');
+                    if (pinAccess.length !== 6) {
+                        swalWithBootstrapButtons.showValidationMessage(
+                            'PIN harus terdiri dari 6 digit.'
+                        );
+                        resolve(false);
+                    } else {
+                        const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"));
+                        let sendData = {
+                            user_id: dataLocalStorage.target,
+                            document_id: dataSinglePreview.value.id,
+                            pin_access: pinAccess
+                        };
+
+                        suratService.postSignVidaPin(sendData)
+                            .then((res) => {
+                                resolve(res);
+                            })
+                            .catch((err) => {
+                                console.error('API call error:', err);
+                                toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal proses sign surat.', life: 3000 });
+                                resolve(false);
+                            });
+                    }
+                });
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (result.value && result.value.code === 200) {
+                    visibleModalSign.value = true;
+                } else {
+                    swalWithBootstrapButtons.fire({
+                        title: 'Terjadi Kesalahan!',
+                        text: 'Salah PIN. Silahkan coba lagi nanti.',
+                        icon: 'error'
+                    });
+                    router.push('/surat-external/preview/' + paramId);
+                }
+            } else {
+                // console.log('User cancelled.');
+            }
+        });
+    }
+};
+
+
+const handleURLToken = async () => {
+    const hash = window.location.hash;
+    const tokenMatch = hash.match(/token=(\w+)/);
+
+    if (tokenMatch) {
+        const token = tokenMatch[1]; // Ambil token dari hasil match
+
+        const swalWithBootstrapButtons = swal.mixin({
+            customClass: {
+                confirmButton: 'btnCustomSweetalert bg-yellow-500',
+                cancelButton: 'btnCustomSweetalert bg-red-500'
+            },
+            buttonsStyling: false
+        });
+
+        swalWithBootstrapButtons.fire({
+            title: 'Informasi!',
+            text: "Apakah ingin melakukan proses verifikasi VIDA?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Signer',
+            cancelButtonText: 'Cancel',
+            showLoaderOnConfirm: true, // Tampilkan loading indicator saat tombol "Signer" diklik
+            preConfirm: () => {
+                return new Promise((resolve) => {
+                    const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"));
+                    const sendData = {
+                        user_id: dataLocalStorage.target,
+                        document_id: parseInt(paramId),
+                        token: token
+                    };
+
+                    suratService.postSignVida(sendData)
+                        .then((res) => {
+                            resolve(res); // Resolve promise dengan respons API
+                        })
+                        .catch((err) => {
+                            console.error('API call error:', err);
+                            resolve({ code: 500 }); // Resolve dengan objek yang menunjukkan error
+                        });
+                });
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (result.value && result.value.code === 200) {
+                    // Jika respons berhasil dengan code 200
+                    visibleModalSign.value = true;
+                } else {
+                    // Jika respons mengandung code 500 atau kondisi lain yang perlu ditangani
+                    swalWithBootstrapButtons.fire({
+                        title: 'Terjadi Kesalahan!',
+                        text: 'Gagal melakukan proses verifikasi VIDA. Silahkan coba lagi nanti.',
+                        icon: 'error'
+                    });
+                    router.push('/surat-external/preview/' + paramId);
+                }
+            } else {
+                // Handle case when user cancels
+                // console.log('User cancelled.');
+            }
+        });
+    }
+};
+
+onMounted(() => {
+    handleURLToken();
+});
+
 const viewSignValidate = (url) => {
     const dualScreenLeft =
         window.screenLeft !== undefined ? window.screenLeft : window.screenX;
-      const dualScreenTop =
+    const dualScreenTop =
         window.screenTop !== undefined ? window.screenTop : window.screenY;
 
-      const width = window.innerWidth
+    const width = window.innerWidth
         ? window.innerWidth
         : document.documentElement.clientWidth
-        ? document.documentElement.clientWidth
-        : screen.width;
-      const height = window.innerHeight
+            ? document.documentElement.clientWidth
+            : screen.width;
+    const height = window.innerHeight
         ? window.innerHeight
         : document.documentElement.clientHeight
-        ? document.documentElement.clientHeight
-        : screen.height;
+            ? document.documentElement.clientHeight
+            : screen.height;
 
-      const systemZoom = width / window.screen.availWidth;
-      const left = (width - 500) / 2 / systemZoom + dualScreenLeft;
-      const top = (height - 600) / 2 / systemZoom + dualScreenTop;
-      let params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no, width=500,height=600,left=${left},top=${top}`;
+    const systemZoom = width / window.screen.availWidth;
+    const left = (width - 500) / 2 / systemZoom + dualScreenLeft;
+    const top = (height - 600) / 2 / systemZoom + dualScreenTop;
+    let params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no, width=500,height=600,left=${left},top=${top}`;
 
-      // let newWindow = open(this.detail.sign_url, "test", params);
-      let newWindow = open(url, "test", params);
-      newWindow.onload = function () {
+    // let newWindow = open(this.detail.sign_url, "test", params);
+    let newWindow = open(url, "test", params);
+    newWindow.onload = function () {
         newWindow.location.reload(true);
-      };
-} 
+    };
+}
 const handleProcessSign = () => {
     visibleModalSign.value = false;
-    let timerInterval
+    let timerInterval;
+
     swal.fire({
         title: 'Waiting!',
         html: 'Sedang melakukan proses verifikasi.',
@@ -422,52 +771,59 @@ const handleProcessSign = () => {
         timerProgressBar: true,
         allowOutsideClick: false,
         didOpen: () => {
-            swal.showLoading()
+            swal.showLoading();
         },
         willClose: () => {
-            clearInterval(timerInterval)
+            clearInterval(timerInterval);
         },
     }).then((result) => {
-    /* Read more about handling dismissals below */
         if (result.dismiss === swal.DismissReason.timer) {
-            const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
+            const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"));
             const param = {
                 id: paramId
-            }
+            };
+
             suratService.getDetail(param).then((data) => {
-                data.signer.map(item => {
+                let success = false;
+                data.signer.forEach(item => {
                     if (item.user_id === dataLocalStorage.target) {
-                        if (item.is_sign === "0") {
-                            toast.add({ severity: 'error', summary: 'Failed', detail: 'Silahkan tandatangan ulang', life: 3000 });
-                        } else {
-                            toast.add({ severity: 'success', summary: 'Successful', detail: 'Tandatangan berhasil', life: 3000 });
-                            if (dataSinglePreview.status === "4") {
-                                router.push('/surat-external/list');
-                            }
+                        if (item.is_sign === "1") {
+                            success = true;
                         }
+                        return; // exit forEach loop after finding the target user
                     }
-                })
+                });
+
+                if (success) {
+                    toast.add({ severity: 'success', summary: 'Successful', detail: 'Tandatangan berhasil', life: 3000 });
+                    router.push('/surat-external/preview/' + paramId);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    toast.add({ severity: 'error', summary: 'Failed', detail: 'Silahkan tandatangan ulang', life: 3000 });
+                }
             });
         }
-    })
+    });
 };
 // END HANDLE SIGNER
 
 // HANDLE DOWNLOAD AND PRINT
 const downloadPDFBase64 = (base64Data) => {
-      // Buat elemen tautan untuk mengunduh
-      const a = document.createElement("a");
-      a.href = base64Data;
-      a.download = "file.pdf"; // Nama file yang akan diunduh
+    // Buat elemen tautan untuk mengunduh
+    const a = document.createElement("a");
+    a.href = base64Data;
+    a.download = "file.pdf"; // Nama file yang akan diunduh
 
-      // Tambahkan tautan ke dalam dokumen
-      document.body.appendChild(a);
+    // Tambahkan tautan ke dalam dokumen
+    document.body.appendChild(a);
 
-      // Pemicu untuk mengklik tautan dan memulai unduhan
-      a.click();
+    // Pemicu untuk mengklik tautan dan memulai unduhan
+    a.click();
 
-      // Hapus tautan dari dokumen
-      document.body.removeChild(a);
+    // Hapus tautan dari dokumen
+    document.body.removeChild(a);
 }
 const handleDownload = (url, urlName) => {
     // window.open(url, '_blank');
@@ -486,44 +842,44 @@ const handleDownload = (url, urlName) => {
             window.URL.revokeObjectURL(url);
         })
 
-//   const a = document.createElement('a')
-//   a.href = url
-//   a.download = url.split('/').pop()
-//   document.body.appendChild(a)
-//   a.click()
-//   document.body.removeChild(a)
+    //   const a = document.createElement('a')
+    //   a.href = url
+    //   a.download = url.split('/').pop()
+    //   document.body.appendChild(a)
+    //   a.click()
+    //   document.body.removeChild(a)
 }
 const printDocument = (base64String) => {
-  // Convert base64 to binary data
-  base64String = base64String.replace('data:application/pdf;base64,', '')
-  const binaryPDF = atob(base64String);
+    // Convert base64 to binary data
+    base64String = base64String.replace('data:application/pdf;base64,', '')
+    const binaryPDF = atob(base64String);
 
-  // Convert binary data to an ArrayBuffer
-  const arrayBuffer = new ArrayBuffer(binaryPDF.length);
-  const uint8Array = new Uint8Array(arrayBuffer);
-  for (let i = 0; i < binaryPDF.length; i++) {
-    uint8Array[i] = binaryPDF.charCodeAt(i);
-  }
+    // Convert binary data to an ArrayBuffer
+    const arrayBuffer = new ArrayBuffer(binaryPDF.length);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    for (let i = 0; i < binaryPDF.length; i++) {
+        uint8Array[i] = binaryPDF.charCodeAt(i);
+    }
 
-  // Create a Blob from the ArrayBuffer
-  const pdfBlob = new Blob([uint8Array], { type: 'application/pdf' });
+    // Create a Blob from the ArrayBuffer
+    const pdfBlob = new Blob([uint8Array], { type: 'application/pdf' });
 
-  // Create an Object URL from the Blob
-  const objectURL = URL.createObjectURL(pdfBlob);
+    // Create an Object URL from the Blob
+    const objectURL = URL.createObjectURL(pdfBlob);
 
-  // Open a new window or tab and load the Object URL
-  const printWindow = window.open(objectURL, '_blank');
+    // Open a new window or tab and load the Object URL
+    const printWindow = window.open(objectURL, '_blank');
 
-  // Wait for the window to load before applying the print styles and triggering the print
-  printWindow.onload = function () {
-    // Add a style element with print-specific CSS to the print window
-    const style = printWindow.document.createElement('style');
-    style.innerHTML = '@media print { body { margin: 0; } }';
-    printWindow.document.head.appendChild(style);
+    // Wait for the window to load before applying the print styles and triggering the print
+    printWindow.onload = function () {
+        // Add a style element with print-specific CSS to the print window
+        const style = printWindow.document.createElement('style');
+        style.innerHTML = '@media print { body { margin: 0; } }';
+        printWindow.document.head.appendChild(style);
 
-    // Trigger the print dialog
-    printWindow.print();
-  };
+        // Trigger the print dialog
+        printWindow.print();
+    };
 }
 // END HANDLE DOWNLOAD AND PRINT
 
@@ -534,7 +890,7 @@ const generatePDF = (params) => {
 // END  HANDLE GENERATE PDF
 
 // GENERATE QR FROM LINK URL DATA
-const qrOption = {"width":300,"height":300,"data":"https://purwanto.co.id.com","margin":0,"qrOptions":{"typeNumber":"0","mode":"Byte","errorCorrectionLevel":"H"},"imageOptions":{"hideBackgroundDots":false,"imageSize":0.4,"margin":0},"dotsOptions":{"type":"square","color":"#100f0f"},"backgroundOptions":{"color":"#ffffff"},"image":"data:image/png;base64,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","dotsOptionsHelper":{"colorType":{"single":true,"gradient":false},"gradient":{"linear":true,"radial":false,"color1":"#6a1a4c","color2":"#6a1a4c","rotation":"0"}},"cornersSquareOptions":{"type":"","color":"#000000"},"cornersSquareOptionsHelper":{"colorType":{"single":true,"gradient":false},"gradient":{"linear":true,"radial":false,"color1":"#000000","color2":"#000000","rotation":"0"}},"cornersDotOptions":{"type":"","color":"#000000"},"cornersDotOptionsHelper":{"colorType":{"single":true,"gradient":false},"gradient":{"linear":true,"radial":false,"color1":"#000000","color2":"#000000","rotation":"0"}},"backgroundOptionsHelper":{"colorType":{"single":true,"gradient":false},"gradient":{"linear":true,"radial":false,"color1":"#ffffff","color2":"#ffffff","rotation":"0"}}}
+const qrOption = { "width": 300, "height": 300, "data": "https://purwanto.co.id.com", "margin": 0, "qrOptions": { "typeNumber": "0", "mode": "Byte", "errorCorrectionLevel": "H" }, "imageOptions": { "hideBackgroundDots": false, "imageSize": 0.4, "margin": 0 }, "dotsOptions": { "type": "square", "color": "#100f0f" }, "backgroundOptions": { "color": "#ffffff" }, "image": "data:image/png;base64,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", "dotsOptionsHelper": { "colorType": { "single": true, "gradient": false }, "gradient": { "linear": true, "radial": false, "color1": "#6a1a4c", "color2": "#6a1a4c", "rotation": "0" } }, "cornersSquareOptions": { "type": "", "color": "#000000" }, "cornersSquareOptionsHelper": { "colorType": { "single": true, "gradient": false }, "gradient": { "linear": true, "radial": false, "color1": "#000000", "color2": "#000000", "rotation": "0" } }, "cornersDotOptions": { "type": "", "color": "#000000" }, "cornersDotOptionsHelper": { "colorType": { "single": true, "gradient": false }, "gradient": { "linear": true, "radial": false, "color1": "#000000", "color2": "#000000", "rotation": "0" } }, "backgroundOptionsHelper": { "colorType": { "single": true, "gradient": false }, "gradient": { "linear": true, "radial": false, "color1": "#ffffff", "color2": "#ffffff", "rotation": "0" } } }
 
 const generateQRCode = (urlLink) => {
     if (urlLink !== "") {
@@ -547,7 +903,7 @@ const generateQRCode = (urlLink) => {
 
 // UPLOAD FILE TANDATANGAN BASAH
 const onUploadFileTandatanganBasah = (event) => {
-    // console.log(event, "OOO");
+    // // console.log(event, "OOO");
     let reader = new FileReader()
     reader.onload = (e) => {
         fileUploaded.value = e.target.result
@@ -562,21 +918,21 @@ const onUploadFileOptional = (event) => {
     reader.onload = (e) => {
         fileUploadedOptional.value = e.target.result
     }
-    // console.log(event.files[0]);
+    // // console.log(event.files[0]);
     reader.readAsDataURL(event.files[0])
     fileUploadedOptionalFiles.value = event
     visibleFileOptional.value = true
 }
 const previewFileOptional = (url) => {
     fetch(url)
-      .then(response => response.blob())
-      .then(blob => {
-          console.log(blob);
+        .then(response => response.blob())
+        .then(blob => {
+            // console.log(blob);
             let reader = new FileReader()
             reader.readAsDataURL(blob)
             reader.onloadend = () => {
                 fileUploadedOptionalPreview.value = reader.result
-                console.log(reader);
+                // console.log(reader);
             }
             visibleFileOptionalUpload.value = true
         });
@@ -611,7 +967,7 @@ const submitUploadFileOptional = (event) => {
         allowOutsideClick: () => !swal.isLoading()
     }).then((result) => {
         if (result.isConfirmed) {
-            
+
         }
     })
 }
@@ -623,12 +979,21 @@ const goBack = () => {
 }
 // END HANDLE GO BACK
 
+const goPageMemo = (link) => {
+    // Hapus bagian domain dari link jika ada
+    const relativeLink = link.replace(window.location.origin + '/#', '');
+    router.push(relativeLink);
+};
+
 </script>
 <template>
     <div class="stepsdemo-content">
         <Toast />
         <Card class="mt-3">
             <template v-slot:title>
+                <!-- <div v-if="dataLocalStorage.target !== dataSinglePreview.verificator?.user_id">
+                    {{ showTemplate() }}
+                </div> -->
                 <div class="grid">
                     <div class="field col-12 md:col-6">
                         <div class="flex align-items-baseline">
@@ -640,15 +1005,21 @@ const goBack = () => {
                             </span>
                         </div>
                     </div>
-                    <div class="field col-12 md:col-12 mb-0 pt-0 pb-0" v-if="dataSinglePreview.status === '6' && dataSinglePreview.note !== ''">
-                        <Message class="m-0" severity="warn" :closable="false">Catatan Revisi : {{ dataSinglePreview.note }}</Message>
+                    <div class="field col-12 md:col-12 mb-0 pt-0 pb-0"
+                        v-if="dataSinglePreview.status === '6' && dataSinglePreview.note !== ''">
+                        <Message class="m-0" severity="warn" :closable="false">Catatan Revisi : {{
+                            dataSinglePreview.note }}</Message>
                     </div>
                     <div v-if="dataSinglePreview.status === '4'" class="field col-12 md:col-6 text-right">
-                        <Button @click="handleDownload(`http://192.168.4.250:6067/file/download/${dataSinglePreview.asset_url}`, dataSinglePreview.asset_url)" iconPos="right" class="p-button-warning mx-1">
+                        <Button
+                            @click="handleDownload(`http://192.168.4.250:6067/file/download/${dataSinglePreview.asset_url}`, dataSinglePreview.asset_url)"
+                            iconPos="right" class="p-button-warning mx-1">
+                            <!-- <Button @click="handleDownload(`http://192.168.4.250/sipamv2/filepdf.php?type=download&name=${dataSinglePreview.asset_url}`, dataSinglePreview.asset_url)" iconPos="right" class="p-button-warning mx-1"> -->
                             <span class="mr-2">Download</span>
                             <i class="fas fa-cloud-download-alt"></i>
                         </Button>
-                        <Button @click="printDocument(dataSinglePreview.asset_print)" iconPos="right" class="p-button-warning mx-1">
+                        <Button @click="printDocument(dataSinglePreview.asset_print)" iconPos="right"
+                            class="p-button-warning mx-1">
                             <span class="mr-2">Print</span>
                             <i class="fas fa-cloud-download-alt"></i>
                         </Button>
@@ -659,28 +1030,44 @@ const goBack = () => {
                 <div class="p-fluid grid">
                     <div class="field col-12 md:col-3">
                         <div class="field col-12 mb-0">
-                            <label for="Perihal">Nomor</label>
+                            <label for="Perihal">Nomor Surat</label>
                             <div class="grid align-items-center">
                                 <div class="field col-10 mb-0">
-                                    <b>{{dataSinglePreview.document_no}}</b>
+                                    <b>{{ dataSinglePreview.document_no }}</b>
                                 </div>
-                                <div class="field col-2 mb-0" v-if="dataSinglePreview.status === '6' && dataSinglePreview.need_attach === '1'">
-                                    <Button v-if="dataLocalStorage.target === dataSinglePreview.sender?.user_id" @click="onCopy(dataSinglePreview.document_no)" v-clipboard:error="onError" class="p-button-warning justify-content-center">
+                                <div class="field col-2 mb-0"
+                                    v-if="dataSinglePreview.status === '6' && dataSinglePreview.need_attach === '1'">
+                                    <Button v-if="dataLocalStorage.target === dataSinglePreview.sender?.user_id"
+                                        @click="onCopy(dataSinglePreview.document_no)" v-clipboard:error="onError"
+                                        class="p-button-warning justify-content-center">
                                         <i class="pi pi-clone"></i>
                                     </Button>
                                 </div>
                             </div>
                         </div>
-                        <div class="field col-12 mb-0" :class="dataSinglePreview.status === '6' && dataSinglePreview.need_attach === '1'? 'block' : 'hidden'">
+                        <div class="field col-12 mb-0">
+                            <label for="Perihal">Sifat Surat</label>
+                            <br>
+                            <!-- <div id="canvas" ref="qrcode"></div> -->
+                            <b v-if="dataSifatSurat?.name_document_nature">
+                                {{ dataSifatSurat.name_document_nature }}
+                            </b>
+                            <b v-else>-</b>
+                        </div>
+                        <div class="field col-12 mb-0"
+                            :class="dataSinglePreview.status === '6' && dataSinglePreview.need_attach === '1' ? 'block' : 'hidden'">
                             <label for="Perihal">QR Code</label>
                             <br>
                             <div class="flex justify-content-center flex-wrap">
                                 <div ref="qrimage" class="flex justify-content-center flex-wrap">
                                     <div id="canvas" ref="qrcode"></div>
-                                    <p class="text-center" style="font-size: 1.5rem;">dokumen ini ditandatangani <br> secara elektronik</p>
+                                    <p class="text-center" style="font-size: 1.5rem;">dokumen ini ditandatangani <br>
+                                        secara elektronik</p>
                                 </div>
                             </div>
-                            <Button v-if="dataLocalStorage.target === dataSinglePreview.sender?.user_id" @click="onCopyQR" v-clipboard:error="onError" class="p-button-warning justify-content-center mt-3">
+                            <Button v-if="dataLocalStorage.target === dataSinglePreview.sender?.user_id"
+                                @click="onCopyQR" v-clipboard:error="onError"
+                                class="p-button-warning justify-content-center mt-3">
                                 <i class="pi pi-clone"></i>
                             </Button>
                         </div>
@@ -688,26 +1075,26 @@ const goBack = () => {
                             <label for="Perihal">Kategori</label>
                             <br>
                             <!-- <div id="canvas" ref="qrcode"></div> -->
-                            <b>{{dataCategoryPreview.name}}</b>
+                            <b>{{ dataCategoryPreview.name }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Perihal">Perihal</label>
                             <br>
-                            <b>{{dataSinglePreview.perihal}}</b>
+                            <b>{{ dataSinglePreview.perihal }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Tujuan">Tujuan</label>
                             <br>
                             <template v-for="item, idxTujuan in dataSinglePreview.receiver" :key="idxTujuan">
-                                <b>{{item.user_name}}</b>
+                                <b>{{ item.user_name }}</b>
                                 <br>
-                                <b>{{item.address}}</b>
+                                <b>{{ item.address }}</b>
                             </template>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Up">Up</label><br>
                             <template v-for="item, idxTujuan in dataSinglePreview.receiver" :key="idxTujuan">
-                                <b>{{item.up}}</b>
+                                <b>{{ item.up }}</b>
                             </template>
                         </div>
                         <div class="field col-12 mb-0" v-if="dataSinglePreview.attachment?.length !== 0">
@@ -718,7 +1105,8 @@ const goBack = () => {
                                 </template> -->
                                 <template v-for="item, idx in dataSinglePreview.attachment" :key="idx">
                                     <Chip class="p-2 px-3 bg-primary-500" style="width: 100%;">
-                                        <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.asset_url }}</p>
+                                        <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
+                                            item.asset_url }}</p>
                                     </Chip>
                                 </template>
                             </div>
@@ -728,52 +1116,101 @@ const goBack = () => {
                             <label for="Tujuan">Penanda Tangan</label><br>
                             <div class="flex flex-wrap gap-2">
                                 <template v-for="item, idx in dataSinglePreview.signer" :key="idx">
-                                    <Badge :value="item.user_name" :severity="item.is_sign === '1' ? 'success' : 'danger'"></Badge>
+                                    <Badge :value="item.user_name"
+                                        :severity="item.is_sign === '1' ? 'success' : 'danger'"></Badge>
                                 </template>
                             </div>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Tujuan">Verifikator</label>
                             <br>
-                            <b>{{dataSinglePreview.verificator?.user_name}}</b>
+                            <b>{{ dataSinglePreview.verificator?.user_name }}</b>
                             <!-- <div class="flex flex-wrap gap-2">
                                 <template v-for="item, idx in dataSinglePreview.verificator" :key="idx">
                                     <Chip :label="item.user_name" />
                                 </template>
                             </div> -->
                         </div>
-                        <div class="field col-12 mb-0" v-if="dataSinglePreview.status === '6' && dataSinglePreview.need_attach === '1' && dataLocalStorage.target === dataSinglePreview.sender.user_id">
+                        <div class="field col-12 mb-0">
+                            <label for="Tujuan">Jenis Tandatangan</label>
+                            <br>
+                            <b>{{ dataSinglePreview.need_sign === '1' ? 'Tandatangan Digital (VIDA)' :
+                                (dataSinglePreview.need_sign === '0' ?
+                                    'Tandatangan Basah' : '') }}</b>
+                        </div>
+
+                        <div class="field col-12 mb-0" v-if="dataSinglePreview.status === '7'">
+                            <label for="Tujuan">Keterangan Cancel</label>
+                            <br>
+                            <b>{{ dataSinglePreview.note_cancel || '-' }}</b>
+                        </div>
+
+                        <div class="field col-12 mb-0"
+                            v-if="dataSinglePreview.status === '7' && dataSinglePreview.asset_url_cancel != ''">
+                            <label for="Tujuan">File Cancel</label>
+                            <br>
+                            <b
+                                v-if="dataSinglePreview.asset_url_cancel == null || dataSinglePreview.asset_url_cancel == ''">-</b>
+                            <Button v-else type="button" label="Preview"
+                                @click="previewFileOptional(`http://192.168.4.250:6067/file/cancel/${dataSinglePreview.asset_url_cancel}`)" />
+                        </div>
+
+                        <div class="field col-12 mb-0"
+                            v-if="dataSinglePreview.status === '7' && (dataSinglePreview.update_cancel_by != '' && dataSinglePreview.update_cancel_by != null)">
+                            <label for="Tujuan">Link Cancel</label>
+                            <br>
+                            <b v-if="dataSinglePreview.link_cancel == null || dataSinglePreview.link_cancel == ''">-</b>
+                            <Button v-else type="button" label="Preview"
+                                @click="goPageMemo(dataSinglePreview.link_cancel)" />
+                        </div>
+
+                        <div class="field col-12 mb-0" v-if="dataSinglePreview.status === '7'">
+                            <label for="Tujuan">Cancel By</label>
+                            <br>
+                            <b>{{ dataSinglePreview.update_cancel_by || '-' }}</b>
+                        </div>
+
+                        <div class="field col-12 mb-0"
+                            v-if="dataSinglePreview.status === '6' && dataSinglePreview.need_attach === '1' && dataLocalStorage.target === dataSinglePreview.sender.user_id">
                             <label for="upload">Upload File</label>
                             <!-- FOR UPLOAD FILE YANG SUDAH DI TANDATANGAN BASAH -->
                             <div class="field col-12 md:col-12">
-                                <FileUpload mode="basic" customUpload @select="onUploadFileTandatanganBasah" accept="application/pdf" :maxFileSize="10000000" />
+                                <FileUpload mode="basic" customUpload @select="onUploadFileTandatanganBasah"
+                                    accept="application/pdf" :maxFileSize="10000000" />
                             </div>
                             <!-- END FOR UPLOAD FILE YANG SUDAH DI TANDATANGAN BASAH -->
                         </div>
-                        <div class="field col-12 mb-0" v-if="dataSinglePreview.status === '4' && dataSinglePreview.need_attach !== '1' && dataSinglePreview.link_external !== ''">
+                        <div class="field col-12 mb-0"
+                            v-if="dataSinglePreview.status === '4' && dataSinglePreview.need_attach !== '1' && dataSinglePreview.link_external !== ''">
                             <label for="upload">Upload File <span class="text-orange-600">(Optional)</span></label>
                             <div class="field col-12 md:col-12 p-0">
                                 <Badge :value="'File Already Exists'" :severity="'success'"></Badge>
                             </div>
                             <div class="field col-12 md:col-12 p-0">
-                                <Button type="button" label="Preview" @click="previewFileOptional(`http://192.168.4.250:6067/file/upload/${dataSinglePreview.asset_url}`)" />
+                                <Button type="button" label="Preview"
+                                    @click="previewFileOptional(`http://192.168.4.250:6067/file/upload/${dataSinglePreview.asset_url}`)" />
+                                <!-- <Button type="button" label="Preview" @click="previewFileOptional(`http://192.168.4.250/sipamv2/filepdf.php?type=preview&name=${dataSinglePreview.asset_url}`)" /> -->
                             </div>
                         </div>
-                        <div class="field col-12 mb-0" v-if="dataSinglePreview.status === '4' && dataSinglePreview.need_attach !== '1' && dataSinglePreview.link_external === ''">
+                        <div class="field col-12 mb-0"
+                            v-if="dataSinglePreview.status === '4' && dataSinglePreview.need_attach !== '1' && dataSinglePreview.link_external === ''">
                             <label for="upload">Upload File <span class="text-orange-600">(Optional)</span></label>
                             <!-- FOR UPLOAD FILE YANG SUDAH DI TANDATANGAN BASAH -->
                             <div class="field col-12 md:col-12 p-0">
-                                <FileUpload mode="basic" customUpload @select="onUploadFileOptional" accept="application/pdf" :maxFileSize="10000000" />
+                                <FileUpload mode="basic" customUpload @select="onUploadFileOptional"
+                                    accept="application/pdf" :maxFileSize="10000000" />
                             </div>
                             <!-- END FOR UPLOAD FILE YANG SUDAH DI TANDATANGAN BASAH -->
                         </div>
-                        <div class="field col-12 mb-0" v-if="dataSinglePreview.status === '2' && dataSinglePreview.need_attach === '1' && dataSinglePreview.asset_upload !== ''">
+                        <div class="field col-12 mb-0"
+                            v-if="dataSinglePreview.status === '2' && dataSinglePreview.need_attach === '1' && dataSinglePreview.asset_upload !== ''">
                             <label for="banding">Bandingkan</label>
                             <!-- FOR COMPARE FILE YANG SUDAH DI TANDATANGAN BASAH -->
                             <div class="field col-12 md:col-12 p-0">
-                                <Button @click="visible = true" v-clipboard:error="onError" class="p-button-warning justify-content-center mt-0" label="Bandingkan">
-                                <!-- <i class="pi pi-clone"></i> -->
-                            </Button>
+                                <Button @click="visible = true" v-clipboard:error="onError"
+                                    class="p-button-warning justify-content-center mt-0" label="Bandingkan">
+                                    <!-- <i class="pi pi-clone"></i> -->
+                                </Button>
                             </div>
                             <!-- END FOR COMPARE FILE YANG SUDAH DI TANDATANGAN BASAH -->
                         </div>
@@ -785,72 +1222,85 @@ const goBack = () => {
                     </div>
                     <div class="field col-12 md:col-9">
                         <!-- <div class="field col-12 mb-0"> -->
-                            <!-- <label for="class" class="mt-3">Content Surat</label> -->
-                            <!-- <br> -->
-                            <br>
-                            <!-- <div v-html="props.formData.content"></div> -->
-                            <div class="bg-gray-300">
+                        <!-- <label for="class" class="mt-3">Content Surat</label> -->
+                        <!-- <br> -->
+                        <br>
+                        <!-- <div v-html="props.formData.content"></div> -->
+                        <div class="bg-gray-300">
 
-                                <ScrollPanel style="width: 100%; height: 1300px" class="custombar1">
-                                    <div class="p-8">
-                                        <vue-pdf-embed
-                                        v-if="dataSinglePreview.status === '4'"
+                            <ScrollPanel style="width: 100%; height: 1300px" class="custombar1">
+                                <div class="p-8">
+                                    <vue-pdf-embed
+                                        v-if="dataSinglePreview.status === '4' || dataSinglePreview.status === '3'"
                                         ref="pdfRef"
                                         :source="`http://192.168.4.250:6067/file/download/${dataSinglePreview.asset_url}`"
-                                        :page="page"
-                                        @password-requested="handlePasswordRequest"
-                                        @rendered="handleDocumentRender"
-                                        />
-                                        <vue-pdf-embed
-                                        v-if="dataSinglePreview.status !== '4'"
-                                        ref="pdfRef"
-                                        :source="dataPdf"
-                                        :page="page"
-                                        @password-requested="handlePasswordRequest"
-                                        @rendered="handleDocumentRender"
-                                        />
-                                    </div>
-                                </ScrollPanel>
-                            </div>
+                                        :page="page" @password-requested="handlePasswordRequest"
+                                        @rendered="handleDocumentRender" />
+                                    <vue-pdf-embed
+                                        v-if="dataSinglePreview.status !== '4' || dataSinglePreview.status !== '3'"
+                                        ref="pdfRef" :source="dataPdf" :page="page"
+                                        @password-requested="handlePasswordRequest" @rendered="handleDocumentRender" />
+                                </div>
+                            </ScrollPanel>
+                        </div>
                         <!-- </div> -->
                     </div>
                 </div>
             </template>
             <template v-slot:footer>
                 <div class="grid grid-nogutter justify-content-end">
-                    <Button v-if="dataSignerUser.is_sign === '0' && dataSinglePreview.status === '3'" label="Signer" @click="handleSigner()" icon="pi pi-user-edit" iconPos="right" class="p-button-info mx-1" :style="statusSign ? 'visibility: hidden;' : ''"/>
-                    <Button v-if="setUserIDVerif()" label="Revisi" @click="handleRevisi()" icon="pi pi-times" iconPos="right" class="p-button-danger mx-1"/>
-                    <Button v-if="setUserIDVerif()" label="Verif" @click="handleVerif()" icon="pi pi-check" iconPos="right" class="p-button-success mx-1"/>
-                    <Button v-if="dataSinglePreview.status === '6' && dataSinglePreview.need_attach === '1' && dataLocalStorage.target === dataSinglePreview.sender?.user_id" label="Submit Upload" @click="handleUpload()" icon="pi pi-check" iconPos="right" class="p-button-success mx-1"/>
+                    <!-- Via Email PIN-->
+                    <Button
+                        v-if="dataSinglePreview.need_sign === '1' & dataSignerUser.is_sign === '0' && dataSinglePreview.status === '3'"
+                        label="Signer Via PIN" @click="handleSignerVIDAViaPIN()" icon="pi pi-user-edit" iconPos="right"
+                        class="p-button-warning mx-1" :style="statusSign ? 'visibility: hidden;' : ''" />
+
+                    <!-- TTD Basah -->
+                    <Button
+                        v-if="dataSinglePreview.need_sign === '0' & dataSignerUser.is_sign === '0' && dataSinglePreview.status === '3'"
+                        label="Signer" @click="handleSigner()" icon="pi pi-user-edit" iconPos="right"
+                        class="p-button-info mx-1" :style="statusSign ? 'visibility: hidden;' : ''" />
+
+                    <!-- Via Email VIDA-->
+                    <Button
+                        v-if="dataSinglePreview.need_sign === '1' & dataSignerUser.is_sign === '0' && dataSinglePreview.status === '3'"
+                        label="Signer Via Email" @click="handleSignerVIDAViaEmail()" icon="pi pi-user-edit"
+                        iconPos="right" class="p-button-info mx-1" :style="statusSign ? 'visibility: hidden;' : ''" />
+
+                    <Button v-if="setUserIDVerif()" label="Revisi" @click="handleRevisi()" icon="pi pi-times"
+                        iconPos="right" class="p-button-danger mx-1" />
+                    <Button v-if="setUserIDVerif()" label="Verif" @click="handleVerif()" icon="pi pi-check"
+                        iconPos="right" class="p-button-success mx-1" />
+                    <Button
+                        v-if="dataSinglePreview.status === '6' && dataSinglePreview.need_attach === '1' && dataLocalStorage.target === dataSinglePreview.sender?.user_id"
+                        label="Submit Upload" @click="handleUpload()" icon="pi pi-check" iconPos="right"
+                        class="p-button-success mx-1" />
                 </div>
             </template>
         </Card>
 
-        <Dialog v-model:visible="visibleModalSign" :style="{width: '450px'}" :closable="false" :modal="true" class="p-fluid" :showHeader="false">
+        <Dialog v-model:visible="visibleModalSign" :style="{ width: '450px' }" :closable="false" :modal="true"
+            class="p-fluid" :showHeader="false">
             <div class="text-center fa-5x text-yellow-500 mb-2 mt-3">
                 <i class="fas fa-exclamation-circle"></i>
             </div>
             <p class="text-center">
                 Silahkan klik Lanjutkan untuk cek status sign anda.
             </p>
-            <Button label="Lanjutkan" text @click="handleProcessSign"/>
+            <Button label="Lanjutkan" text @click="handleProcessSign" />
         </Dialog>
         <Dialog v-model:visible="visible" maximizable modal header="Bandingkan" :style="{ width: '50vw' }">
             <div class="card">
                 <div class="flex flex-column md:flex-row gap-5">
                     <div class="flex-auto">
-                        <Button @click="downloadPDFBase64(tempTemplateDataPdf)" iconPos="right" class="p-button-warning mx-1">
+                        <Button @click="downloadPDFBase64(tempTemplateDataPdf)" iconPos="right"
+                            class="p-button-warning mx-1">
                             <span class="mr-2">Download</span>
                             <i class="fas fa-cloud-download-alt"></i>
                         </Button>
                         <ScrollPanel style="width: 100%; height: auto" class="custombar1">
-                            <vue-pdf-embed
-                                ref="pdfRef"
-                                :source="tempTemplateDataPdf"
-                                :page="page"
-                                @password-requested="handlePasswordRequest"
-                                @rendered="handleDocumentRender"
-                            />
+                            <vue-pdf-embed ref="pdfRef" :source="tempTemplateDataPdf" :page="page"
+                                @password-requested="handlePasswordRequest" @rendered="handleDocumentRender" />
                         </ScrollPanel>
                     </div>
                     <div class="flex-auto">
@@ -859,13 +1309,8 @@ const goBack = () => {
                             <i class="fas fa-cloud-download-alt"></i>
                         </Button>
                         <ScrollPanel style="width: 100%; height: auto" class="custombar1">
-                            <vue-pdf-embed
-                                ref="pdfRef"
-                                :source="dataPdf"
-                                :page="page"
-                                @password-requested="handlePasswordRequest"
-                                @rendered="handleDocumentRender"
-                            />
+                            <vue-pdf-embed ref="pdfRef" :source="dataPdf" :page="page"
+                                @password-requested="handlePasswordRequest" @rendered="handleDocumentRender" />
                         </ScrollPanel>
                     </div>
                 </div>
@@ -874,29 +1319,21 @@ const goBack = () => {
 
         <Dialog v-model:visible="visibleFileOptional" maximizable modal header="Preview" :style="{ width: '50vw' }">
             <div class="card">
-                <vue-pdf-embed
-                    ref="pdfRef"
-                    :source="fileUploadedOptional"
-                    :page="page"
-                    @password-requested="handlePasswordRequest"
-                    @rendered="handleDocumentRender"
-                />
-                <Button @click="submitUploadFileOptional(fileUploadedOptionalFiles)" iconPos="right" class="p-button-warning mx-1">
+                <vue-pdf-embed ref="pdfRef" :source="fileUploadedOptional" :page="page"
+                    @password-requested="handlePasswordRequest" @rendered="handleDocumentRender" />
+                <Button @click="submitUploadFileOptional(fileUploadedOptionalFiles)" iconPos="right"
+                    class="p-button-warning mx-1">
                     <span class="mr-2">Submit</span>
                     <i class="fas fa-cloud-download-alt"></i>
-                </Button>   
+                </Button>
             </div>
         </Dialog>
 
-        <Dialog v-model:visible="visibleFileOptionalUpload" maximizable modal header="Preview" :style="{ width: '50vw' }">
+        <Dialog v-model:visible="visibleFileOptionalUpload" maximizable modal header="Preview"
+            :style="{ width: '50vw' }">
             <div class="card">
-                <vue-pdf-embed
-                    ref="pdfRef"
-                    :source="fileUploadedOptionalPreview"
-                    :page="page"
-                    @password-requested="handlePasswordRequest"
-                    @rendered="handleDocumentRender"
-                />
+                <vue-pdf-embed ref="pdfRef" :source="fileUploadedOptionalPreview" :page="page"
+                    @password-requested="handlePasswordRequest" @rendered="handleDocumentRender" />
             </div>
         </Dialog>
     </div>
@@ -963,12 +1400,19 @@ export default {
     border-radius: 4px;
     cursor: pointer;
 }
-.vue-pdf-embed > div {
+
+.vue-pdf-embed>div {
     display: flex;
     justify-content: center;
 }
-.vue-pdf-embed > div > canvas {
+
+.vue-pdf-embed>div>canvas {
     width: 100% !important;
     height: auto !important;
+}
+
+.blur-background {
+    filter: blur(5px);
+    transition: all 0.3s ease;
 }
 </style>

@@ -30,7 +30,7 @@ export default class CategoryService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -53,7 +53,7 @@ export default class CategoryService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -74,7 +74,7 @@ export default class CategoryService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -83,7 +83,7 @@ export default class CategoryService {
     //     const myHeaders = new Headers();
     //     myHeaders.append("Authorization", token);
     //     myHeaders.append("Content-Type", "application/json");
-    //     console.log(params);
+    //     // console.log(params);
     //     const requestOptions = {
     //         method: 'GET',
     //         mode: 'cors',
@@ -94,7 +94,7 @@ export default class CategoryService {
     //         const result = await response.json();
     //         return result;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -116,7 +116,7 @@ export default class CategoryService {
             })
             return response;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async updateListData(params, id) {
@@ -137,7 +137,7 @@ export default class CategoryService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 }

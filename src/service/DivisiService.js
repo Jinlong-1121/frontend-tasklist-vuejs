@@ -31,7 +31,7 @@ export default class DivisiService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // GET 
@@ -53,7 +53,7 @@ export default class DivisiService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -75,7 +75,7 @@ export default class DivisiService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -97,7 +97,7 @@ export default class DivisiService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 }

@@ -60,7 +60,7 @@ const itemClick = (event, item) => {
     }
 
     const foundItemKey = item.items ? (isActiveMenu.value ? props.parentItemKey : itemKey) : itemKey.value;
-    console.log(foundItemKey, item);
+    // console.log(foundItemKey, item);
     setActiveMenuItem(foundItemKey);
 };
 

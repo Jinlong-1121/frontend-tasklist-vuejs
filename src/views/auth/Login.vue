@@ -12,7 +12,23 @@ const email = ref('');
 const password = ref('');
 const dataAuth = ref({});
 
-const router = useRouter()
+const router = useRouter();
+
+const today = new Date();
+
+// Mendapatkan waktu dalam zona waktu Jakarta (Asia/Jakarta)
+const options = {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false // Format 24 jam
+};
+
+const formattedDate = today.toLocaleString('en-GB', options).replace(',', '').replace(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})/, '$3-$2-$1 $4:$5:$6');
 
 const logoUrl = computed(() => {
     return `${contextPath}layout/images/${layoutConfig.darkTheme.value ? 'logo-white' : 'logo-dark'}.svg`;
@@ -25,6 +41,7 @@ const loginAction = () => {
         email: email.value,
         password: password.value
     }
+
     if (!params.email || !params.password) {
         const swalWithButtonsCustom = swal.mixin({
             customClass: {
@@ -33,33 +50,63 @@ const loginAction = () => {
             },
             buttonsStyling: false
         })
+
         swalWithButtonsCustom.fire({
             icon: 'error',
             title: 'Input!',
-            text: 'Input Email atau Password tidak boleh kosong.',
+            text: 'Input Email atau Password tidak boleh kosong.'
         })
-    }else {
+    } else {
         authService.authLogin(params).then((data) => {
-        if (!data.error) {
-            localStorage.setItem("sipam", JSON.stringify(data.data));
-            router.push('/')
-        }else {
-            const swalWithButtonsCustom = swal.mixin({
-                customClass: {
-                    confirmButton: 'btnCustomSweetalert bg-yellow-500',
-                    cancelButton: 'btnCustomSweetalert bg-red-500'
-                },
-                buttonsStyling: false
-            })
-            swalWithButtonsCustom.fire({
-                icon: 'error',
-                title: 'Password!',
-                text: data.error,
-            })
-        }
-    });
+            if (!data.error) {
+                localStorage.setItem("sipam", JSON.stringify(data.data));
+                localStorage.setItem('lastLoginTime', new Date().toISOString());
+
+                const redirectTo = localStorage.getItem('redirectTo');
+                localStorage.removeItem('redirectTo');
+
+                router.push(redirectTo || '/');
+            } else if (data.code == 403) {
+                const swalWithButtonsCustom = swal.mixin({
+                    customClass: {
+                        confirmButton: 'btnCustomSweetalert bg-yellow-500',
+                        cancelButton: 'btnCustomSweetalert bg-red-500'
+                    },
+                    buttonsStyling: false
+                })
+
+                swalWithButtonsCustom.fire({
+                    icon: 'error',
+                    title: 'Password Expired!',
+                    text: data.message,
+                    showCancelButton: true,
+                    confirmButtonText: 'Reset Password',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "http://192.168.4.250/sipam/#/auth/forgot-password";
+                    }
+                });
+
+            } else {
+                const swalWithButtonsCustom = swal.mixin({
+                    customClass: {
+                        confirmButton: 'btnCustomSweetalert bg-yellow-500',
+                        cancelButton: 'btnCustomSweetalert bg-red-500'
+                    },
+                    buttonsStyling: false
+                })
+
+                swalWithButtonsCustom.fire({
+                    icon: 'error',
+                    title: 'Login Gagal!',
+                    text: data.error
+                })
+            }
+        });
     }
 }
+
 </script>
 
 <template>
@@ -91,6 +138,10 @@ const loginAction = () => {
                             <a class="font-medium no-underline ml-2 text-right cursor-pointer" style="color: var(--primary-color)">Forgot password?</a>
                         </div> -->
                         <Button label="Sign In" class="w-full p-3 text-xl mt-5" @click.prevent="loginAction()"></Button>
+
+                        <div class="mt-4 text-center">
+                            <a href="/sipam/#/auth/forgot-password" class="text-gray-500 hover:text-gray-700 mt-6 texr-center">Lupa Password</a>
+                        </div>
                     </div>
                 </div>
             </div>

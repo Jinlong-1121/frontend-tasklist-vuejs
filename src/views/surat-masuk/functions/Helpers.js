@@ -113,10 +113,9 @@ export default class HelpersFunction {
         for (let i = 0; i < data.length; i++) {
             element = data[i];
             html += `
-                <td>
-                    <p class="mb-0" style="${element.position !== 'External' ? 'text-decoration: underline;' : ''} font-weight: bold;">${element.user_name}</p>
-                    ${element.position !== 'External' ? element.position : ''}
-                </td>
+                <p class="mb-0" style="${element.position !== 'External' ? 'text-decoration: underline;' : ''} font-weight: bold; margin-top: 5px;">${element.user_name}</p>
+                ${element.position !== 'External' ? element.position : ''}
+            </td>
             `;
         }
         html += `</tr></table>`;

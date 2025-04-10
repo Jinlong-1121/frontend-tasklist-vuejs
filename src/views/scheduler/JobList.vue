@@ -51,11 +51,11 @@ onMounted(() => {
     getListData(page);
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -83,7 +83,7 @@ const editJob = (prod) => {
 const saveJob = () => {
     submitted.value = true;
     if (job.value.name.trim()) {
-        console.log(job.value.id, typeof(job.value.id));
+        // console.log(job.value.id, typeof(job.value.id));
         if (typeof(job.value.id) === "undefined") {
             job.value.status = '1';
             saveListData(job.value)
@@ -114,14 +114,14 @@ const getListData = (page) => {
 
 const saveListData = (params) => {
     jobService.saveListData(params).then((data) => {
-        console.log(data);
+        // console.log(data);
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'New data scheduler saved', life: 3000 });
     });
 };
 
 const updateListData = (params, id) => {
-    console.log(params, id);
+    // console.log(params, id);
     jobService.updateListData(params, id).then((data) => {
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Data scheduler updated', life: 3000 });
@@ -130,7 +130,7 @@ const updateListData = (params, id) => {
 
 const runScheduler = () => {
     jobService.runScheduler().then((data) => {
-        console.log(data);
+        // console.log(data);
         // getListData(1);
     });
 };
@@ -138,7 +138,7 @@ const runScheduler = () => {
 const accessData = () => {
     var page = (first.value/10)+1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
 

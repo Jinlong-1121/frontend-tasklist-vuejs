@@ -105,9 +105,9 @@ import TreeTable from 'primevue/treetable';
 import TriStateCheckbox from 'primevue/tristatecheckbox';
 import VirtualScroller from 'primevue/virtualscroller';
 import '../node_modules/@syncfusion/ej2-base/styles/material.css';
-import "../node_modules/@syncfusion/ej2-base/styles/material.css";
 import "../node_modules/@syncfusion/ej2-vue-lists/styles/material.css";
-
+import "../node_modules/@syncfusion/ej2-treegrid/styles/material.css";
+import "../node_modules/@syncfusion/ej2-vue-lists/styles/material.css";
 import { registerLicense } from '@syncfusion/ej2-base';
 registerLicense('ORg4AjUWIQA/Gnt2XVhhQlJHfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTH5Sd0BjXX9Wc3dVTmdZ');
 const vuetify = createVuetify();

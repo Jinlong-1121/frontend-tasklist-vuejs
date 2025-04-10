@@ -22,6 +22,8 @@ const dataPdf = ref();
 
 const page = ref(null);
 
+const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
+
 const props = defineProps({ formData: Object })
 const emit = defineEmits(['next-page', 'prev-page']);
 
@@ -47,6 +49,27 @@ const getListSingleData = () => {
 
         dataPdf.value = `http://192.168.4.250:6067/file/download/${data.asset_url}`
         // setUserIDSigner(data.signer)
+
+        // Check if any of the conditions is true
+        // Check if the user_id from signer matches dataLocalStorage.target
+        const isSignerMatch = dataSinglePreview.value.signer.some(signer => signer.user_id === dataLocalStorage.target);
+        const isReceiverMatch = dataSinglePreview.value.receiver.some(receiver => receiver.user_id === dataLocalStorage.target);
+
+        // Check other conditions
+        const isVerificatorMatch = dataLocalStorage.target === dataSinglePreview.value.verificator.user_id;
+        const isSenderMatch = dataLocalStorage.target === dataSinglePreview.value.sender.user_id;
+        const isDivisiMatch = dataLocalStorage.divisi === 1;
+        const isDireksiMatch = dataLocalStorage.divisi === 2;
+        const isKomiteInvestasiMatch = dataLocalStorage.divisi === 3;
+
+        // Determine if showTemplate should be called
+        const shouldShowTemplate =
+            (!isSignerMatch && !isReceiverMatch && !isVerificatorMatch && !isSenderMatch && !isDivisiMatch && !isDireksiMatch && !isKomiteInvestasiMatch);
+
+        // Show template if all conditions are false and isSignerMatch is false
+        if (shouldShowTemplate) {
+            showTemplate();
+        }
     });
 };
 // END GET SURAT EXTERNAL
@@ -54,11 +77,11 @@ const getListSingleData = () => {
 // USER ID
 const setUserIDVerif = () => {
     const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
-    if(dataSinglePreview.value.verificator?.user_id === dataLocalStorage.target && dataSinglePreview.value.status === "2") {
+    if (dataSinglePreview.value.verificator?.user_id === dataLocalStorage.target && dataSinglePreview.value.status === "2") {
         return true
-    }else {
+    } else {
         return false
-    } 
+    }
 }
 const setUserIDSigner = (dataParam) => {
     const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
@@ -100,7 +123,7 @@ const handleVerif = () => {
                         'success'
                     )
                     router.push('/surat-masuk/list');
-                }else {
+                } else {
                     toast.add({ severity: 'error', summary: 'Failed!', detail: res.data, life: 2000 });
                     dataSinglePreview.value.status = "2"
                     dataSignerUser.value.is_sign = "0"
@@ -111,7 +134,7 @@ const handleVerif = () => {
         allowOutsideClick: () => !swal.isLoading()
     }).then((result) => {
         if (result.isConfirmed) {
-            
+
         }
     })
 }
@@ -148,6 +171,37 @@ const handleRevisi = () => {
 }
 // END HANDLE REVISI
 
+const showTemplate = () => {
+    const swalWithBootstrapButtons = swal.mixin({
+        customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+        },
+        buttonsStyling: false
+    });
+
+    swalWithBootstrapButtons.fire({
+        title: 'Information Akses!',
+        html: `<p>Anda tidak bisa melihat surat ini</p>`,
+        icon: 'warning',
+        cancelButtonText: 'Cancel',
+        showLoaderOnConfirm: true,
+        allowOutsideClick: false, // Prevent closing by clicking outside
+        allowEscapeKey: false,    // Prevent closing with Escape key
+        willOpen: () => {
+            // Add blur class to background element, not the body
+            document.getElementById('app').classList.add('blur-background');
+        },
+        willClose: () => {
+            // Remove blur class when modal closes
+            document.getElementById('app').classList.remove('blur-background');
+        },
+        preConfirm: () => {
+            router.push('/surat-internal/list');
+        }
+    });
+};
+
 const handleDownload = (url, urlName) => {
     fetch(url, {
         method: 'GET'
@@ -170,11 +224,11 @@ const printDocument = (url) => {
         document.body.appendChild(iframe);
 
         iframe.style.display = 'none';
-        iframe.onload = function() {
-        setTimeout(function() {
-            iframe.focus();
-            iframe.contentWindow.print();
-        }, 1);
+        iframe.onload = function () {
+            setTimeout(function () {
+                iframe.focus();
+                iframe.contentWindow.print();
+            }, 1);
         };
     }
 
@@ -204,11 +258,20 @@ const goBack = () => {
                         </div>
                     </div>
                     <div class="field col-12 md:col-6 text-right">
-                        <Button v-if="dataSinglePreview.status === '4'" @click="handleDownload(`http://192.168.4.250:6067/file/document/${dataSinglePreview.asset_url}`, dataSinglePreview.asset_url)" iconPos="right" class="p-button-warning mx-1">
-                        <!-- <Button v-if="dataSinglePreview.status === '4'" @click="handleDownload(`${dataSinglePreview.link_url}`, dataSinglePreview.asset_url)" iconPos="right" class="p-button-warning mx-1"> -->
+                        <Button
+                            v-if="dataSinglePreview.status === '4' && dataSinglePreview.document_no.includes('MAS')"
+                            @click="handleDownload(`http://192.168.4.250:6067/file/document/${dataSinglePreview.asset_url}`, dataSinglePreview.asset_url)"
+                            iconPos="right" class="p-button-warning mx-1">
                             <span class="mr-2">Download</span>
                             <i class="fas fa-cloud-download-alt"></i>
                         </Button>
+                        <Button v-if="dataSinglePreview.status === '4' && !dataSinglePreview.document_no.includes('MAS')"
+                            @click="handleDownload(`http://192.168.4.250:6067/file/download/${dataSinglePreview.asset_url}`, dataSinglePreview.asset_url)"
+                            iconPos="right" class="p-button-warning mx-1">
+                            <span class="mr-2">Download</span>
+                            <i class="fas fa-cloud-download-alt"></i>
+                        </Button>
+                      
                     </div>
                 </div>
             </template>
@@ -218,68 +281,59 @@ const goBack = () => {
                         <div class="field col-12 mb-0">
                             <label for="Perihal">Nomor</label>
                             <br>
-                            <b>{{dataSinglePreview.document_no}}</b>
+                            <b>{{ dataSinglePreview.document_no }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Perihal">Kategori</label>
                             <br>
-                            <b>{{dataCategoryPreview.name}}</b>
+                            <b>{{ dataCategoryPreview.name }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Perihal">Perihal</label>
                             <br>
-                            <b>{{dataSinglePreview.perihal}}</b>
+                            <b>{{ dataSinglePreview.perihal }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Tujuan">Tujuan</label><br>
                             <template v-for="item, idxTujuan in dataSinglePreview.receiver" :key="idxTujuan">
-                                <Chip :label="item.user_name" class="mb-2 mr-2"/>
+                                <Chip :label="item.user_name" class="mb-2 mr-2" />
                             </template>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Tujuan">Verifikator</label>
                             <br>
-                            <b>{{dataSinglePreview.verificator?.user_name}}</b>
+                            <b>{{ dataSinglePreview.verificator?.user_name }}</b>
                         </div>
                     </div>
                     <div class="field col-12 md:col-9">
-                            <br>
-                            <div class="bg-gray-300">
-                                <ScrollPanel style="width: 100%; height: 1300px" class="custombar1">
-                                    <div class="p-8">
-                                        <vue-pdf-embed
-                                        v-if="dataSinglePreview.parent === 0"
-                                        ref="pdfRef"
-                                        :source="`data:application/pdf;base64,`+dataSinglePreview.content"
-                                        :page="page"
-                                        @password-requested="handlePasswordRequest"
-                                        @rendered="handleDocumentRender"
-                                        />
-                                        <vue-pdf-embed
-                                        v-else
-                                        ref="pdfRef"
-                                        :source="dataPdf"
-                                        :page="page"
-                                        @password-requested="handlePasswordRequest"
-                                        @rendered="handleDocumentRender"
-                                        />
-                                        <!-- <vue-pdf-embed
+                        <br>
+                        <div class="bg-gray-300">
+                            <ScrollPanel style="width: 100%; height: 1300px" class="custombar1">
+                                <div class="p-8">
+                                    <vue-pdf-embed v-if="dataSinglePreview.parent === 0" ref="pdfRef"
+                                        :source="`data:application/pdf;base64,` + dataSinglePreview.content" :page="page"
+                                        @password-requested="handlePasswordRequest" @rendered="handleDocumentRender" />
+                                    <vue-pdf-embed v-else ref="pdfRef" :source="dataPdf" :page="page"
+                                        @password-requested="handlePasswordRequest" @rendered="handleDocumentRender" />
+                                    <!-- <vue-pdf-embed
                                         ref="pdfRef"
                                         :source="`data:application/pdf;base64,`+dataSinglePreview.content"
                                         :page="page"
                                         @password-requested="handlePasswordRequest"
                                         @rendered="handleDocumentRender"
                                         /> -->
-                                    </div>
-                                </ScrollPanel>
-                            </div>
+                                </div>
+                            </ScrollPanel>
+                        </div>
                     </div>
                 </div>
             </template>
             <template v-slot:footer>
                 <div class="grid grid-nogutter justify-content-end">
-                    <Button v-if="setUserIDVerif()" label="Revisi" @click="handleRevisi()" icon="pi pi-times" iconPos="right" class="p-button-danger mx-1"/>
-                    <Button v-if="setUserIDVerif()" label="Verif" @click="handleVerif()" icon="pi pi-check" iconPos="right" class="p-button-success mx-1"/>
+                    <!-- <Button v-if="setUserIDVerif()" label="Revisi" @click="handleRevisi()" icon="pi pi-times"
+                        iconPos="right" class="p-button-danger mx-1" /> -->
+                    <Button v-if="setUserIDVerif()" label="Verif" @click="handleVerif()" icon="pi pi-check"
+                        iconPos="right" class="p-button-success mx-1" />
                 </div>
             </template>
         </Card>
@@ -346,5 +400,10 @@ export default {
     margin-right: 20px;
     border-radius: 4px;
     cursor: pointer;
+}
+
+.blur-background {
+    filter: blur(5px);
+    transition: all 0.3s ease;
 }
 </style>

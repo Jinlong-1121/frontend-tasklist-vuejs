@@ -207,7 +207,7 @@ const onTypeSelect = (event) => {
 }
 const onRowSelect = (event) => {
     accountDetail.value = event.data;
-    console.log("ada"+ selectedProduct.value.description);
+    // console.log("ada"+ selectedProduct.value.description);
     toast.add({ severity: 'info', summary: 'Product Selected', detail: 'Name: ' + event.data.description, life: 3000 });
 };
 const onRowUnselect = (event) => {
@@ -322,8 +322,8 @@ const addChild = (data) => {
     inputData.value.account_cost = data.account_cost
     inputData.value.cost_center = account.value.cost_center
     inputData.value.status = account.value.status
-    console.log(data.account_no, "data");
-    console.log(inputData.value, "data input");
+    // console.log(data.account_no, "data");
+    // console.log(inputData.value, "data input");
 };
 
 const addAccountHeader = () => {
@@ -335,7 +335,7 @@ const addAccountHeader = () => {
     inputData.value.account_cost = account.value.account_cost
     inputData.value.cost_center = account.value.cost_center
     inputData.value.status = account.value.status
-    console.log(inputData.value, "data input");
+    // console.log(inputData.value, "data input");
     // AccountService.createAccount(inputData.value).then(() => {
     //     hideDialog()
     //     AccountService.getList().then((data) => (products.value = data));
@@ -351,7 +351,7 @@ const addAccount = () => {
     inputData.value.account_cost = account.value.account_cost
     inputData.value.cost_center = account.value.cost_center
     inputData.value.status = account.value.status
-    console.log(inputData.value, "data input");
+    // console.log(inputData.value, "data input");
     AccountService.createAccount(inputData.value).then(() => {
         hideDialog()
         AccountService.getList().then((data) => (products.value = data));

@@ -32,9 +32,9 @@ export function useLayout() {
     };
 
     const setActiveMenuItem = (item) => {
-        console.log('item', item);
+        // console.log('item', item);
         layoutConfig.activeMenuItem = item.value || item;
-        console.log(layoutConfig);
+        // console.log(layoutConfig);
     };
 
     const onMenuToggle = () => {

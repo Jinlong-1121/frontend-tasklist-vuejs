@@ -26,10 +26,10 @@ export default class PrivilegeService {
         try {
             const response = await fetch(contextPath + `api/v1/privileges?limit=10&page=${params.page}&divisi=${params.divisi}`, requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -47,10 +47,10 @@ export default class PrivilegeService {
         try {
             const response = await fetch(contextPath + 'api/v1/privilege', requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -68,10 +68,10 @@ export default class PrivilegeService {
     //     try {
     //         const response = await fetch(contextPath + 'api/v1/privilege/'+ id, requestOptions);
     //         const result = await response.json();
-    //         console.log(result);
+    //         // console.log(result);
     //         return result.data;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -88,10 +88,10 @@ export default class PrivilegeService {
     //     try {
     //         const response = await fetch(contextPath + 'api/v1/privilege', requestOptions);
     //         const result = await response.json();
-    //         console.log(result);
+    //         // console.log(result);
     //         return result.data;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -100,7 +100,7 @@ export default class PrivilegeService {
     //     const myHeaders = new Headers();
     //     myHeaders.append("Authorization", token);
     //     myHeaders.append("Content-Type", "application/json");
-    //     console.log(params);
+    //     // console.log(params);
     //     const requestOptions = {
     //         method: 'GET',
     //         mode: 'cors',
@@ -111,7 +111,7 @@ export default class PrivilegeService {
     //         const result = await response.json();
     //         return result;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 

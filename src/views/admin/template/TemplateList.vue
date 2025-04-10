@@ -71,7 +71,7 @@ const hideDialog = () => {
 };
 
 const editTemplate = (prod) => {
-    console.log(prod.id);
+    // console.log(prod.id);
     router.push('/admin/template/form/'+prod.id);
     // template.value = {...prod};
     // selectedStatus.value = template.value.status;
@@ -81,7 +81,7 @@ const editTemplate = (prod) => {
 const saveTemplate = () => {
     submitted.value = true;
     if (template.value.name.trim()) {
-        console.log(template.value.id, typeof(template.value.id));
+        // console.log(template.value.id, typeof(template.value.id));
         if (typeof(template.value.id) === "undefined") {
             template.value.status = '1';
             saveListData(template.value);
@@ -115,14 +115,14 @@ const getListData = (page) => {
 
 const saveListData = (params) => {
     templateService.saveListData(params).then((data) => {
-        console.log(data);
+        // console.log(data);
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'New data scheduler saved', life: 3000 });
     });
 };
 
 const updateListData = (params, id) => {
-    console.log(params, id);
+    // console.log(params, id);
     templateService.updateListData(params, id).then((data) => {
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Data scheduler updated', life: 3000 });
@@ -131,7 +131,7 @@ const updateListData = (params, id) => {
 
 const runScheduler = () => {
     templateService.runScheduler().then((data) => {
-        console.log(data);
+        // console.log(data);
         // getListData(1);
     });
 };
@@ -139,11 +139,10 @@ const runScheduler = () => {
 const accessData = () => {
     var page = (first.value/10)+1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
-const deleteTemplate = (editTemplate) => {
-    template.value = editTemplate;
+const deleteTemplate = (data) => {
     const swalWithBootstrapButtons = swal.mixin({
         customClass: {
             confirmButton: 'btnCustomSweetalert bg-yellow-500',
@@ -154,30 +153,84 @@ const deleteTemplate = (editTemplate) => {
 
     swalWithBootstrapButtons.fire({
         title: 'Delete Template!',
-        text: `Anda yakin ingin delete template ${template.value.name}?`,
+        text: `Anda yakin ingin delete template ${data.name}?`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Delete',
+        confirmButtonText: 'Submit',
         cancelButtonText: 'Cancel',
+        showLoaderOnConfirm: true, // This enables the loader on the confirm button
+        preConfirm: () => {
+            const param = data.id;
+
+            // Return the promise to SweetAlert2 so it knows when to stop the loader
+            return templateService.deleteListData(param)
+                .then((res) => {
+                    getListData();
+                    swal.fire({
+                        icon: 'success',
+                        title: 'Surat!',
+                        text: `Template ${data.title} berhasil dihapus.`,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                })
+                .catch((error) => {
+                    // Handle errors here, e.g., show an error message
+                    swalWithBootstrapButtons.fire(
+                        'Error!',
+                        'Terjadi kesalahan saat menghapus meeting room.',
+                        'error'
+                    );
+                    console.error(error);
+                });
+        },
+        allowOutsideClick: () => !swal.isLoading()
     }).then((result) => {
         if (result.isConfirmed) {
-            templateService.deleteListData(template.value.id).then((data) => {
-                getListData(1);
-                // toast.add({ severity: 'success', summary: 'Successful', detail: 'Template Deleted', life: 3000 });
-                // deletetemplateDialog.value = false;
-                swal.fire({
-                    icon: 'success',
-                    title: 'Template!',
-                    text: `Template ${template.value.name} berhasil dihapus.`,
-                    showConfirmButton: false,
-                    timer: 1500
-                })
-                template.value = {};
-            });
+            // You can perform additional actions here if needed
         }
-    })
-    // console.log(id);
+    });
 };
+
+// const deleteTemplate = (editTemplate) => {
+//     template.value = editTemplate;
+//     const swalWithBootstrapButtons = swal.mixin({
+//         customClass: {
+//             confirmButton: 'btnCustomSweetalert bg-yellow-500',
+//             cancelButton: 'btnCustomSweetalert bg-red-500'
+//         },
+//         buttonsStyling: false
+//     })
+
+//     swalWithBootstrapButtons.fire({
+//         title: 'Delete Template!',
+//         text: `Anda yakin ingin delete template ${template.value.name}?`,
+//         icon: 'warning',
+//         showCancelButton: true,
+//         confirmButtonText: 'Delete',
+//         cancelButtonText: 'Cancel',
+//     }).then((result) => {
+//         const param = {
+//                 id: data.id
+//             }
+//         if (result.isConfirmed) {
+//             templateService.deleteListData(template.value.id).then((data) => {
+//                 getListData(1);
+//                 // toast.add({ severity: 'success', summary: 'Successful', detail: 'Template Deleted', life: 3000 });
+//                 // deletetemplateDialog.value = false;
+//                 swal.fire({
+//                     icon: 'success',
+//                     title: 'Template!',
+//                     text: `Template ${template.value.name} berhasil dihapus.`,
+//                     showConfirmButton: false,
+//                     timer: 1500
+//                 })
+//                 template.value = {};
+//             });
+//         }
+//     })
+//     // // console.log(id);
+// };
 
 // const findIndexById = (id) => {
 //     let index = -1;
@@ -247,14 +300,14 @@ const initFilters = () => {
 
 const getListDivisi = () => {
     divisiService.getListAll().then((data) => {
-        console.log(data);
+        // console.log(data);
         divisiList.value = data;
     });
 };
 
 const setDivisiFilter = (data) => {
     var page = 1;
-    console.log(selectedDivisiFilter.value, "MASUK SET FILTER");
+    // console.log(selectedDivisiFilter.value, "MASUK SET FILTER");
     getListData(page, selectedDivisiFilter.value)
 }
 
@@ -304,7 +357,14 @@ const columns = [
                         </OverlayPanel> -->
                     </template>
                 </Toolbar>
+
                 <DataTable ref="dt" :value="Templates" responsiveLayout="scroll">
+                    <template #empty>
+                        <div class="text-center p-2">
+                            <p class="text-lg font-semibold">No Data Available</p>
+                        </div>
+                    </template>
+                    
                     <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header" headerStyle="width:20%; min-width:10rem;"></Column>
                     <Column field="status" header="Status" :sortable="false" headerStyle="width:14%; min-width:10rem;">
                         <template #body="slotProps">

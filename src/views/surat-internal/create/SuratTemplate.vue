@@ -1,5 +1,5 @@
 <script setup>
-import { inject, ref, onMounted, onUpdated } from "vue";
+import { inject, ref, onMounted, onUpdated, reactive, computed } from "vue";
 import { useRoute } from "vue-router";
 // import SuratService from '@/service/SuratService';
 import CategoryService from '@/service/CategoryService';
@@ -18,12 +18,13 @@ const submitted = ref(false);
 
 const selectedCategory = ref({});
 const validateSelectedCategory = ref();
-const categoryList = ref([]);     
+const categoryList = ref([]);
 const selectedTemplate = ref({});
 const sender = ref({});
 const templateList = ref(null);
 const need_attach = ref('0');
 const layout = ref('grid');
+const MenuTandatangan = ref(false)
 const switchTandatanganBasah = ref(false)
 const totalCuti = ref(0)
 
@@ -33,61 +34,96 @@ const templateService = new TemplateService();
 const absenService = new AbsenService();
 
 onMounted(() => {
-    getCategory();
-    sender.value = setSender();
-    if (route.params.action==="update") {
-      selectedCategory.value = props.formData.category;
-      getTemplate(1);
-    }
+  getCategory();
+  sender.value = setSender();
+  if (route.params.action === "update") {
+    selectedCategory.value = props.formData.category;
+    getTemplate(1);
+  }
 });
 
 onUpdated(() => {
-    getCategory();
-    sender.value = setSender();
-    if (route.params.action==="update") {
-      selectedCategory.value = props.formData.category;
-      getTemplate(1);
-    }
+  getCategory();
+  sender.value = setSender();
+  if (route.params.action === "update") {
+    selectedCategory.value = props.formData.category;
+    getTemplate(1);
+  }
 });
+
+const inputForm = reactive({
+  need_sign: "1"
+});
+
+const isRadioDisabled = reactive(false);
 
 // FUNCTION HANDLE SET TEMPLATE & PICK TEMPLATE
 const setTemplate = (event) => {
-    need_attach.value = '0'
-    switchTandatanganBasah.value = false
-    selectedTemplate.value = {}
-    selectedCategory.value = event.value
-    validateSelectedCategory.value = event.value
-    getTemplate(event.value.id);
+  need_attach.value = '0'
+  MenuTandatangan.value = false
+  switchTandatanganBasah.value = false
+  selectedTemplate.value = {}
+  selectedCategory.value = event.value
+  validateSelectedCategory.value = event.value
+  getTemplate(event.value.id);
 };
 const pickTemplate = (data) => {
-    let dataUser = JSON.parse(localStorage.getItem('sipam')).pin
-    need_attach.value = '0'
-    const dataTemplate = templateList.value.filter(item => item.id === data.id);
-    selectedTemplate.value = dataTemplate[0];
-    if (data.category_name === 'General' && data.name === 'Template Tanda Tangan Basah') {
-      switchTandatanganBasah.value = true
-    }else {
-      switchTandatanganBasah.value = false
-    }
+  let dataUser = JSON.parse(localStorage.getItem('sipam')).pin
+  need_attach.value = '0'
+  const dataTemplate = templateList.value.filter(item => item.id === data.id);
+  selectedTemplate.value = dataTemplate[0];
+  if (data.category_name === 'Izin' && data.name === "Template Izin Cuti") {
+    switchTandatanganBasah.value = false
+    MenuTandatangan.value = false
+  } else  if (data.category_name === 'Izin' && data.name === "Tambahan Cuti") {
+    switchTandatanganBasah.value = false
+    MenuTandatangan.value = false
+  } else  if (data.category_name === 'Izin' && data.name === "Permohonan Cuti Panjang") {
+    switchTandatanganBasah.value = false
+    MenuTandatangan.value = false
+  } else  if (data.category_name === 'Izin' && data.name === "Permohonan Cuti") {
+    switchTandatanganBasah.value = false
+    MenuTandatangan.value = false
+  } else if (data.category_name === 'Izin' && data.name === "Izin Sakit") {
+    switchTandatanganBasah.value = false
+    MenuTandatangan.value = false
+  } else if (selectedTemplate.value.name === 'Template Tanda Tangan Basah') {
+    switchTandatanganBasah.value = true
+    MenuTandatangan.value = false
+  } else if (inputForm.need_sign === '0' || inputForm.need_sign === '1') {
+    switchTandatanganBasah.value = false
+    MenuTandatangan.value = true
+  } else {
+    switchTandatanganBasah.value = false
+    MenuTandatangan.value = false
+  }
 
-    // console.log(data, "TEMPLATE");
-    if (data.category_name === 'Izin' && data.name === "Template Izin Cuti") {
-      absenService.getSisaTotalCuti(dataUser).then((res) => {
-        totalCuti.value = res.data
-      });
-    }else {
-      console.log("KELUAR");
-    }
+  // // console.log(data, "TEMPLATE");
+  if (data.category_name === 'Izin' && data.name === "Template Izin Cuti") {
+    absenService.getSisaTotalCuti(dataUser).then((res) => {
+      totalCuti.value = res.data
+    });
+  } else {
+    // console.log("KELUAR");
+  }
+
+  if (data.category_name === 'Izin' && data.name === "Permohonan Cuti Panjang") {
+    absenService.getSisaTotalCutiNew(dataUser).then((res) => {
+      totalCuti.value = res.data
+    });
+  } else {
+    // console.log("KELUAR");
+  }
 };
 // END FUNCTION HANDLE SET TEMPLATE & PICK TEMPLATE
 
 const setSender = () => {
-    const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
-    const dataSender = {}
-    dataSender.user_id = dataLocalStorage.target;
-    dataSender.user_name = dataLocalStorage.user_name;
-    dataSender.user_type = "1";
-    return dataSender;
+  const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
+  const dataSender = {}
+  dataSender.user_id = dataLocalStorage.target;
+  dataSender.user_name = dataLocalStorage.user_name;
+  dataSender.user_type = "1";
+  return dataSender;
 };
 
 // get category from api
@@ -113,7 +149,7 @@ const getTemplate = (id) => {
       data.unshift(dataTemp[0]);
     }
     templateList.value = data;
-    if (route.params.action==="update") {
+    if (route.params.action === "update") {
       pickTemplate(props.formData.template.id);
     }
   });
@@ -121,13 +157,13 @@ const getTemplate = (id) => {
 
 // VALIDATE
 const checkValidate = () => {
-    if (
-        !validateSelectedCategory.value
-    ) {
-        return false
-    }else {
-        return true
-    }
+  if (
+    !validateSelectedCategory.value
+  ) {
+    return false
+  } else {
+    return true
+  }
 }
 // END VALIDATE
 
@@ -146,16 +182,17 @@ const nextPage = () => {
               document_type: "2",
               need_attach: need_attach.value,
               perihal: '',
+              need_sign: "1",
               is_cuti: '1',
               total_cuti: totalCuti.value
             },
             pageIndex: 0,
           });
-        }else {
+        } else {
           const swalWithButtonsCustom = swal.mixin({
             customClass: {
-                confirmButton: 'btnCustomSweetalert bg-yellow-500',
-                cancelButton: 'btnCustomSweetalert bg-red-500'
+              confirmButton: 'btnCustomSweetalert bg-yellow-500',
+              cancelButton: 'btnCustomSweetalert bg-red-500'
             },
             buttonsStyling: false
           })
@@ -166,59 +203,32 @@ const nextPage = () => {
           })
         }
       }
-    }else {
+    } else {
       toast.add({ severity: 'error', summary: 'Cuti', detail: 'Sisa cuti habis', life: 3000 });
     }
-  }else {
+  } else if (selectedTemplate.value.name === 'Izin Sakit') {
     const check = checkValidate()
     submitted.value = true
     if (check !== false) {
       if (Object.keys(selectedTemplate.value).length !== 0) {
-        if (selectedCategory.value.alias === 'GEN' && selectedTemplate.value.name === 'Template Tanda Tangan Basah') {
-          if (switchTandatanganBasah.value && need_attach.value === '1') {
-            emit("next-page", {
-              formData: {
-                category: selectedCategory.value,
-                template: selectedTemplate.value,
-                sender: sender.value,
-                document_type: "2",
-                need_attach: need_attach.value,
-                perihal: ''
-              },
-              pageIndex: 0,
-            });
-          }else {
-            const swalWithButtonsCustom = swal.mixin({
-              customClass: {
-                  confirmButton: 'btnCustomSweetalert bg-yellow-500',
-                  cancelButton: 'btnCustomSweetalert bg-red-500'
-              },
-              buttonsStyling: false
-            })
-            swalWithButtonsCustom.fire({
-              icon: 'error',
-              title: 'Switch Tanda Tangan Basah!',
-              text: 'Silahkan aktifkan tanda tangan basah dahulu.',
-            })
-          }
-        }else {
-          emit("next-page", {
-            formData: {
-              category: selectedCategory.value,
-              template: selectedTemplate.value,
-              sender: sender.value,
-              document_type: "2",
-              need_attach: need_attach.value,
-              perihal: ''
-            },
-            pageIndex: 0,
-          });
-        }
-      }else {
+        emit("next-page", {
+          formData: {
+            category: selectedCategory.value,
+            template: selectedTemplate.value,
+            sender: sender.value,
+            document_type: "2",
+            need_attach: need_attach.value,
+            perihal: '',
+            need_sign: "1",
+            is_cuti: '1',
+          },
+          pageIndex: 0,
+        });
+      } else {
         const swalWithButtonsCustom = swal.mixin({
           customClass: {
-              confirmButton: 'btnCustomSweetalert bg-yellow-500',
-              cancelButton: 'btnCustomSweetalert bg-red-500'
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
           },
           buttonsStyling: false
         })
@@ -228,6 +238,260 @@ const nextPage = () => {
           text: 'Silahkan pilih template terlebih dahulu.',
         })
       }
+    }
+  } else if (selectedTemplate.value.name === 'Tambahan Cuti') {
+    const check = checkValidate()
+    submitted.value = true
+    if (check !== false) {
+      if (Object.keys(selectedTemplate.value).length !== 0) {
+        emit("next-page", {
+          formData: {
+            category: selectedCategory.value,
+            template: selectedTemplate.value,
+            sender: sender.value,
+            document_type: "2",
+            need_attach: need_attach.value,
+            perihal: '',
+            need_sign: "1",
+            is_cuti: '1',
+          },
+          pageIndex: 0,
+        });
+      } else {
+        const swalWithButtonsCustom = swal.mixin({
+          customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+          },
+          buttonsStyling: false
+        })
+        swalWithButtonsCustom.fire({
+          icon: 'error',
+          title: 'Template Kosong!',
+          text: 'Silahkan pilih template terlebih dahulu.',
+        })
+      }
+    }
+  } else if (selectedTemplate.value.name === 'Permohonan Cuti Panjang') {
+    const check = checkValidate()
+    submitted.value = true
+    if (check !== false) {
+      if (Object.keys(selectedTemplate.value).length !== 0) {
+        emit("next-page", {
+          formData: {
+            category: selectedCategory.value,
+            template: selectedTemplate.value,
+            sender: sender.value,
+            document_type: "2",
+            need_attach: need_attach.value,
+            perihal: '',
+            need_sign: "1",
+            is_cuti: '1',
+            total_cuti: totalCuti.value
+          },
+          pageIndex: 0,
+        });
+      } else {
+        const swalWithButtonsCustom = swal.mixin({
+          customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+          },
+          buttonsStyling: false
+        })
+        swalWithButtonsCustom.fire({
+          icon: 'error',
+          title: 'Template Kosong!',
+          text: 'Silahkan pilih template terlebih dahulu.',
+        })
+      }
+    }
+  } else if (selectedTemplate.value.name === 'Permohonan Cuti') {
+    const check = checkValidate()
+    submitted.value = true
+    if (check !== false) {
+      if (Object.keys(selectedTemplate.value).length !== 0) {
+        emit("next-page", {
+          formData: {
+            category: selectedCategory.value,
+            template: selectedTemplate.value,
+            sender: sender.value,
+            document_type: "2",
+            need_attach: need_attach.value,
+            perihal: '',
+            need_sign: "1",
+            is_cuti: '1',
+            total_cuti: totalCuti.value
+          },
+          pageIndex: 0,
+        });
+      } else {
+        const swalWithButtonsCustom = swal.mixin({
+          customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+          },
+          buttonsStyling: false
+        })
+        swalWithButtonsCustom.fire({
+          icon: 'error',
+          title: 'Template Kosong!',
+          text: 'Silahkan pilih template terlebih dahulu.',
+        })
+      }
+    }
+  } else if (selectedTemplate.value.name === 'Template Tanda Tangan Basah') {
+    const check = checkValidate()
+    submitted.value = true
+    if (check !== false) {
+      if (Object.keys(selectedTemplate.value).length !== 0) {
+        if (selectedTemplate.value.name === 'Template Tanda Tangan Basah') {
+          if (switchTandatanganBasah.value && need_attach.value === '1') {
+            emit("next-page", {
+              formData: {
+                category: selectedCategory.value,
+                template: selectedTemplate.value,
+                sender: sender.value,
+                document_type: "2",
+                need_sign: "1",
+                need_attach: need_attach.value,
+                perihal: ''
+              },
+              pageIndex: 0,
+            });
+          } else {
+            const swalWithButtonsCustom = swal.mixin({
+              customClass: {
+                confirmButton: 'btnCustomSweetalert bg-yellow-500',
+                cancelButton: 'btnCustomSweetalert bg-red-500'
+              },
+              buttonsStyling: false
+            })
+            swalWithButtonsCustom.fire({
+              icon: 'error',
+              title: 'Switch Tanda Tangan Basah!',
+              text: 'Silahkan aktifkan tanda tangan basah dahulu.',
+            })
+          }
+        } else {
+          emit("next-page", {
+            formData: {
+              category: selectedCategory.value,
+              template: selectedTemplate.value,
+              sender: sender.value,
+              document_type: "2",
+              need_sign: "0",
+              need_attach: need_attach.value,
+              perihal: ''
+            },
+            pageIndex: 0,
+          });
+        }
+      } else {
+        const swalWithButtonsCustom = swal.mixin({
+          customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+          },
+          buttonsStyling: false
+        })
+        swalWithButtonsCustom.fire({
+          icon: 'error',
+          title: 'Template Kosong!',
+          text: 'Silahkan pilih template terlebih dahulu.',
+        })
+      }
+    }
+  } else {
+    const check = checkValidate()
+    submitted.value = true
+    if (check !== false) {
+      if (Object.keys(selectedTemplate.value).length !== 0) {
+        if (inputForm.need_sign === '0' || inputForm.need_sign === '1') {
+          const signType = inputForm.need_sign === '0' ? 'Tandatangan Basah' : 'Tandatangan Digital (VIDA)';
+          const swalWithButtonsCustom = swal.mixin({
+            customClass: {
+              confirmButton: 'btnCustomSweetalert bg-yellow-500',
+              cancelButton: 'btnCustomSweetalert bg-red-500'
+            },
+            buttonsStyling: false
+          });
+          swalWithButtonsCustom.fire({
+            icon: 'warning',
+            title: `Anda memilih ${signType}`,
+            text: `Apakah yakin dengan pilihan ${signType}?`,
+            showCancelButton: true,
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              emit("next-page", {
+                formData: {
+                  category: selectedCategory.value,
+                  template: selectedTemplate.value,
+                  sender: sender.value,
+                  document_type: "2",
+                  need_attach: need_attach.value,
+                  need_sign: inputForm.need_sign,
+                  perihal: ''
+                },
+                pageIndex: 0,
+              });
+            }
+          });
+        } else {
+          emit("next-page", {
+            formData: {
+              category: selectedCategory.value,
+              template: selectedTemplate.value,
+              sender: sender.value,
+              document_type: "2",
+              need_attach: need_attach.value,
+              need_sign: "1",
+              perihal: ''
+            },
+            pageIndex: 0,
+          });
+        }
+        // emit("next-page", {
+        //   formData: {
+        //     category: selectedCategory.value,
+        //     template: selectedTemplate.value,
+        //     sender: sender.value,
+        //     document_type: "2",
+        //     need_attach: need_attach.value,
+        //     need_sign: "1",
+        //     perihal: ''
+        //   },
+        //   pageIndex: 0,
+        // });
+      } else {
+        const swalWithButtonsCustom = swal.mixin({
+          customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+          },
+          buttonsStyling: false
+        })
+        swalWithButtonsCustom.fire({
+          icon: 'error',
+          title: 'Template Kosong!',
+          text: 'Silahkan pilih template terlebih dahulu.',
+        })
+      }
+    } else {
+      const swalWithButtonsCustom = swal.mixin({
+        customClass: {
+          confirmButton: 'btnCustomSweetalert bg-yellow-500',
+          cancelButton: 'btnCustomSweetalert bg-red-500'
+        },
+        buttonsStyling: false
+      });
+      swalWithButtonsCustom.fire({
+        icon: 'error',
+        title: 'Category Kosong!',
+        text: `Silahkan pilih Category terlebih dahulu.`,
+      });
     }
   }
 };
@@ -243,21 +507,29 @@ const nextPage = () => {
         <div class="p-fluid formgrid grid mt-3 justify-content-between">
           <div class="field col-12 md:col-6">
             <label for="class">Category</label>
-            <Dropdown
-              inputId="class"
-              v-model="validateSelectedCategory"
-              :options="categoryList"
-              @change="setTemplate($event)"
-              optionLabel="name"
-              placeholder="Select a Category"
-              required="true" autofocus :class="{'p-invalid': submitted && !validateSelectedCategory}"
-            />
+            <Dropdown inputId="class" v-model="validateSelectedCategory" :options="categoryList"
+              @change="setTemplate($event)" optionLabel="name" placeholder="Select a Category" required="true" autofocus
+              :class="{ 'p-invalid': submitted && !validateSelectedCategory }" />
             <small class="p-error" v-if="submitted && !validateSelectedCategory">Category is required.</small>
           </div>
           <div class="field col-12 md:col-3 text-right" v-if="switchTandatanganBasah">
             <label for="class">Tandatangan Basah</label>
             <div class="switch-Tandatangan">
-              <InputSwitch v-model="need_attach" falseValue="0" trueValue="1"/>
+              <InputSwitch v-model="need_attach" falseValue="0" trueValue="1" />
+            </div>
+          </div>
+
+          <div class="field mt-5 mr-5 ml-2 flex flex-col sm:flex-row sm:items-center sm:space-x-4"
+            v-if="MenuTandatangan">
+            <div class="flex items-center mb-2 sm:mb-0">
+              <input type="radio" id="0" name="switch-Tandatangan" value="0" v-model="inputForm.need_sign"
+                class="radio-custom" :disabled="isRadioDisabled">
+              <label for="0" class="ml-2 mr-3">Tandatangan Basah</label>
+            </div>
+            <div class="flex items-center">
+              <input type="radio" id="1" name="switch-Tandatangan" value="1" v-model="inputForm.need_sign"
+                class="radio-custom" :disabled="isRadioDisabled">
+              <label for="1" class="ml-2">Tandatangan Digital (VIDA)</label>
             </div>
           </div>
         </div>
@@ -269,54 +541,57 @@ const nextPage = () => {
           <div class="field col-12">
             <label for="seat">Template</label>
             <DataView :value="templateList" :layout="layout" :paginator="true" :rows="9">
-                    <template #header>
-                        <div class="grid grid-nogutter">
-                            <div class="col-6 text-left">
-                                <!-- <Dropdown v-model="sortKey" :options="sortOptions" optionLabel="label" placeholder="Sort By Price" @change="onSortChange($event)" /> -->
-                            </div>
-                            <div class="col-6 text-right">
-                                <DataViewLayoutOptions v-model="layout" />
-                            </div>
-                        </div>
-                    </template>
-                    <template #list="slotProps">
-                        <div class="col-12">
-                            <div class="flex flex-column md:flex-row align-items-center p-3 w-full">
-                                <!-- <img :src="contextPath + 'demo/images/product/' + slotProps.data.image" :alt="slotProps.data.name" class="my-4 md:my-0 w-9 md:w-10rem shadow-2 mr-5" /> -->
-                                <div class="flex-1 text-center md:text-left">
-                                    <div class="font-bold text-2xl">{{ slotProps.data.name }}</div>
-                                    <div class="mb-3">{{ slotProps.data.description }}</div>
-                                    <!-- <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false" class="mb-2"></Rating> -->
-                                    <!-- <div class="flex align-items-center">
+              <template #header>
+                <div class="grid grid-nogutter">
+                  <div class="col-6 text-left">
+                    <!-- <Dropdown v-model="sortKey" :options="sortOptions" optionLabel="label" placeholder="Sort By Price" @change="onSortChange($event)" /> -->
+                  </div>
+                  <div class="col-6 text-right">
+                    <DataViewLayoutOptions v-model="layout" />
+                  </div>
+                </div>
+              </template>
+              <template #list="slotProps">
+                <div class="col-12">
+                  <div class="flex flex-column md:flex-row align-items-center p-3 w-full">
+                    <!-- <img :src="contextPath + 'demo/images/product/' + slotProps.data.image" :alt="slotProps.data.name" class="my-4 md:my-0 w-9 md:w-10rem shadow-2 mr-5" /> -->
+                    <div class="flex-1 text-center md:text-left">
+                      <div class="font-bold text-2xl">{{ slotProps.data.name }}</div>
+                      <div class="mb-3">{{ slotProps.data.description }}</div>
+                      <!-- <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false" class="mb-2"></Rating> -->
+                      <!-- <div class="flex align-items-center">
                                         <i class="pi pi-tag mr-2"></i>
                                         <span class="font-semibold">{{ slotProps.data.category }}</span>
                                     </div> -->
-                                </div>
-                                <div class="flex flex-row md:flex-column justify-content-between w-full md:w-auto align-items-center md:align-items-end mt-5 md:mt-0">
-                                    <!-- <span class="text-2xl font-semibold mb-2 align-self-center md:align-self-end">${{ slotProps.data.price }}</span> -->
-                                    <!-- <Button icon="pi pi-shopping-cart" label="Add to Cart" :disabled="slotProps.data.inventoryStatus === 'OUTOFSTOCK'" class="mb-2"></Button> -->
-                                    <span class="product-badge status-instock">{{ slotProps.data.category_name }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
+                    </div>
+                    <div
+                      class="flex flex-row md:flex-column justify-content-between w-full md:w-auto align-items-center md:align-items-end mt-5 md:mt-0">
+                      <!-- <span class="text-2xl font-semibold mb-2 align-self-center md:align-self-end">${{ slotProps.data.price }}</span> -->
+                      <!-- <Button icon="pi pi-shopping-cart" label="Add to Cart" :disabled="slotProps.data.inventoryStatus === 'OUTOFSTOCK'" class="mb-2"></Button> -->
+                      <span class="product-badge status-instock">{{ slotProps.data.category_name }}</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
 
-                    <template #grid="slotProps">
-                        <div class="col-12 md:col-3 mt-3">
-                            <div class="card mx-3 border-1 surface-border hcard" :class="{ 'active': slotProps.data === selectedTemplate }" :key="slotProps.data.id" @click="pickTemplate(slotProps.data)" style="min-height: 100%">
-                                <div class="text-center">
-                                    <div class="text-2xl font-bold">{{ slotProps.data.name }}</div>
-                                    <div class="mb-3">
-                                      <p>
-                                        {{ slotProps.data.description }}
-                                      </p>
-                                    </div>
-                                    <span class="product-badge status-instock">{{ slotProps.data.category_name }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </DataView>
+              <template #grid="slotProps">
+                <div class="col-12 md:col-3 mt-3">
+                  <div class="card mx-3 border-1 surface-border hcard"
+                    :class="{ 'active': slotProps.data === selectedTemplate }" :key="slotProps.data.id"
+                    @click="pickTemplate(slotProps.data)" style="min-height: 100%">
+                    <div class="text-center">
+                      <div class="text-2xl font-bold">{{ slotProps.data.name }}</div>
+                      <div class="mb-3">
+                        <p>
+                          {{ slotProps.data.description }}
+                        </p>
+                      </div>
+                      <span class="product-badge status-instock">{{ slotProps.data.category_name }}</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </DataView>
           </div>
         </div>
       </template>
@@ -324,12 +599,7 @@ const nextPage = () => {
         <div class="grid grid-nogutter justify-content-between">
           <!-- <Button label="Back" @click="prevPage()" icon="pi pi-angle-left" /> -->
           <i></i>
-          <Button
-            label="Next"
-            @click="nextPage()"
-            icon="pi pi-angle-right"
-            iconPos="right"
-          />
+          <Button label="Next" @click="nextPage()" icon="pi pi-angle-right" iconPos="right" />
         </div>
       </template>
     </Card>
@@ -341,9 +611,35 @@ const nextPage = () => {
   background-color: antiquewhite !important;
   /* border-width: 2px !important; */
 }
+
 :deep(.active) {
   border-color: rgb(242, 151, 39) !important;
   background-color: antiquewhite !important;
   /* border-width: 2px !important; */
+}
+</style>
+
+<style>
+.radio-custom {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #000000;
+  border-radius: 50%;
+  outline: none;
+  box-shadow: none;
+  background-color: #fff;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.radio-custom:checked {
+  background-color: #FFC107;
+  border-color: #FFC107;
+}
+
+.radio-custom:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.4);
 }
 </style>

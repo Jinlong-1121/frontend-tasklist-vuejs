@@ -55,7 +55,7 @@ const accessCreate = () => {
     sender: setSender()
   }
   suratService.createActionAccess(params).then((data) => {
-    console.log(data);
+    // console.log(data);
     const updatedObject = reactive({
       ...formObject.value,  // Copy existing properties
       ...data,
@@ -78,7 +78,7 @@ const setSender = () => {
 const loadData = async () => {
   suratService.getDetail().then((data) => {
     formObject.value = data;
-    console.log(formObject.value, 'value');
+    // console.log(formObject.value, 'value');
   });
 }
 
@@ -106,13 +106,13 @@ const complete = () => {
 };
 
 // const editAction = () => {
-//   console.log(formObject, "data form object");
+//   // console.log(formObject, "data form object");
 //   disabledBtnCreate.value = true
 //   disabledBtnPost.value = false
 // }
 // const postAction = () => {
-//   console.log(formObject, "data form object");
-//   console.log("post action");
+//   // console.log(formObject, "data form object");
+//   // console.log("post action");
 //   disabledBtnCreate.value = false
 //   disabledBtnPost.value = true
 // }

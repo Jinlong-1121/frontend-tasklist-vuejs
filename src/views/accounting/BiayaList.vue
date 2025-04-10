@@ -74,7 +74,7 @@ const editTemplate = (prod) => {
 const saveTemplate = () => {
     submitted.value = true;
     if (template.value.name.trim()) {
-        console.log(template.value.id, typeof(template.value.id));
+        // console.log(template.value.id, typeof(template.value.id));
         if (typeof(template.value.id) === "undefined") {
             template.value.status = '1';
             saveListData(template.value);
@@ -108,14 +108,14 @@ const getListData = (page) => {
 
 const saveListData = (params) => {
     templateService.saveListData(params).then((data) => {
-        console.log(data);s
+        // console.log(data);s
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'New data scheduler saved', life: 3000 });
     });
 };
 
 const updateListData = (params, id) => {
-    console.log(params, id);
+    // console.log(params, id);
     templateService.updateListData(params, id).then((data) => {
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Data scheduler updated', life: 3000 });
@@ -124,7 +124,7 @@ const updateListData = (params, id) => {
 
 const runScheduler = () => {
     templateService.runScheduler().then((data) => {
-        console.log(data);
+        // console.log(data);
         // getListData(1);
     });
 };
@@ -132,7 +132,7 @@ const runScheduler = () => {
 const accessData = () => {
     var page = (first.value/10)+1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
 const deleteTemplate = (editTemplate) => {
@@ -169,7 +169,7 @@ const deleteTemplate = (editTemplate) => {
             });
         }
     })
-    // console.log(id);
+    // // console.log(id);
 };
 
 const filterMonthEvent = () => {
@@ -201,14 +201,14 @@ const initFilters = () => {
 
 const getListDivisi = () => {
     divisiService.getListAll().then((data) => {
-        console.log(data);
+        // console.log(data);
         divisiList.value = data;
     });
 };
 
 const setDivisiFilter = (data) => {
     var page = 1;
-    console.log(selectedDivisiFilter.value, "MASUK SET FILTER");
+    // console.log(selectedDivisiFilter.value, "MASUK SET FILTER");
     getListData(page, selectedDivisiFilter.value)
 }
 

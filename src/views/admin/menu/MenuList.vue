@@ -51,11 +51,11 @@ onMounted(() => {
     getListData(page);
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -83,7 +83,7 @@ const editMenu = (prod) => {
 const saveMenu = () => {
     submitted.value = true;
     if (menu.value.name.trim()) {
-        console.log(menu.value.id, typeof(menu.value.id));
+        // console.log(menu.value.id, typeof(menu.value.id));
         if (typeof(menu.value.id) === "undefined") {
             menu.value.status = '1';
             menu.value.parent = parseInt(menu.value.parent);
@@ -116,14 +116,14 @@ const getListData = (page) => {
 
 const saveListData = (params) => {
     menuService.saveListData(params).then((data) => {
-        console.log(data);
+        // console.log(data);
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'New data menu saved', life: 3000 });
     });
 };
 
 const updateListData = (params, id) => {
-    console.log(params, id);
+    // console.log(params, id);
     menuService.updateListData(params, id).then((data) => {
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Data menu updated', life: 3000 });
@@ -132,7 +132,7 @@ const updateListData = (params, id) => {
 
 const runMenu = () => {
     menuService.runMenu().then((data) => {
-        console.log(data);
+        // console.log(data);
         // getListData(1);
     });
 };
@@ -140,7 +140,7 @@ const runMenu = () => {
 const accessData = () => {
     var page = (first.value/10)+1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
 
@@ -267,6 +267,11 @@ const columns = [
                     </template>
                 </Toolbar>
                 <DataTable ref="dt" :value="Menus" responsiveLayout="scroll">
+                    <template #empty>
+                        <div class="text-center p-2">
+                            <p class="text-lg font-semibold">No Data Available</p>
+                        </div>
+                    </template>
                     <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header" headerStyle="width:20%; min-width:10rem;"></Column>
                     <Column field="status" header="Status" :sortable="false" headerStyle="width:14%; min-width:10rem;">
                         <template #body="slotProps">

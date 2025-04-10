@@ -119,26 +119,26 @@ onBeforeMount(() => {
   //   //   formObject.value = formIntObject.value;
   //   //   break;
   // }
-  // console.log(routeType, "type");
-  // console.log(routeAction, "action");
-  // console.log(items.value, "items");
-  // console.log(formObject.value, "form");
+  // // console.log(routeType, "type");
+  // // console.log(routeAction, "action");
+  // // console.log(items.value, "items");
+  // // console.log(formObject.value, "form");
 });
 
 onMounted(() => {
   // loadData();
   getDataDetail();
-  // console.log(formObject.value, "form mount");
+  // // console.log(formObject.value, "form mount");
 });
 
 const getDataDetail = () => {
-  // console.log("BOLEH");
+  // // console.log("BOLEH");
    const param = {
         id: paramId
     }
     suratService.getDetail(param).then((data) => {
-      // console.log(data, "MASUK MASZ");
-      console.log(data, "data detail");
+      // // console.log(data, "MASUK MASZ");
+      // console.log(data, "data detail");
       dataTempStatus.status = data.status
       dataTempStatus.note = data.note
       // getCategory(data.document_type);
@@ -151,7 +151,7 @@ const getDataDetail = () => {
 const loadData = async () => {
   suratService.getDetail().then((data) => {
     formObject.value = data;
-    // console.log(formObject.value, 'value');
+    // // console.log(formObject.value, 'value');
   });
 }
 

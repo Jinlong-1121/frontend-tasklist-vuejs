@@ -17,7 +17,7 @@ const childComponentRef = ref(null);
 
 const getData = () => {
   const childComponent = childComponentRef.value;
-  console.log(childComponent.$.ctx, route);
+  // console.log(childComponent.$.ctx, route);
   childComponent.$.ctx[route.meta.actionSearching](1, keyword.value)
 
 //   if (childComponent) {
@@ -147,7 +147,7 @@ const createNew = () => {
 </template>
 
 <style scoped lang="scss">
-@import '/src/assets/badges'
+@import '@/assets/badges.scss';
 
 </style>
 

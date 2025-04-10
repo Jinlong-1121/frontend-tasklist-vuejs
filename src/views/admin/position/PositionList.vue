@@ -51,11 +51,11 @@ onMounted(() => {
     getListData(page);
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -83,7 +83,7 @@ const editPosition = (prod) => {
 const savePosition = () => {
     submitted.value = true;
     if (position.value.name.trim()) {
-        console.log(position.value.id, typeof(position.value.id));
+        // console.log(position.value.id, typeof(position.value.id));
         if (typeof(position.value.id) === "undefined") {
             position.value.status = '1';
             saveListData(position.value)
@@ -114,14 +114,14 @@ const getListData = (page) => {
 
 const saveListData = (params) => {
     positionService.saveListData(params).then((data) => {
-        console.log(data);
+        // console.log(data);
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'New data position saved', life: 3000 });
     });
 };
 
 const updateListData = (params, id) => {
-    console.log(params, id);
+    // console.log(params, id);
     positionService.updateListData(params, id).then((data) => {
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Data position updated', life: 3000 });
@@ -130,7 +130,7 @@ const updateListData = (params, id) => {
 
 const runPosition = () => {
     positionService.runPosition().then((data) => {
-        console.log(data);
+        // console.log(data);
         // getListData(1);
     });
 };
@@ -138,7 +138,7 @@ const runPosition = () => {
 const accessData = () => {
     var page = (first.value/10)+1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
 
@@ -262,6 +262,11 @@ const columns = [
                     </template>
                 </Toolbar>
                 <DataTable ref="dt" :value="Positions" responsiveLayout="scroll">
+                    <template #empty>
+                        <div class="text-center p-2">
+                            <p class="text-lg font-semibold">No Data Available</p>
+                        </div>
+                    </template>
                     <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header" headerStyle="width:20%; min-width:10rem;"></Column>
                     <Column field="status" header="Status" :sortable="false" headerStyle="width:14%; min-width:10rem;">
                         <template #body="slotProps">
@@ -282,7 +287,7 @@ const columns = [
                 </DataTable>
             </div>
 
-            <Dialog v-model:visible="positionDialog" :style="{width: '450px'}" header="Position Position" :modal="true" class="p-fluid">
+            <Dialog v-model:visible="positionDialog" :style="{width: '450px'}" header="Position" :modal="true" class="p-fluid">
                 <div class="field">
                     <label for="name">Name</label>
                     <InputText id="name" v-model.trim="position.name" required="true" autofocus :class="{'p-invalid': submitted && !position.name}" />

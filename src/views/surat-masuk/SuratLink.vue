@@ -69,11 +69,11 @@ const routeValidation = () => {
     const realData = HelperFunc.decryption(dataRep);
     const parsingData = JSON.parse(realData);
     docId.value = parsingData.id
-    console.log(JSON.stringify(data));
-    console.log(realData, docId.value);
+    // console.log(JSON.stringify(data));
+    // console.log(realData, docId.value);
     const isAuthenticated = localStorage.getItem('sipam');
     if (isAuthenticated) {
-        // console.log(isAuthenticated, "atuh");
+        // // console.log(isAuthenticated, "atuh");
         const dataUser = JSON.parse(isAuthenticated);
         if (dataUser.target === parsingData.user) {
             location.href = `http://localhost:2323/#/surat/masuk/edit/${parsingData.id}`;

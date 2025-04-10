@@ -26,10 +26,10 @@ export default class MenuService {
         try {
             const response = await fetch(contextPath + `api/v1/menus?limit=10&page=${params.page}`, requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -49,10 +49,10 @@ export default class MenuService {
         try {
             const response = await fetch(contextPath + `api/v1/menus/divisi?divisi=${params.divisi}`, requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -61,7 +61,7 @@ export default class MenuService {
     //     const myHeaders = new Headers();
     //     myHeaders.append("Authorization", token);
     //     myHeaders.append("Content-Type", "application/json");
-    //     console.log(params);
+    //     // console.log(params);
     //     const requestOptions = {
     //         method: 'GET',
     //         mode: 'cors',
@@ -72,7 +72,7 @@ export default class MenuService {
     //         const result = await response.json();
     //         return result.data;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -81,7 +81,7 @@ export default class MenuService {
     //     const myHeaders = new Headers();
     //     myHeaders.append("Authorization", token);
     //     myHeaders.append("Content-Type", "application/json");
-    //     console.log(params);
+    //     // console.log(params);
     //     const requestOptions = {
     //         method: 'GET',
     //         mode: 'cors',
@@ -92,7 +92,7 @@ export default class MenuService {
     //         const result = await response.json();
     //         return result;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -110,10 +110,10 @@ export default class MenuService {
         try {
             const response = await fetch(contextPath + 'api/v1/menu', requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -131,10 +131,10 @@ export default class MenuService {
         try {
             const response = await fetch(contextPath + 'api/v1/menu/'+ id, requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -151,10 +151,10 @@ export default class MenuService {
     //     try {
     //         const response = await fetch(contextPath + 'api/v1/menu', requestOptions);
     //         const result = await response.json();
-    //         console.log(result);
+    //         // console.log(result);
     //         return result.data;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -163,7 +163,7 @@ export default class MenuService {
     //     const myHeaders = new Headers();
     //     myHeaders.append("Authorization", token);
     //     myHeaders.append("Content-Type", "application/json");
-    //     console.log(params);
+    //     // console.log(params);
     //     const requestOptions = {
     //         method: 'GET',
     //         mode: 'cors',
@@ -174,7 +174,7 @@ export default class MenuService {
     //         const result = await response.json();
     //         return result;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 

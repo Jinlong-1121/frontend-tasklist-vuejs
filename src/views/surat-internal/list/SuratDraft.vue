@@ -1,4 +1,3 @@
-
 <script setup>
 import { FilterMatchMode } from 'primevue/api';
 import { inject, ref, onMounted, onBeforeMount } from 'vue';
@@ -25,19 +24,19 @@ onBeforeMount(() => {
     initFilters();
 });
 onMounted(() => {
-    var page = (first.value/10)+1;
+    var page = (first.value / 10) + 1;
     getListData(page);
 });
 
 // VIEW SURAT INTERNAL
 const viewSuratComplete = (prod) => {
-    // console.log(prod);
-    router.push('/surat/internal/edit/'+prod.id);
+    // // console.log(prod);
+    router.push('/surat/internal/edit/' + prod.id);
 };
 // END VIEW SURAT INTERNAL
 
 // GET SURAT INTERNAL
-const getListData = (page, date="", keyword="") => {
+const getListData = (page, date = "", keyword = "") => {
     keywords.value = keyword
     let dataTarget = JSON.parse(localStorage.getItem("sipam"))
     var params = {
@@ -67,48 +66,68 @@ const deleteSuratDraft = (data) => {
     })
 
     swalWithBootstrapButtons.fire({
-        title: 'Delete Draft Surat!',
-        text: "Anda yakin ingin delete draft surat?",
+        title: 'Delete Surat!',
+        text: `Anda yakin ingin delete surat ${data.perihal}?`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Delete',
+        confirmButtonText: 'Submit',
         cancelButtonText: 'Cancel',
+        showLoaderOnConfirm: true, // This enables the loader on the confirm button
+        preConfirm: () => {
+            const param = { id: data.id };
+
+            // Return the promise to SweetAlert2 so it knows when to stop the loader
+            return suratService.putSurat(param)
+                .then((res) => {
+                    let page = (first.value / 10) + 1;
+                    getListData(page);
+                    swal.fire({
+                        icon: 'success',
+                        title: 'Surat!',
+                        text: `Surat ${data.perihal} berhasil dihapus.`,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                })
+                .catch((error) => {
+                    // Handle errors here, e.g., show an error message
+                    swalWithBootstrapButtons.fire(
+                        'Error!',
+                        'Terjadi kesalahan saat menghapus surat.',
+                        'error'
+                    );
+                    console.error(error);
+                });
+        },
+        allowOutsideClick: () => !swal.isLoading()
     }).then((result) => {
         if (result.isConfirmed) {
-            const param = {
-                id: data.id
-            }
-            suratService.deleteSurat(param).then((data) => {
-                let page = (first.value/10)+1;
-                let date = new Date();
-                let currentDate = dateMonthYear(date);
-                // filterMonth.value = date;
-                getListData(page,currentDate);
-            });
+            // You can perform additional actions here if needed
         }
-    })
+    });
 };
+
 // END DELETE SURAT INTERNAL
 
 const accessData = () => {
     const selectedDate = (dateSearch.value) ? dateMonthYear(dateSearch.value) : ""
-    var page = (first.value/10)+1;
+    var page = (first.value / 10) + 1;
     getListData(page, selectedDate, keywords.value)
 };
 
 const dateMonthYear = (dateString) => {
     var date = new Date(dateString);
-    var dateFormat = date.getFullYear() + "-" +(String((date.getMonth()+1)).length != 2 ? "0" + (date.getMonth() + 1) : (date.getMonth()+1)) + "-" +(String((date.getDate())).length != 2 ? "0" + (date.getDate()) : (date.getDate()));
+    var dateFormat = date.getFullYear() + "-" + (String((date.getMonth() + 1)).length != 2 ? "0" + (date.getMonth() + 1) : (date.getMonth() + 1)) + "-" + (String((date.getDate())).length != 2 ? "0" + (date.getDate()) : (date.getDate()));
     return dateFormat;
 }
 
 const setFormatDate = (data) => {
-    let date = data?new Date(data):new Date();
+    let date = data ? new Date(data) : new Date();
     let tahun = date.getFullYear();
     let bulan = date.getMonth();
     let tanggal = date.getDate();
     let hari = date.getDay();
-    switch(hari) {
+    switch (hari) {
         case 0: hari = "Minggu"; break;
         case 1: hari = "Senin"; break;
         case 2: hari = "Selasa"; break;
@@ -117,7 +136,7 @@ const setFormatDate = (data) => {
         case 5: hari = "Jum'at"; break;
         case 6: hari = "Sabtu"; break;
     }
-    switch(bulan) {
+    switch (bulan) {
         case 0: bulan = "Januari"; break;
         case 1: bulan = "Februari"; break;
         case 2: bulan = "Maret"; break;
@@ -132,7 +151,7 @@ const setFormatDate = (data) => {
         case 11: bulan = "Desember"; break;
     }
     let tampilTanggal = hari + ", " + tanggal + " " + bulan + " " + tahun;
-    
+
     return tampilTanggal;
 }
 
@@ -151,64 +170,120 @@ const columns = [
 <template>
     <div>
         <Toolbar class="mb-4">
-                    <template v-slot:start>
-                    </template>
+            <template v-slot:start>
+            </template>
 
-                    <template v-slot:end>
-                        <div class="flex flex-wrap gap-3">
-                            <Calendar v-model="dateSearch" placeholder="Created At" showButtonBar />
-                            <span class="p-input-icon-left">
-                                <i class="pi pi-search" />
-                                <InputText v-model="keywords" placeholder="Keyword Search" />
-                            </span>
-                            <Button type="submit" label="Filter" class="" @click="accessData"/>
-                        </div>
+            <template v-slot:end>
+                <div class="flex flex-wrap gap-3">
+                    <Calendar v-model="dateSearch" placeholder="Created At" showButtonBar />
+                    <span class="p-input-icon-left">
+                        <i class="pi pi-search" />
+                        <InputText v-model="keywords" placeholder="Keyword Search" />
+                    </span>
+                    <Button type="submit" label="Filter" class="" @click="accessData" />
+                </div>
+            </template>
+        </Toolbar>
+        <DataTable ref="dt" :value="SuratData" responsiveLayout="scroll">
+            <template #empty>
+                <div class="text-center p-2">
+                    <p class="text-lg font-semibold">No Data Available</p>
+                </div>
+            </template>
+            <Column header="Aksi" :exportable="false" style="width: 10%; min-width:8rem">
+                <template #body="slotProps">
+                    <Button icon="pi pi-pencil" outlined rounded class="mr-2"
+                        @click="viewSuratComplete(slotProps.data)" />
+                    <Button icon="pi pi-trash" outlined rounded severity="danger"
+                        @click="deleteSuratDraft(slotProps.data)" />
+                </template>
+            </Column>
+            <Column field="category" header="Category" :sortable="false" headerStyle="width:10%; min-width:10rem;">
+                <template #body="slotProps">
+                    <p>{{ JSON.parse(slotProps.data.category).name }}</p>
+                </template>
+            </Column>
+            <Column field="document_no" header="No.Surat" :sortable="false" headerStyle="width:14%; min-width:10rem;">
+                <template #body="slotProps">
+                    <p>{{ slotProps.data.document_no }}</p>
+                </template>
+            </Column>
+            <Column field="perihal" header="Perihal" :sortable="false" headerStyle="width:24%; min-width:10rem;">
+                <template #body="slotProps">
+                    <p>{{ slotProps.data.perihal }}</p>
+                </template>
+            </Column>
+            <Column field="created_at" header="Tanggal" :sortable="false" headerStyle="width:14%; min-width:10rem;">
+                <template #body="slotProps">
+                    <p>{{ setFormatDate(slotProps.data.created_at) }}</p>
+                </template>
+            </Column>
+            <Column field="receiver" header="Tujuan" headerStyle="width:14%; min-width:10rem;">
+                <template #body="slotProps">
+                    <template v-if="slotProps.data.receiver.length > 3">
+                        <template v-if="showAll(slotProps.node.id)">
+                            <template v-for="(item, idxTujuan) in slotProps.data.receiver" :key="idxTujuan">
+                                <Chip :label="item.user_name" class="mb-2 mr-2" />
+                            </template>
+                            <a @click="toggleShowAll(slotProps.data.id)">...</a>
+                        </template>
+                        <template v-else>
+                            <template v-for="(item, idxTujuan) in slotProps.data.receiver.slice(0, 3)" :key="idxTujuan">
+                                <Chip :label="item.user_name" class="mb-2 mr-2" />
+                            </template>
+                            <a @click="toggleShowAll(slotProps.data.id)">...</a>
+                        </template>
                     </template>
-                </Toolbar>
-    <DataTable ref="dt" :value="SuratData" responsiveLayout="scroll">
-        <Column header="Aksi" :exportable="false" style="width: 100%; min-width:8rem">
-            <template #body="slotProps">
-                <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="viewSuratComplete(slotProps.data)" />
-                <Button icon="pi pi-trash" outlined rounded severity="danger" @click="deleteSuratDraft(slotProps.data)" />
+                    <template v-else>
+                        <template v-for="(item, idxTujuan) in slotProps.data.receiver" :key="idxTujuan">
+                            <Chip :label="item.user_name" class="mb-2 mr-2" />
+                        </template>
+                    </template>
+                </template>
+            </Column>
+            <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header"
+                headerStyle="width:14%; min-width:10rem;"></Column>
+            <Column field="status" header="Status" :sortable="false" headerStyle="width:14%; min-width:10rem;">
+                <template #body="">
+                    <Badge :value="`Draft`" severity="info"></Badge>
+                </template>
+            </Column>
+            <template #footer>
+                <Paginator v-model:first="first" :rows="10" :totalRecords="Rows" @click="accessData"></Paginator>
             </template>
-        </Column>
-        <Column field="category" header="Category" :sortable="false" headerStyle="width: 100%; min-width:10rem;">
-            <template #body="slotProps">
-                <p>{{ JSON.parse(slotProps.data.category).name }}</p>
-            </template>
-        </Column>
-        <Column field="document_no" header="No.Surat" :sortable="false">
-            <template #body="slotProps">
-                <p>{{ slotProps.data.document_no }}</p>
-            </template>
-        </Column>
-        <Column field="perihal" header="Perihal" :sortable="false" headerStyle="min-width:18rem;">
-            <template #body="slotProps">
-                <p>{{ slotProps.data.perihal }}</p>
-            </template>
-        </Column>
-        <Column field="created_at" header="Tanggal" :sortable="false" headerStyle="min-width:14rem;">
-            <template #body="slotProps">
-                <p>{{ setFormatDate(slotProps.data.created_at) }}</p>
-            </template>
-        </Column>
-        <Column field="receiver" header="Tujuan" :sortable="false" headerStyle="min-width:14rem;">
-            <template #body="slotProps">
-                <p>{{ slotProps.data.receiver[0].user_name }}</p>
-            </template>
-        </Column>
-        <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header" headerStyle="width:14%; min-width:10rem;"></Column>
-        <Column field="status" header="Status" :sortable="false" headerStyle="width:14%; min-width:10rem;">
-            <template #body="slotProps">
-                <Badge :value="`Draft`" severity="info"></Badge>
-            </template>
-        </Column>
-        <template #footer>
-            <Paginator v-model:first="first" :rows="10" :totalRecords="Rows" @click="accessData"></Paginator>
-        </template>
-    </DataTable>
+        </DataTable>
     </div>
 </template>
+
+<style>
+.p-treetable table {
+    table-layout: auto !important;
+}
+</style>
+
+<script>
+export default {
+    data() {
+        return {
+            showAllIds: new Set(), // Menggunakan Set untuk menyimpan ID yang sedang ditampilkan
+        };
+    },
+    computed: {
+        showAll() {
+            return (id) => this.showAllIds.has(id);
+        },
+    },
+    methods: {
+        toggleShowAll(id) {
+            if (this.showAllIds.has(id)) {
+                this.showAllIds.delete(id);
+            } else {
+                this.showAllIds.add(id);
+            }
+        },
+    },
+};
+</script>
 <style>
 .btnCustomSweetalert {
     border: none;

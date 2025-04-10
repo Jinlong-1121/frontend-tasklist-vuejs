@@ -14,6 +14,7 @@ const swal = inject('$swal')
 import Editor from "@/components/editor";
 
 const editor = Editor;
+const submitted = ref(false);
 
 const toast = useToast();
 const router = useRouter();
@@ -22,12 +23,18 @@ const breadcrumbHome = ref({ icon: "pi pi-home", to: "/" });
 const breadcrumbItems = ref([{ label: "Template", to: "/admin/template" }, { label: "Add" }]);
 const selectedCategory = ref({});
 const selectedDivisiFilter = ref();
+const selectedStatusFilter = ref();
 const selectedTipeCategoryFilter = ref()
 const divisiList = ref([]);
 const tipeCategoryList = ref([
-  {name: 'External', type: '1'},
-  {name: 'Internal', type: '2'},
-  {name: 'Masuk', type: '3'}
+  { name: 'External', type: '1' },
+  { name: 'Internal', type: '2' },
+  { name: 'Masuk', type: '3' }
+])
+
+const tipeStatusList = ref([
+  { name: 'Active', id: '1' },
+  { name: 'Non Active', id: '0' },
 ])
 
 const suratService = new SuratService();
@@ -44,7 +51,7 @@ const inputForm = reactive({
   content: "",
   category: null,
   category_name: "",
-  status: "1",
+  status: "",
   parameter: [],
 });
 
@@ -73,12 +80,14 @@ const optionTypeInputParam = ref([
   { name: 'Input File', type: '6' },
   { name: 'Input Blotter', type: '7' },
   { name: 'Input Date Multiple', type: '8' },
+  { name: 'Input Option', type: '9' },
 ]);
 const setTypeNameParam = (event) => {
   inputFormParam.value.type = event.value.type;
   inputFormParam.value.type_name = event.value.name;
 };
 const paramSelectedAdd = ref([])
+
 const handleAddParam = () => {
   paramSelectedAdd.value.push(inputFormParam.value)
   inputFormParam.value = {
@@ -90,6 +99,28 @@ const handleAddParam = () => {
   }
   selectFormTypeNameParam.value = {}
 }
+
+const checkValidateParam = () => {
+  return (
+    inputFormParam.value.label?.trim() !== "" &&
+    inputFormParam.value.param?.trim() !== "" &&
+    selectFormTypeNameParam.value &&
+    Object.keys(selectFormTypeNameParam.value).length > 0 &&
+    selectFormTypeNameParam.value.name?.trim() !== "" &&
+    selectFormTypeNameParam.value.type?.trim() !== ""
+  );
+};
+
+const checkValidate = () => {
+  return (
+    inputForm.name?.trim() !== "" &&
+    selectedTipeCategoryFilter.value  &&
+    selectedCategory.value &&
+    selectedStatusFilter.value &&
+    inputForm.description?.trim() !== ""
+  )
+};
+
 const handleDeleteParam = (label) => {
   let myArrayDeleted = paramSelectedAdd.value.filter(function (obj) {
     return obj.label !== label;
@@ -108,6 +139,12 @@ const setDivisiFilter = (data) => {
   selectedTipeCategoryFilter.value = undefined
   selectedCategory.value = {}
 }
+
+const setStatusFilter = (data) => {
+  inputForm.status = data.value;
+  selectedStatusFilter.value = data.value;
+}
+
 const setTipeCategoryFilter = (data) => {
   getListCategoryAll(data.value)
 }
@@ -132,6 +169,10 @@ const getDetailTemplate = () => {
     paramSelectedAdd.value = data.parameter
     let dataFilters = divisiList.value.find(x => x.id === data.divisi)
     selectedDivisiFilter.value = dataFilters.id
+
+    let dataStatusFilters = tipeStatusList.value.find(x => x.id === data.status)
+    selectedStatusFilter.value = dataStatusFilters.id
+
     getListCategoryAll("1", data.category)
   });
 }
@@ -151,7 +192,7 @@ const getListCategoryAll = (type, categoryID = null) => {
   });
 }
 const setCategory = (event) => {
-  console.log(event);
+  // console.log(event);
   inputForm.category = event.value.id;
   inputForm.category_name = event.value.name;
 };
@@ -173,6 +214,12 @@ const loadData = () => {
 
 // FUNCTION HANDLE SUBMIT
 const submitAction = () => {
+  submitted.value = true;
+
+  if (!checkValidate()) {
+    return;
+  }
+
   const swalWithBootstrapButtons = swal.mixin({
     customClass: {
       confirmButton: 'btnCustomSweetalert bg-yellow-500',
@@ -195,7 +242,7 @@ const submitAction = () => {
       inputForm.divisi = selectedDivisiFilter.value;
       loading.value = true;
       if (paramId) {
-        inputForm.status = "1";
+        inputForm.status = selectedStatusFilter.value;
         templateService.updateListData(inputForm, paramId).then((data) => {
           if (!data.error) {
             toast.add({ severity: 'success', summary: 'Successful', detail: 'New Data Webinar Saved', life: 3000 });
@@ -255,6 +302,7 @@ const duplicateAction = () => {
     if (result.isConfirmed) {
       inputForm.parameter = paramSelectedAdd.value;
       inputForm.divisi = selectedDivisiFilter.value;
+      inputForm.status = selectedStatusFilter.value;
       loading.value = true;
 
       const sendData = {};
@@ -323,52 +371,60 @@ const generatePDF = (params) => {
               :loading="loading" @click="duplicateAction" />
             <Button label="Submit" icon="pi pi-plus" class="p-button-success mr-2" :loading="loading"
               @click="submitAction" />
-            <!-- <Button label="Send Email" icon="pi pi-upload" class="p-button-help" @click="toggle" />
-                        <OverlayPanel ref="op" appendTo="body">
-                                <div class="flex justify-valuecontent-center p-fluid">
-                                    <div v-focustrap class="cards">
-                                        <div class="field">
-                                            <InputText id="input" v-model="email" type="text" placeholder="Email" autofocus />
-                                        </div>
-                                        <Button type="submit" label="Send" class="mt-2" :loading="loading" @click="sendEmail"/>
-                                    </div>
-                                </div>
-                        </OverlayPanel> -->
           </template>
         </Toolbar>
         <div class="p-fluid formgrid grid mt-3">
-          <div class="field col-12 md:col-4">
+          <div class="field col-12 md:col-6">
             <label for="name">Template Name</label>
-            <InputText id="name" type="text" v-model="inputForm.name" />
+            <InputText id="name" type="text" v-model="inputForm.name"
+              :class="{ 'p-invalid': submitted && !inputForm.name }" />
+            <small class="p-error" v-if="submitted && !inputForm.name">Template Name is required.</small>
           </div>
 
           <div class="field col-12 md:col-3">
             <label for="category">Divisi</label>
-            <div class="p-inputgroup flex-1">
+            <div>
               <Dropdown inputId="category" v-model="selectedDivisiFilter" :options="divisiList"
-                @change="setDivisiFilter($event)" optionLabel="name" optionValue="id" placeholder="Select Divisi" />
+                @change="setDivisiFilter($event)" optionLabel="name" optionValue="id" placeholder="Select Divisi"
+                :class="{ 'p-invalid': submitted && !selectedDivisiFilter }" />
+              <small class="p-error" v-if="submitted && !selectedDivisiFilter">Divisi is required.</small>
             </div>
           </div>
 
           <div class="field col-12 md:col-2">
             <label for="category">Template Tipe Category</label>
-            <div class="p-inputgroup flex-1">
+            <div>
               <Dropdown inputId="category" v-model="selectedTipeCategoryFilter" :options="tipeCategoryList"
-                @change="setTipeCategoryFilter($event)" optionLabel="name" optionValue="type" placeholder="Select Divisi" />
+                @change="setTipeCategoryFilter($event)" optionLabel="name" optionValue="type"
+                placeholder="Select Divisi" :class="{ 'p-invalid': submitted && !selectedTipeCategoryFilter }" />
+              <small class="p-error" v-if="submitted && !selectedTipeCategoryFilter">Template Tipe Category is required.</small>
             </div>
           </div>
 
           <div class="field col-12 md:col-3">
             <label for="category">Category</label>
-            <div class="p-inputgroup flex-1">
+            <div>
               <Dropdown inputId="category" v-model="selectedCategory" :options="optionCategory"
-                @change="setCategory($event)" optionLabel="name" placeholder="Select Category" />
+                @change="setCategory($event)" optionLabel="name" placeholder="Select Category"
+                :class="{ 'p-invalid': submitted && !selectedCategory }" />
+              <small class="p-error" v-if="submitted && !selectedCategory">Category is required.</small>
+            </div>
+          </div>
+
+          <div class="field col-12 md:col-3">
+            <label for="status">Status</label>
+            <div>
+              <Dropdown inputId="status" v-model="selectedStatusFilter" :options="tipeStatusList"
+                @change="setStatusFilter($event)" optionLabel="name" optionValue="id" placeholder="Select Status"
+                :class="{ 'p-invalid': submitted && !selectedStatusFilter }" />
+              <small class="p-error" v-if="submitted && !selectedStatusFilter">Status is required.</small>
             </div>
           </div>
 
           <div class="field col-12 md:col-12">
             <p for="description">Description</p>
             <Textarea v-model="inputForm.description" rows="3" cols="30" />
+            <small class="p-error" v-if="submitted && !inputForm.description">Description is required.</small>
           </div>
 
           <div class="field col-12 md:col-4">
@@ -389,7 +445,8 @@ const generatePDF = (params) => {
               </div>
               <div class="field col-4 md:col-1 px-1">
                 <label style="visibility: hidden;"> 1</label>
-                <Button icon="pi pi-plus" class="p-button-success mr-2" :loading="loading" @click="handleAddParam" />
+                <Button icon="pi pi-plus" class="p-button-success mr-2" :loading="loading" @click="handleAddParam"
+                  :disabled="!checkValidateParam()" />
               </div>
             </div>
 

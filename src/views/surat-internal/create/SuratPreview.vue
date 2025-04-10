@@ -20,7 +20,7 @@ const props = defineProps({ formData: Object })
 const emit = defineEmits(['next-page', 'prev-page']);
 
 onMounted(() => {
-    console.log('update', props.formData.template.parameter[0].value);
+    // console.log('update', props.formData.template.parameter[0].value);
     const form = new FormData();
     form.append("content", props.formData.content)
     for (let i = 0; i < props.formData.attachment.length; i++) {
@@ -28,13 +28,13 @@ onMounted(() => {
     }
     if (props.formData.need_attach === '0') {
         generatePDF(form);
-    }else {
+    } else {
         dataPdf.value = props.formData.template.parameter[0].value
     }
 });
 
 onUpdated(() => {
-    console.log('update', props.formData.template.parameter[0].value);
+    // console.log('update', props.formData.template.parameter[0].value);
     const form = new FormData();
     form.append("content", props.formData.content)
     for (let i = 0; i < props.formData.attachment.length; i++) {
@@ -42,7 +42,7 @@ onUpdated(() => {
     }
     if (props.formData.need_attach === '0') {
         generatePDF(form);
-    }else {
+    } else {
         dataPdf.value = props.formData.template.parameter[0].value
     }
 });
@@ -55,18 +55,19 @@ const prevPage = () => {
     // for (let i = 0; i < selectedPenandatanganExternal.value.length; i++) {
     //     inputForm.signer.push(selectedPenandatanganExternal.value[i])
     // }
-    emit('prev-page', {pageIndex: 2});
+    emit('prev-page', { pageIndex: 2 });
 };
 
 // Handle Complete or Submit
-const handleComplete = () => {
+
+const handleComplete = async () => {
     const swalWithBootstrapButtons = swal.mixin({
         customClass: {
             confirmButton: 'btnCustomSweetalert bg-yellow-500',
             cancelButton: 'btnCustomSweetalert bg-red-500'
         },
         buttonsStyling: false
-    })
+    });
 
     swalWithBootstrapButtons.fire({
         title: 'Buat Surat!',
@@ -75,41 +76,52 @@ const handleComplete = () => {
         showCancelButton: true,
         confirmButtonText: 'Submit',
         cancelButtonText: 'Cancel',
-        // reverseButtons: true
-    }).then((result) => {
-        
-        if (result.isConfirmed) {
-            const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"))
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+            try {
+                const dataLocalStorage = JSON.parse(localStorage.getItem("sipam"));
 
-            emit('complete');
-            delete props.formData.total_cuti
-            let dataTemp = props.formData
-            let tempDataCheckTypeTemplate = props.formData.template
-            let tempDataFormCuti = [];
-            if (tempDataCheckTypeTemplate.name === 'Template Izin Cuti') {
-                tempDataFormCuti = props.formData.template.parameter[0]
-            }
-            props.formData.category = JSON.stringify(dataTemp.category)
-            props.formData.template = JSON.stringify(dataTemp.template)
-            props.formData.divisi = JSON.stringify(dataTemp.divisi)
-            props.formData.data_form = JSON.stringify(dataTemp.data_form)
-            // props.formData.receiver[0].is_read = "0"
-            props.formData.status = "2"
-            
-            suratService.postSurat(dataTemp).then((res) => {
+                emit('complete');
+                delete props.formData.total_cuti;
+                let dataTemp = props.formData;
+                let tempDataCheckTypeTemplate = props.formData.template;
+                let tempDataFormCuti = [];
+
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Template Izin Cuti') {
+                    tempDataFormCuti = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[0] ? tempDataCheckTypeTemplate.parameter[0] : [];
+                }
+
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Izin Sakit') {
+                    tempDataFormCuti = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[0] ? tempDataCheckTypeTemplate.parameter[0] : [];
+                }
+
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Permohonan Cuti') {
+                    tempDataFormCuti = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[2] ? tempDataCheckTypeTemplate.parameter[2] : [];
+                }
+
+                // console.log("tempDataCheckTypeTemplate", tempDataCheckTypeTemplate)
+
+
+                props.formData.category = JSON.stringify(dataTemp.category);
+                props.formData.template = JSON.stringify(dataTemp.template);
+                props.formData.divisi = JSON.stringify(dataTemp.divisi);
+                props.formData.data_form = JSON.stringify(dataTemp.data_form);
+                props.formData.document_nature = JSON.stringify(dataTemp.document_nature)
+                props.formData.status = "2";
+
+                const res = await suratService.postSurat(dataTemp);
+
                 // POST SURAT CUTI
-                if (tempDataCheckTypeTemplate.name === 'Template Izin Cuti') {
-                    tempDataFormCuti.value.map((date, index) => {
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Template Izin Cuti') {
+                    for (let date of tempDataFormCuti.value || []) {
                         let d = new Date(date),
-                        bulan = '' + (d.getMonth() + 1),
-                        tanggal = '' + d.getDate(),
-                        tahun = d.getFullYear();
-                        
-                        if (bulan.length < 2) 
-                            bulan = '0' + bulan;
-                        if (tanggal.length < 2) 
-                            tanggal = '0' + tanggal;
-    
+                            bulan = '' + (d.getMonth() + 1),
+                            tanggal = '' + d.getDate(),
+                            tahun = d.getFullYear();
+
+                        if (bulan.length < 2) bulan = '0' + bulan;
+                        if (tanggal.length < 2) tanggal = '0' + tanggal;
+
                         const dataAbsen = {
                             type: 1,
                             pin: dataLocalStorage.pin,
@@ -118,52 +130,144 @@ const handleComplete = () => {
                             keterangan: 'Izin Cuti',
                             doc_id: `${res.data.id}`,
                             status: '1'
-                        }
-    
-                        absenService.postSuratSisaCuti(dataAbsen).then((resp) => {
-                        })
-                    })
+                        };
+
+                        await absenService.postSuratSisaCuti(dataAbsen);
+                    }
                 }
                 // END POST SURAT CUTI
 
-                if (props.formData.attachment.length !== 0) {
-                    const formAttach = new FormData();
-                    formAttach.append("document_id", res.data.id)
-                    for (let i = 0; i < props.formData.attachment.length; i++) {
-                        formAttach.append("attachment[]", props.formData.attachment[i])
+                // POST SURAT IZIN SAKIT
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Izin Sakit') {
+                    for (let date of tempDataFormCuti.value || []) {
+                        let d = new Date(date),
+                            bulan = '' + (d.getMonth() + 1),
+                            tanggal = '' + d.getDate(),
+                            tahun = d.getFullYear();
+
+                        if (bulan.length < 2) bulan = '0' + bulan;
+                        if (tanggal.length < 2) tanggal = '0' + tanggal;
+
+                        const keterangan = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[1] ? `Izin Sakit ${tempDataCheckTypeTemplate.parameter[1].value}` : 'Izin Sakit';
+
+                        const dataAbsen = {
+                            type: 4,
+                            pin: dataLocalStorage.pin,
+                            date: [tahun, bulan, tanggal].join('-'),
+                            times: '',
+                            keterangan: keterangan,
+                            doc_id: `${res.data.id}`,
+                            status: '1'
+                        };
+
+                        await absenService.postSuratSisaCuti(dataAbsen);
                     }
-                    suratService.postAttachment(formAttach).then((rest) => {
-                        swalWithBootstrapButtons.fire(
-                            'Success!',
-                            'Surat anda berhasil dibuat.',
-                            'success'
-                        )
-                        router.push('/surat-internal/list/waiting');
-                    })
-                }else {
-                    swalWithBootstrapButtons.fire(
-                        'Success!',
-                        'Surat anda berhasil dibuat.',
-                        'success'
-                    )
-                    router.push('/surat-internal/list/waiting');
                 }
-                // router.push('/surat-external/list/waiting');
-            });
+                // END POST SURAT IZIN SAKIT
+
+                // POST SURAT PEMOHONAN CUTI PANJANG
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Permohonan Cuti Panjang') {
+                    // Ambil nilai type dari parameter[2] dan konversi ke integer
+                    const typeStr = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[2] ? `${tempDataCheckTypeTemplate.parameter[2].value.type}` : '0';
+                    const type = parseInt(typeStr, 10); // Konversi string ke integer
+
+                    // Ambil dan format tanggal dari parameter[0].value
+                    const tanggalValue = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[0] ? new Date(tempDataCheckTypeTemplate.parameter[0].value) : new Date();
+                    let bulan = '' + (tanggalValue.getMonth() + 1),
+                        tanggal = '' + tanggalValue.getDate(),
+                        tahun = tanggalValue.getFullYear();
+
+                    if (bulan.length < 2) bulan = '0' + bulan;
+                    if (tanggal.length < 2) tanggal = '0' + tanggal;
+
+                    const formattedDate = [tahun, bulan, tanggal].join('-');
+
+                    const keterangan = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[1] ? `Izin: ${tempDataCheckTypeTemplate.parameter[1].value}` : 'Izin';
+
+                    const dataAbsen = {
+                        pin: dataLocalStorage.pin,
+                        type: type,
+                        effective_date: formattedDate,
+                        qty: parseInt(tempDataCheckTypeTemplate.parameter[2].value.default_qty),
+                        keterangan: keterangan,
+                        doc_id: `${res.data.id}`,
+                    };
+                    await absenService.sendLeaveAdjustment(dataAbsen);
+                }
+                // END POST SURAT PEMOHONAN CUTI PANJANG
+
+                // POST SURAT PEMOHONAN CUTI
+                if (tempDataCheckTypeTemplate && tempDataCheckTypeTemplate.name === 'Permohonan Cuti') {
+                    // Ambil nilai type dari parameter[2] dan konversi ke integer
+                    const typeStr = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[0] ? `${tempDataCheckTypeTemplate.parameter[0].value.type}` : '0';
+                    const type = parseInt(typeStr, 10); // Konversi string ke integer
+
+                    for (let date of tempDataFormCuti.value || []) {
+                        let d = new Date(date),
+                            bulan = '' + (d.getMonth() + 1),
+                            tanggal = '' + d.getDate(),
+                            tahun = d.getFullYear();
+
+                        if (bulan.length < 2) bulan = '0' + bulan;
+                        if (tanggal.length < 2) tanggal = '0' + tanggal;
+
+                        const keterangan = tempDataCheckTypeTemplate.parameter && tempDataCheckTypeTemplate.parameter[1] ? `Izin: ${tempDataCheckTypeTemplate.parameter[1].value}` : 'Izin';
+                        const dataAbsen = {
+                            pin: dataLocalStorage.pin,
+                            type: type,
+                            effective_date: [tahun, bulan, tanggal].join('-'),
+                            qty: tempDataCheckTypeTemplate.parameter[2].value.length,
+                            keterangan: keterangan,
+                            doc_id: `${res.data.id}`,
+                        };
+
+                        // console.log("dataAbsen", dataAbsen);
+
+                        await absenService.sendLeaveAdjustment(dataAbsen);
+                    }
+                }
+
+                // END POST SURAT PEMOHONAN CUTI
+
+                if (props.formData.attachment && props.formData.attachment.length !== 0) {
+                    const formAttach = new FormData();
+                    formAttach.append("document_id", res.data.id);
+                    for (let i = 0; i < props.formData.attachment.length; i++) {
+                        formAttach.append("attachment[]", props.formData.attachment[i]);
+                    }
+                    await suratService.postAttachment(formAttach);
+                }
+
+                return res.data;
+            } catch (error) {
+                swalWithBootstrapButtons.showValidationMessage(`Request failed: ${error}`);
+            }
+        },
+        allowOutsideClick: () => !swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            swalWithBootstrapButtons.fire(
+                'Success!',
+                'Surat anda berhasil dibuat.',
+                'success'
+            );
+            router.push('/surat-internal/list/waiting');
         }
-    })
-} 
+    });
+};
+
+
 // End Handle Complete or Submit
 
 // Handle Draft
-const handleDraft = () => {
+const handleDraft = async () => {
     const swalWithBootstrapButtons = swal.mixin({
         customClass: {
             confirmButton: 'btnCustomSweetalert bg-yellow-500',
             cancelButton: 'btnCustomSweetalert bg-red-500'
         },
         buttonsStyling: false
-    })
+    });
 
     swalWithBootstrapButtons.fire({
         title: 'Draft Surat!',
@@ -172,45 +276,49 @@ const handleDraft = () => {
         showCancelButton: true,
         confirmButtonText: 'Submit',
         cancelButtonText: 'Cancel',
-        // reverseButtons: true
-    }).then((result) => {
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+            try {
+                emit('draft');
+                delete props.formData.type;
+                let dataTemp = props.formData;
 
-        if (result.isConfirmed) {
-            emit('draft');
-            delete props.formData.type
-            let dataTemp = props.formData
-            props.formData.category = JSON.stringify(dataTemp.category)
-            props.formData.template = JSON.stringify(dataTemp.template)
-            props.formData.divisi = JSON.stringify(dataTemp.divisi)
-            props.formData.status = "0"
-            
-            suratService.postSurat(props.formData).then((res) => {
-                console.log(res, "RESPON");
+                props.formData.category = JSON.stringify(dataTemp.category);
+                props.formData.template = JSON.stringify(dataTemp.template);
+                props.formData.divisi = JSON.stringify(dataTemp.divisi);
+                props.formData.data_form = JSON.stringify(dataTemp.data_form);
+                props.formData.document_nature = JSON.stringify(dataTemp.document_nature)
+                props.formData.status = "0";
+
+                const res = await suratService.postSurat(dataTemp);
+
                 if (props.formData.attachment.length !== 0) {
                     const formAttach = new FormData();
-                    formAttach.append("document_id", res.data.id)
+                    formAttach.append("document_id", res.data.id);
                     for (let i = 0; i < props.formData.attachment.length; i++) {
-                        formAttach.append("attachment[]", props.formData.attachment[i])
+                        formAttach.append("attachment[]", props.formData.attachment[i]);
                     }
-                    suratService.postAttachment(formAttach).then((rest) => {
-                        swalWithBootstrapButtons.fire(
-                            'Success!',
-                            'Surat anda berhasil di draft.',
-                            'success'
-                        )
-                        router.push('/surat-internal/list/draft');
-                    })
+                    await suratService.postAttachment(formAttach);
                 }
-                swalWithBootstrapButtons.fire(
-                    'Success!',
-                    'Surat anda berhasil di draft.',
-                    'success'
-                )
-                router.push('/surat-internal/list/draft');
-            });
+
+                return res.data;  // This ensures the SweetAlert will know when to stop loading
+            } catch (error) {
+                swalWithBootstrapButtons.showValidationMessage(`Request failed: ${error}`);
+            }
+        },
+        allowOutsideClick: () => !swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            swalWithBootstrapButtons.fire(
+                'Success!',
+                'Surat anda berhasil di draft.',
+                'success'
+            );
+            router.push('/surat-internal/list/draft');
         }
-    })
-} 
+    });
+};
+
 // End Handle Draft
 
 </script>
@@ -229,7 +337,12 @@ const handleDraft = () => {
                             </div> -->
                             <label for="Perihal">Nomor Surat</label>
                             <br>
-                            <b>{{formData.document_no}}</b>
+                            <b>{{ formData.document_no }}</b>
+                        </div>
+                        <div class="field col-12 mb-0">
+                            <label for="Perihal">Sifat Surat</label>
+                            <br>
+                            <b>{{formData.document_nature.name_document_nature}}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <!-- <div class="flex align-items-center">
@@ -237,7 +350,7 @@ const handleDraft = () => {
                             </div> -->
                             <label for="Perihal">Kategori</label>
                             <br>
-                            <b>{{formData.category.name}}</b>
+                            <b>{{ formData.category.name }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <!-- <div class="flex align-items-center">
@@ -245,12 +358,12 @@ const handleDraft = () => {
                             </div> -->
                             <label for="Perihal">Perihal</label>
                             <br>
-                            <b>{{formData.perihal}}</b>
+                            <b>{{ formData.perihal }}</b>
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Tujuan">Tujuan</label><br>
                             <template v-for="item, idxTujuan in formData.receiver" :key="idxTujuan">
-                                <Chip :label="item.user_name" class="mb-2 mr-2"/>
+                                <Chip :label="item.user_name" class="mb-2 mr-2" />
                             </template>
                             <!-- <b>{{formData.receiver.user_name}}</b><br>
                             <b>{{formData.receiver.alamat}}</b> -->
@@ -260,7 +373,8 @@ const handleDraft = () => {
                             <div class="flex flex-wrap gap-2" v-if="formData.attachment?.length !== 0">
                                 <template v-for="item, idx in formData.attachment" :key="idx">
                                     <Chip class="p-2 px-3 bg-primary-500" style="width: 100%;">
-                                        <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.name }}</p>
+                                        <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
+                                            item.name }}</p>
                                     </Chip>
                                 </template>
                             </div>
@@ -276,44 +390,41 @@ const handleDraft = () => {
                         </div>
                         <div class="field col-12 mb-0">
                             <label for="Tujuan">Verificator</label><br>
-                            <b>{{formData.verificator.user_name}}</b>
+                            <b>{{ formData.verificator.user_name }}</b>
                             <!-- <div class="flex flex-wrap gap-2">
                                 <template v-for="item, idx in formData.verificator" :key="idx">
                                     <Chip :label="item.user_name" />
                                 </template>
                             </div> -->
                         </div>
-                        <!-- <label for="class">Data</label>
-                        <br>
-                        <pre>
-                            <b>{{formData}}</b>
-                        </pre> -->
+                        <div class="field col-12 mb-0">
+                            <label for="Tujuan">Jenis Tandatangan</label>
+                            <br>
+                            <b>{{ formData.need_sign === '1' ? 'Tandatangan Digital (VIDA)' :
+                                (formData.need_sign === '0' ?
+                                    'Tandatangan Basah' : '') }}</b>
+                        </div>
                     </div>
                     <div class="field col-12 md:col-9">
                         <!-- <div class="field col-12 mb-0"> -->
-                            <!-- <label for="class" class="mt-3">Content Surat</label> -->
-                            <!-- <br> -->
-                            <br>
-                            <!-- <div v-html="props.formData.content"></div> -->
-                            <div class="bg-gray-300">
+                        <!-- <label for="class" class="mt-3">Content Surat</label> -->
+                        <!-- <br> -->
+                        <br>
+                        <!-- <div v-html="props.formData.content"></div> -->
+                        <div class="bg-gray-300">
 
-                                <ScrollPanel style="width: 100%; height: 1300px" class="custombar1">
-                                    <div class="p-8">
-                                        <vue-pdf-embed
-                                        ref="pdfRef"
-                                        :source="dataPdf"
-                                        :page="page"
-                                        @password-requested="handlePasswordRequest"
-                                        @rendered="handleDocumentRender"
-                                        />
-                                    </div>
-                                </ScrollPanel>
-                            </div>
-                            <div>
-                                <!-- <iframe :src="dataPdf" frameborder="0" width="100%" height="500px"></iframe> -->
-                                <!-- <iframe src="https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" frameborder="0" toolbar="0" width="100%" height="500px"></iframe> -->
-                                
-                            </div>
+                            <ScrollPanel style="width: 100%; height: 1300px" class="custombar1">
+                                <div class="p-8">
+                                    <vue-pdf-embed ref="pdfRef" :source="dataPdf" :page="page"
+                                        @password-requested="handlePasswordRequest" @rendered="handleDocumentRender" />
+                                </div>
+                            </ScrollPanel>
+                        </div>
+                        <div>
+                            <!-- <iframe :src="dataPdf" frameborder="0" width="100%" height="500px"></iframe> -->
+                            <!-- <iframe src="https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" frameborder="0" toolbar="0" width="100%" height="500px"></iframe> -->
+
+                        </div>
                         <!-- </div> -->
                     </div>
                 </div>
@@ -360,8 +471,10 @@ const handleDraft = () => {
                         <Button label="Back" @click="prevPage()" icon="pi pi-angle-left" />
                     </div>
                     <div>
-                        <Button label="Draft" @click="handleDraft()" icon="pi pi-file-edit" iconPos="right" class="p-button-secondary mr-2"/>
-                        <Button label="Submit" @click="handleComplete()" icon="pi pi-check" iconPos="right" class="p-button-success"/>
+                        <Button label="Draft" @click="handleDraft()" icon="pi pi-file-edit" iconPos="right"
+                            class="p-button-secondary mr-2" />
+                        <Button label="Submit" @click="handleComplete()" icon="pi pi-check" iconPos="right"
+                            class="p-button-success" />
                     </div>
                 </div>
             </template>

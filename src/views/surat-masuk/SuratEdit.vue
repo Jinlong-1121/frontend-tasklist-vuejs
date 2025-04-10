@@ -49,7 +49,7 @@ onMounted(() => {
 
 const accessEdit = (params) => {
   suratService.editActionAccess(params, "edit").then((data) => {
-    console.log(data);
+    // console.log(data);
     if (typeof data === "string" && data !== "") {
       formObject.value.is_used = true
       toast.add({ severity: 'error', summary: 'Sorry', detail: 'Page is used by another', life: 3000 });
@@ -69,8 +69,8 @@ const accessUpdate = () => {
         id: paramId
     }
     suratService.getDetail(param).then((data) => {
-      // console.log(data, "MASUK MASZ");
-      console.log(data, "data detail");
+      // // console.log(data, "MASUK MASZ");
+      // console.log(data, "data detail");
       const updatedObject = reactive({
         ...formObject.value,  // Copy existing properties
         ...data,
@@ -94,7 +94,7 @@ const accessUpdate = () => {
   //   sender: setSender()
   // }
   // suratService.createActionAccess(params).then((data) => {
-  //   console.log(data);
+  //   // console.log(data);
   //   const updatedObject = reactive({
   //     ...formObject.value,  // Copy existing properties
   //     ...data,
@@ -117,7 +117,7 @@ const setSender = () => {
 // const loadData = async () => {
 //   suratService.getDetail().then((data) => {
 //     formObject.value = data;
-//     console.log(formObject.value, 'value');
+//     // console.log(formObject.value, 'value');
 //   });
 // }
 
@@ -145,13 +145,13 @@ const complete = () => {
 };
 
 // const editAction = () => {
-//   console.log(formObject, "data form object");
+//   // console.log(formObject, "data form object");
 //   disabledBtnCreate.value = true
 //   disabledBtnPost.value = false
 // }
 // const postAction = () => {
-//   console.log(formObject, "data form object");
-//   console.log("post action");
+//   // console.log(formObject, "data form object");
+//   // console.log("post action");
 //   disabledBtnCreate.value = false
 //   disabledBtnPost.value = true
 // }

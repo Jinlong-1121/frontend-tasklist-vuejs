@@ -113,21 +113,21 @@ onBeforeMount(() => {
   //   //   formObject.value = formIntObject.value;
   //   //   break;
   // }
-  // console.log(routeType, "type");
-  // console.log(routeAction, "action");
-  console.log(items.value, "items");
-  console.log(formObject.value, "form");
+  // // console.log(routeType, "type");
+  // // console.log(routeAction, "action");
+  // console.log(items.value, "items");
+  // console.log(formObject.value, "form");
 });
 
 onMounted(() => {
   // loadData();
-  console.log(formObject.value, "form mount");
+  // console.log(formObject.value, "form mount");
 });
 
 const loadData = async () => {
   suratService.getDetail().then((data) => {
     formObject.value = data;
-    console.log(formObject.value, 'value');
+    // console.log(formObject.value, 'value');
   });
 }
 

@@ -28,7 +28,7 @@ export const AccountService = {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     },
     async createAccount(data) {
@@ -51,7 +51,7 @@ export const AccountService = {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     },
     getData() {

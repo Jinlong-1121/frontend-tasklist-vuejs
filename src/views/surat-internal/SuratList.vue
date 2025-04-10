@@ -1,18 +1,36 @@
 <script setup>
-import { onMounted, onUpdated, reactive, ref } from 'vue';
+import { onMounted, onUpdated, provide, ref } from 'vue';
 import SuratService from '@/service/SuratService';
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 const breadcrumbHome = ref({ icon: 'pi pi-home', to: '/' });
 const breadcrumbItems = ref([{ label: 'Surat', to: '/surat-internal/list' }, { label: 'List', to: '/surat-internal/list' }]);
 
 const suratService = new SuratService();
 
 const dataTotal = ref([])
+const keyword = ref("")
+
+const childComponentRef = ref(null);
+
+const getData = () => {
+  const childComponent = childComponentRef.value;
+  // console.log(childComponent.$.ctx, route);
+  childComponent.$.ctx[route.meta.actionSearching](1, keyword.value)
+
+//   if (childComponent) {
+//     // Call a method on the child component
+//     childComponent.getListData(1, keyword.value);
+//   }
+};
 
 onMounted(() => {
     getTotalSurat()
+    // childComponentRef.value = $refs.childComponentRef;
+    // const instance = getCurrentInstance();
+    // childComponentRef.value = instance.vnode.component.proxy.$refs.childComponentRef;
 })
 
 onUpdated(() => {
@@ -41,9 +59,9 @@ const getTotalSurat = async () => {
         document.querySelectorAll("li.p-tabmenuitem")[4].classList.add("notip")
     }
     let data3 = document.querySelectorAll("li.p-tabmenuitem")[5]
-    if (dataTotal.value[3] !== "0") {
-        document.querySelectorAll("li.p-tabmenuitem")[5].classList.add("notip")
-    }
+    // if (dataTotal.value[3] !== "0") {
+    //     document.querySelectorAll("li.p-tabmenuitem")[5].classList.add("notip")
+    // }
 
     data0.setAttribute("dataDynamic", dataTotal.value[0]);
     data1.setAttribute("dataDynamic", dataTotal.value[1]);
@@ -64,15 +82,15 @@ const getTotalSuratUpdate = (tempDataTotal) => {
     if (tempDataTotal[2] !== "0") {
         document.querySelectorAll("li.p-tabmenuitem")[4].classList.add("notip")
     }
-    let data3 = document.querySelectorAll("li.p-tabmenuitem")[5]
-    if (tempDataTotal[3] !== "0") {
-        document.querySelectorAll("li.p-tabmenuitem")[5].classList.add("notip")
-    }
+    // let data3 = document.querySelectorAll("li.p-tabmenuitem")[5]
+    // if (tempDataTotal[3] !== "0") {
+    //     document.querySelectorAll("li.p-tabmenuitem")[5].classList.add("notip")
+    // }
 
     data0.setAttribute("dataDynamic", tempDataTotal[0]);
     data1.setAttribute("dataDynamic", tempDataTotal[1]);
     data2.setAttribute("dataDynamic", tempDataTotal[2]);
-    // data3.setAttribute("dataDynamic", tempDataTotal[3]);
+    data3.setAttribute("dataDynamic", tempDataTotal[3]);
 }
 
 const nestedRouteItems = ref([
@@ -100,15 +118,17 @@ const nestedRouteItems = ref([
     //     label: 'Upload Documents',
     //     to: '/surat-internal/list/upload-documents'
     // },
-    // {
-    //     label: 'Surat Cancel',
-    //     to: '/surat-internal/list/surat-cancel'
-    // }
+    {
+        label: 'Surat Cancel',
+        to: '/surat-internal/list/surat-cancel'
+    }
 ]);
 
 const createNew = () => {
     router.push('/surat/internal/create');
 }
+
+// provide("childComponentRef", childComponentRef)
 </script>
 
 <template>
@@ -117,9 +137,10 @@ const createNew = () => {
             <div class="card card-w-title">
                 <h3>Surat Internal</h3>
                 <Breadcrumb class="mb-4" :home="breadcrumbHome" :model="breadcrumbItems" />
-                    <Button icon="pi pi-plus" label="Surat Baru" @click="createNew" class="mr-2 mb-2" />
-                    <TabMenu :model="nestedRouteItems" class="button-tabSurat"/>
-                <router-view />
+                <Button icon="pi pi-plus" label="Surat Baru" @click="createNew" class="mr-2 mb-2" />
+                        
+                        <TabMenu :model="nestedRouteItems" class="button-tabSurat"/>
+                <router-view ref="childComponentRef" />
             </div>
         </div>
     </div>

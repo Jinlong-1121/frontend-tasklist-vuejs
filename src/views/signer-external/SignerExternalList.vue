@@ -68,11 +68,11 @@ onMounted(() => {
     getListData(page);
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -107,10 +107,10 @@ const editUser = (prod) => {
 
 const saveUser = () => {
     userSignerExternal.value.created_by = JSON.parse(localStorage.getItem("sipam")).target
-    console.log(userSignerExternal.value, "VALUE");
+    // console.log(userSignerExternal.value, "VALUE");
     submitted.value = true;
     // if (userSignerExternal.value.name.trim()) {
-    //     // console.log(user.value.id, typeof(user.value.id));
+    //     // // console.log(user.value.id, typeof(user.value.id));
     //     // if (typeof(user.value.id) === "undefined") {
             saveListData(userSignerExternal.value)
     //         // toast.add({ severity: 'success', summary: 'Successful', detail: 'User Updated', life: 3000 });
@@ -146,7 +146,7 @@ const saveListData = (params) => {
 };
 
 const resendSignerExternal = (data) => {
-    console.log(data, "DATANYA");
+    // console.log(data, "DATANYA");
     delete data.created_at
     delete data.divisi_alias
     delete data.due_date
@@ -165,7 +165,7 @@ const resendSignerExternal = (data) => {
 }
 
 const updateListData = (params, id) => {
-    console.log(params, id);
+    // console.log(params, id);
     userService.updateListData(params, id).then((data) => {
         getListData(1);
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Data user updated', life: 3000 });
@@ -174,7 +174,7 @@ const updateListData = (params, id) => {
 
 const runUser = () => {
     userService.runUser().then((data) => {
-        console.log(data);
+        // console.log(data);
         // getListData(1);
     });
 };
@@ -182,7 +182,7 @@ const runUser = () => {
 const accessData = () => {
     var page = (first.value/10)+1;
     getListData(page)
-    // console.log(row);
+    // // console.log(row);
 };
 
 const filterMonthEvent = () => {
@@ -254,6 +254,8 @@ const columns = [
     <div class="grid">
         <div class="col-12">
             <div class="card card-w-title">
+                <h3>Signer External</h3>
+
                 <Breadcrumb class="mb-4" :home="breadcrumbHome" :model="breadcrumbItems" />
                 <Toast />
                 <Toolbar class="mb-4">

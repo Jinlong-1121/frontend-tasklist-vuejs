@@ -6,7 +6,6 @@ import ckeditor5 from '@ckeditor/vite-plugin-ckeditor5';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
-    
     return {
         optimizeDeps: {
             exclude: ['pdfjs-dist']
@@ -15,12 +14,11 @@ export default defineConfig(({ command }) => {
             vue(),
             ckeditor5( { theme: require.resolve( '@ckeditor/ckeditor5-theme-lark' ) } ),
             vuetify({ autoImport: true }),
-            
         ],
         build: {
             transpile: ['vuetify'], // Ensure Vuetify is transpiled
           },
-        base: command === 'serve' ? '' : '/tasklistdemo/',
+        base: command === 'serve' ? '' : '/sipam/',
         resolve: {
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url))

@@ -3,8 +3,6 @@ import axios from 'axios';
 
 const contextPath = suratModul;
 // const contextPathLocal = import.meta.env.BASE_URL;
-const contextPathInternal = "http://192.168.3.249:6064/";
-const contextPathLocal = "http://localhost:5173/";
 // const urlSurat = "http://192.168.4.250/suratcore/api/";
 
 export default class SuratService {
@@ -33,7 +31,7 @@ export default class SuratService {
             // const result = await response.json();
             // return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // End Function Get Total Surat
@@ -58,10 +56,10 @@ export default class SuratService {
             return response;
             // const response = await fetch(contextPath + 'api/v1/document', requestOptions);
             // const result = await response.json();
-            // console.log(result);
+            // // console.log(result);
             // return result;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async postAttachment(data) {
@@ -79,10 +77,10 @@ export default class SuratService {
             // const resultAttachment = response;
             // const responseAttachment = await fetch(contextPath + 'api/v1/attachment', requestOptions);
             // const resultAttachment = await responseAttachment.json();
-            // console.log(resultAttachment);
+            // // console.log(resultAttachment);
             // return result;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async postSign(data) {
@@ -104,13 +102,124 @@ export default class SuratService {
             return response;
             // const response = await fetch(contextPath + 'api/v1/document/sign', requestOptions);
             // const result = await response.json();
-            // console.log(result);
+            // // console.log(result);
             // return result;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // End Function Post Surat
+    async postSignValidasi(data) {
+        const myHeaders = new Headers();
+        // myHeaders.append("Authorization", token);
+        myHeaders.append("Content-Type", "application/json");
+
+        const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            // headers: myHeaders,
+            body: JSON.stringify(data)
+        };
+        try {
+            const response = await axios.post(contextPath + 'api/v1/document/validasi/vida', requestOptions.body)
+            .then(res => {
+                return res.data;
+            })
+            return response;
+        } catch (error) {
+            // console.log(error, "errornya");
+        }
+    }
+    // End Function Post Validasi Surat
+
+    async postSignVida(data) {
+        const myHeaders = new Headers();
+        // myHeaders.append("Authorization", token);
+        myHeaders.append("Content-Type", "application/json");
+
+        const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            // headers: myHeaders,
+            body: JSON.stringify(data)
+        };
+        try {
+            const response = await axios.post(contextPath + 'api/v1/document/complete-vida', requestOptions.body)
+            .then(res => {
+                return res.data;
+            })
+            return response;
+        } catch (error) {
+            // console.log(error, "errornya");
+        }
+    }
+
+    async postSignVidaPin(data) {
+        const myHeaders = new Headers();
+        // myHeaders.append("Authorization", token);
+        myHeaders.append("Content-Type", "application/json");
+
+        const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            // headers: myHeaders,
+            body: JSON.stringify(data)
+        };
+        try {
+            const response = await axios.post(contextPath + 'api/v1/document/complete-vida/pin', requestOptions.body)
+            .then(res => {
+                return res.data;
+            })
+            return response;
+        } catch (error) {
+            // console.log(error, "errornya");
+        }
+    }
+
+    async postSignNew(data) {
+        const myHeaders = new Headers();
+        // myHeaders.append("Authorization", token);
+        myHeaders.append("Content-Type", "application/json");
+
+        const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            // headers: myHeaders,
+            body: JSON.stringify(data)
+        };
+        try {
+            const response = await axios.post(contextPath + 'api/v1/document/complete', requestOptions.body)
+            .then(res => {
+                return res.data;
+            })
+            return response;
+        } catch (error) {
+            // console.log(error, "errornya");
+        }
+    }
+
+    async postRejectCuti(data) {
+        const myHeaders = new Headers();
+        // myHeaders.append("Authorization", token);
+        myHeaders.append("Content-Type", "application/json");
+
+        const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            // headers: myHeaders,
+            body: JSON.stringify(data)
+        };
+        try {
+            const response = await axios.post(contextPath + 'api/v1/document/reject', requestOptions.body)
+            .then(res => {
+                return res.data;
+            })
+            return response;
+        } catch (error) {
+            // console.log(error, "errornya");
+        }
+    }
+    // End Function Post Sign
 
     // Function Put Surat
     async putSurat(data) {
@@ -119,7 +228,7 @@ export default class SuratService {
         myHeaders.append("Content-Type", "application/json");
         // myHeaders.append("Access-Control-Allow-Origin", "*");
 
-        console.log(myHeaders, "HHH");
+        // console.log(myHeaders, "HHH");
         const requestOptions = {
             method: 'PUT',
             // mode: 'no-cors',
@@ -132,7 +241,7 @@ export default class SuratService {
             // body: data
             body: JSON.stringify(data)
         };
-        console.log(requestOptions.headers, "LLL");
+        // console.log(requestOptions.headers, "LLL");
         try {
             const response = await axios.post(contextPath + `api/v1/document/${data.id}`, requestOptions.body, { headers : requestOptions.headers })
             .then(res => {
@@ -141,10 +250,10 @@ export default class SuratService {
             return response;
             // const response = await fetch(contextPath + `api/v1/document/${data.id}`, requestOptions);
             // const result = await response.json();
-            // console.log(result);
+            // // console.log(result);
             // return result;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // End Function Put Surat
@@ -167,7 +276,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async getListInternal(params) {
@@ -187,7 +296,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async getDetail(params) {
@@ -195,7 +304,7 @@ export default class SuratService {
         const myHeaders = new Headers();
         // myHeaders.append("Authorization", token);
         myHeaders.append("Content-Type", "application/json");
-        // console.log(params);
+        // // console.log(params);
         const requestOptions = {
             method: 'GET',
             mode: 'cors',
@@ -211,7 +320,7 @@ export default class SuratService {
             // const result = await response.json();
             // return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
         // return fetch(contextPath + 'demo/data/_detail.json')
         //     .then((res) => res.json())
@@ -220,22 +329,38 @@ export default class SuratService {
     // End Function Get List and Detail Surat
 
     // Function Delete Surat
-    async deleteSurat(params) {
+    async deleteSurat(data) {
         const myHeaders = new Headers();
-        myHeaders.append("Authorization", `Bearer ${token}`);
+        myHeaders.append("Authorization", token);
         myHeaders.append("Content-Type", "application/json");
-        // console.log(params);
+        // myHeaders.append("Access-Control-Allow-Origin", "*");
+
+        // console.log(myHeaders, "HHH");
         const requestOptions = {
             method: 'DELETE',
-            mode: 'cors',
-            headers: myHeaders
+            // mode: 'no-cors',
+            // headers: {
+            //     "Authorization": token,
+            //     "Content-Type": "application/json",
+            //     "Access-Control-Allow-Origin": "*"
+            // },
+            headers: myHeaders,
+            // body: data
+            body: JSON.stringify(data)
         };
+        // console.log(requestOptions.headers, "LLL");
         try {
-            const response = await fetch(contextPath + `api/v1/document/${params.id}`, requestOptions);
-            const result = await response.json();
-            return result.data;
+            const response = await axios.post(contextPath + `api/v1/document/${data.id}`, requestOptions.body, { headers : requestOptions.headers })
+            .then(res => {
+                return res.data;
+            })
+            return response;
+            // const response = await fetch(contextPath + `api/v1/document/${data.id}`, requestOptions);
+            // const result = await response.json();
+            // // console.log(result);
+            // return result;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // End Function Delete Surat
@@ -259,7 +384,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -283,7 +408,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async getListTujuan() {
@@ -305,7 +430,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // End Function Get and Add Tujuan
@@ -330,7 +455,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // End Function Remove Surat
@@ -359,7 +484,7 @@ export default class SuratService {
         // const myHeaders = new Headers();
         // myHeaders.append("Authorization", token);
         // myHeaders.append("Content-Type", "application/json");
-        // console.log(params);
+        // // console.log(params);
         const requestOptions = {
             method: 'POST',
             mode: 'cors',
@@ -369,15 +494,15 @@ export default class SuratService {
         try {
             const response = await fetch(contextPath + `api/v1/document/makepdf`, requestOptions);
             // if (!response.ok) {
-            //     console.log(response);
+            //     // console.log(response);
             //     authService.authLogout();
             //     // throw new Error(`Error! status: ${response.status}`);
             // }
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async generatePreviewPDF(params) {
@@ -385,7 +510,7 @@ export default class SuratService {
         // const myHeaders = new Headers();
         // myHeaders.append("Authorization", token);
         // myHeaders.append("Content-Type", "application/json");
-        // console.log(params);
+        // // console.log(params);
         const requestOptions = {
             method: 'POST',
             mode: 'cors',
@@ -395,15 +520,15 @@ export default class SuratService {
         try {
             const response = await fetch(contextPath + `api/v1/document/previewpdf`, requestOptions);
             // if (!response.ok) {
-            //     console.log(response);
+            //     // console.log(response);
             //     authService.authLogout();
             //     // throw new Error(`Error! status: ${response.status}`);
             // }
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // End Function Generate PDF
@@ -414,7 +539,7 @@ export default class SuratService {
         // const myHeaders = new Headers();
         // myHeaders.append("Authorization", token);
         // myHeaders.append("Content-Type", "application/json");
-        // console.log(params);
+        // // console.log(params);
         const requestOptions = {
             method: 'POST',
             mode: 'cors',
@@ -424,15 +549,15 @@ export default class SuratService {
         try {
             const response = await fetch(contextPath + `api/v1/document/upload`, requestOptions);
             // if (!response.ok) {
-            //     console.log(response);
+            //     // console.log(response);
             //     authService.authLogout();
             //     // throw new Error(`Error! status: ${response.status}`);
             // }
             const result = await response.json();
-            console.log(result);
+            // console.log("result", result);
             return result;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
             // return error;
         }
     }
@@ -441,7 +566,7 @@ export default class SuratService {
         // const myHeaders = new Headers();
         // myHeaders.append("Authorization", token);
         // myHeaders.append("Content-Type", "application/json");
-        // console.log(params);
+        // // console.log(params);
         const requestOptions = {
             method: 'POST',
             mode: 'cors',
@@ -455,7 +580,31 @@ export default class SuratService {
             })
             return response;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
+            // return error;
+        }
+    }
+
+    async uploadFileNoteCancel(params) {
+        // const token = localStorage.getItem('login');
+        // const myHeaders = new Headers();
+        // myHeaders.append("Authorization", token);
+        // myHeaders.append("Content-Type", "application/json");
+        // // console.log(params);
+        const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            // headers: myHeaders
+            body: params
+        };
+        try {
+            const response = await axios.post(contextPath + `api/v1/upload/note-cancel`, requestOptions.body)
+            .then(res => {
+                return res.data;
+            })
+            return response;
+        } catch (error) {
+            // console.log(error, "errornya");
             // return error;
         }
     }
@@ -481,10 +630,10 @@ export default class SuratService {
             return response;
             // const response = await fetch(contextPath + 'api/v1/document', requestOptions);
             // const result = await response.json();
-            // console.log(result);
+            // // console.log(result);
             // return result;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // End Function Blotter
@@ -497,7 +646,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async createActionAccess(data) {
@@ -508,7 +657,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async updateActionAccess(data) {
@@ -519,7 +668,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async editActionAccess(data, type) {
@@ -530,7 +679,7 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     async postActionAccess(data, type) {
@@ -541,7 +690,30 @@ export default class SuratService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
+        }
+    }
+
+    async getDocumentNatures(status) {
+        // const token = localStorage.getItem('login');
+        const myHeaders = new Headers();
+        // myHeaders.append("Authorization", "Bearer 12345qwerty");
+        myHeaders.append("Content-Type", "application/json");
+
+        const requestOptions = {
+            method: 'GET',
+            // mode: 'cors',
+            headers: myHeaders
+        };
+        
+        try {
+            const response = await axios.get(contextPath + `api/v1/document_nature/${status}`, requestOptions.headers)
+            .then(res => {
+                return res.data;
+            })
+            return response.data;
+        } catch (error) {
+            // console.log(error, "errornya");
         }
     }
 }

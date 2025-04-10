@@ -49,11 +49,11 @@ onMounted(() => {
     getListData(page);
 });
 computed(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 watch(() => {
-    console.log(first);
+    // console.log(first);
     // checkLogin();
 });
 
@@ -74,10 +74,9 @@ const editWebinar = (data) => {
 };
 
 const saveWebinarEvent = () => {
-    console.log(webinar.value, "AAA");
     submitted.value = true;
     // if (webinar.value.webinar_id.trim()) {
-    //     console.log(webinar.value.id, typeof(webinar.value.id));
+    //     // console.log(webinar.value.id, typeof(webinar.value.id));
     //     if (typeof(webinar.value.id) === "undefined") {
     //         webinar.value.webinar_id = webinar.value.webinar_id.replaceAll(/\s/g,'')
     //         webinar.value.tanggal = dateDayMonthYear(webinar.value.tanggal)
@@ -104,9 +103,8 @@ const getListData = (page) => {
     var params = {
         page: page
     }
-    webinarService.getListEventWebinar(params).then((data) => {
-        console.log(data.data, "DATA EVENT LIST");
-        Webinars.value = data.data;
+    webinarService.getList(params).then((data) => {
+        Webinars.value = data.rows;
         Rows.value = data.total_rows;
     });
 };
@@ -125,7 +123,7 @@ const updateListData = (params, id) => {
 
 const runScheduler = () => {
     webinarService.runScheduler().then((data) => {
-        console.log(data);
+        // console.log(data);
     });
 };
 
@@ -156,7 +154,7 @@ const onSelectFile = (event) => {
 const columns = [
     // { field: 'eventmeetid', header: 'Meet ID' },
     // { field: 'eventtitle', header: 'Title' },
-    { field: 'eventdate', header: 'Tanggal' },
+    { field: 'tanggal', header: 'Tanggal' },
 ];
 </script>
 
@@ -176,16 +174,16 @@ const columns = [
         </template>
     </Toolbar>
     <DataTable ref="dt" :value="Webinars" responsiveLayout="scroll">
-        <Column field="eventmeetid" header="Webinar ID" headerStyle="width:14%; min-width:10rem;">
+        <Column field="webinar_no" header="Webinar ID" headerStyle="width:14%; min-width:10rem;">
             <template #body="slotProps">
                 <!-- <router-link :to="{ name: 'participant-list', params: { id: slotProps.data.id }}">{{ slotProps.data.webinar_no }}</router-link> -->
-                <p>{{ slotProps.data.eventmeetid }}</p>
+                <p>{{ slotProps.data.webinar_no }}</p>
             </template>
         </Column>
-        <Column field="eventtitle" header="Title" headerStyle="width:50%; min-width:10rem;">
+        <Column field="topic" header="Title" headerStyle="width:50%; min-width:10rem;">
             <template #body="slotProps">
                 <!-- <router-link :to="{ name: 'participant-list', params: { id: slotProps.data.id }}">{{ slotProps.data.webinar_no }}</router-link> -->
-                <p>{{ slotProps.data.eventtitle }}</p>
+                <p>{{ slotProps.data.topic }}</p>
             </template>
         </Column>
         <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header" headerStyle="width:28%; min-width:10rem;"></Column>

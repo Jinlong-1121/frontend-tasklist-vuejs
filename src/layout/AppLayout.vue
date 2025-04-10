@@ -55,22 +55,6 @@ const isOutsideClicked = (event) => {
 
     return !(sidebarEl.isSameNode(event.target) || sidebarEl.contains(event.target) || topbarEl.isSameNode(event.target) || topbarEl.contains(event.target));
 };
-
-
-</script>
-
-<script>
-const dataLocal = localStorage.getItem("sipam");
-import TaskListService, { RetrunValue } from "@/service/TaskListService";
-import { NLi } from 'naive-ui';
-export default {
-    data() {
-        return {
-            
-        }
-    },
-    
-}
 </script>
 
 <template>
@@ -86,10 +70,9 @@ export default {
             </div>
             <app-footer></app-footer>
         </div>
+        <!-- <app-config></app-config> -->
         <div class="layout-mask"></div>
     </div>
-
-    
 </template>
 
 <style lang="scss" scoped></style>

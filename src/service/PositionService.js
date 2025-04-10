@@ -26,10 +26,10 @@ export default class PositionService {
         try {
             const response = await fetch(contextPath + `api/v1/positions?limit=10&page=${params.page}`, requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
     // GET 
@@ -48,10 +48,10 @@ export default class PositionService {
         try {
             const response = await fetch(contextPath + `api/v1/positions/all`, requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -60,7 +60,7 @@ export default class PositionService {
     //     const myHeaders = new Headers();
     //     myHeaders.append("Authorization", token);
     //     myHeaders.append("Content-Type", "application/json");
-    //     console.log(params);
+    //     // console.log(params);
     //     const requestOptions = {
     //         method: 'GET',
     //         mode: 'cors',
@@ -71,7 +71,7 @@ export default class PositionService {
     //         const result = await response.json();
     //         return result.data;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -80,7 +80,7 @@ export default class PositionService {
     //     const myHeaders = new Headers();
     //     myHeaders.append("Authorization", token);
     //     myHeaders.append("Content-Type", "application/json");
-    //     console.log(params);
+    //     // console.log(params);
     //     const requestOptions = {
     //         method: 'GET',
     //         mode: 'cors',
@@ -91,7 +91,7 @@ export default class PositionService {
     //         const result = await response.json();
     //         return result;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -109,10 +109,10 @@ export default class PositionService {
         try {
             const response = await fetch(contextPath + 'api/v1/position', requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -130,10 +130,10 @@ export default class PositionService {
         try {
             const response = await fetch(contextPath + 'api/v1/position/'+ id, requestOptions);
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
             return result.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -150,10 +150,10 @@ export default class PositionService {
     //     try {
     //         const response = await fetch(contextPath + 'api/v1/position', requestOptions);
     //         const result = await response.json();
-    //         console.log(result);
+    //         // console.log(result);
     //         return result.data;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -162,7 +162,7 @@ export default class PositionService {
     //     const myHeaders = new Headers();
     //     myHeaders.append("Authorization", token);
     //     myHeaders.append("Content-Type", "application/json");
-    //     console.log(params);
+    //     // console.log(params);
     //     const requestOptions = {
     //         method: 'GET',
     //         mode: 'cors',
@@ -173,7 +173,7 @@ export default class PositionService {
     //         const result = await response.json();
     //         return result;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 

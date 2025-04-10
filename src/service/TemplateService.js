@@ -28,7 +28,7 @@ export default class TemplateService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -51,7 +51,7 @@ export default class TemplateService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -75,7 +75,7 @@ export default class TemplateService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -83,7 +83,7 @@ export default class TemplateService {
         const myHeaders = new Headers();
         myHeaders.append("Authorization", `Bearer ${token}`);
         myHeaders.append("Content-Type", "application/json");
-        // console.log(params);
+        // // console.log(params);
         const requestOptions = {
             method: 'GET',
             mode: 'cors',
@@ -96,7 +96,7 @@ export default class TemplateService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -118,7 +118,7 @@ export default class TemplateService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -140,28 +140,36 @@ export default class TemplateService {
             })
             return response.data;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
-    async deleteListData(id) {
+    async deleteListData(data) {
         const myHeaders = new Headers();
-        myHeaders.append("Authorization", `Bearer ${token}`);
+        myHeaders.append("Authorization", token);
         myHeaders.append("Content-Type", "application/json");
+        // myHeaders.append("Access-Control-Allow-Origin", "*");
 
+        // console.log(myHeaders, "HHH");
         const requestOptions = {
             method: 'DELETE',
-            mode: 'cors',
-            headers: myHeaders
+            // mode: 'no-cors',
+            headers: myHeaders,
+            // body: data
+            body: JSON.stringify(data)
         };
         try {
-            const response = await fetch(contextPath + 'api/v1/template/'+ id,  requestOptions)
+            const response = await axios.post(contextPath + `api/v1/template/${data.id}`, requestOptions.body, { headers : requestOptions.headers })
             .then(res => {
-                return res.data
+                return res.data;
             })
-            return response.data;
+            return response;
+            // const response = await fetch(contextPath + `api/v1/document/${data.id}`, requestOptions);
+            // const result = await response.json();
+            // // console.log(result);
+            // return result;
         } catch (error) {
-            console.log(error, "errornya");
+            // console.log(error, "errornya");
         }
     }
 
@@ -178,10 +186,10 @@ export default class TemplateService {
     //     try {
     //         const response = await fetch(contextPath + 'api/v1/scheduler', requestOptions);
     //         const result = await response.json();
-    //         console.log(result);
+    //         // console.log(result);
     //         return result.data;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 
@@ -190,7 +198,7 @@ export default class TemplateService {
     //     const myHeaders = new Headers();
     //     myHeaders.append("Authorization", token);
     //     myHeaders.append("Content-Type", "application/json");
-    //     console.log(params);
+    //     // console.log(params);
     //     const requestOptions = {
     //         method: 'GET',
     //         mode: 'cors',
@@ -201,7 +209,7 @@ export default class TemplateService {
     //         const result = await response.json();
     //         return result;
     //     } catch (error) {
-    //         console.log(error, "errornya");
+    //         // console.log(error, "errornya");
     //     }
     // }
 }

@@ -5,6 +5,7 @@ import SuratService from '@/service/SuratService';
 import DivisiService from '@/service/DivisiService';
 import TemplateService from "@/service/TemplateService";
 import UserService from "@/service/UserService";
+import AbsenService from "@/service/AbsenService";
 
 import Editor from "@/components/editor";
 
@@ -16,13 +17,18 @@ const props = defineProps({ formData: Object });
 const emit = defineEmits(['next-page', 'prev-page']);
 const route = useRoute();
 
+let dataUsers = JSON.parse(localStorage.getItem('sipam'));
+
 const suratService = new SuratService();
 const userService = new UserService();
+const absenService = new AbsenService();
 const divisiService = new DivisiService();
 const templateService = new TemplateService();
 
 const editor = Editor;
 const submitted = ref(false);
+
+const totalSisaCuti = ref()
 
 // SELECTION OPTIONS
 const selectedDivisi = ref();
@@ -30,6 +36,8 @@ const selectedTujuan = ref();
 const selectedPenandatangan = ref();
 const selectedPenandatanganExternal = ref();
 const selectedVerificator = ref();
+const selectedSifatSurat = ref();
+const selectedTypeIzin = ref();
 // END SELECTION OPTIONS
 
 // OPTIONS DROPDOWN
@@ -37,7 +45,9 @@ const optionDivisi = ref([]);
 const optionTujuan = ref([]);
 const optionTujuanTemp = ref([]);
 const optionSigner = ref([]);
+const optionTypeIzin = ref([]);
 const optionVerif = ref([]);
+const optionSifatSurat = ref([]);
 const optionTembusan = ref([]);
 const optionInstrumentType = ref([
     { name: "Equity Reguler", type: 1 },
@@ -64,14 +74,16 @@ const inputForm = reactive({
     receiver: [],
     signer: [],
     verificator: {},
+    type_cuti: {},
     tembusan: [],
     attachment: [],
     attachment_avail: [],
     lampiran: 0,
     status: '1',
+    document_nature: "",
     is_reply: "1",
     need_attach: "0",
-    need_sign: "1"
+    // need_sign: "0"
 });
 const inputBlotter = reactive({
     ins_type: null,
@@ -132,16 +144,23 @@ const loadData = async () => {
     getListDivisi();
     getListSigner();
     getListVerif();
+    getDocumentNatures();
     getListTembusan();
-    let currentTime  = new Date();
+    getTypeIzin();
+    let currentTime = new Date();
     if (inputForm.document_no === "") {
         inputForm.document_no = `{no}/${props.formData.type.code}.${props.formData.category.alias}/DIR/${romanize(currentTime.getMonth() + 1)}/${currentTime.getFullYear()}`
-    }else {
+        // inputForm.document_no = `TESTING/{no}/${props.formData.type.code}.${props.formData.category.alias}/DIR/${romanize(currentTime.getMonth() + 1)}/${currentTime.getFullYear()}`
+    } else {
         inputForm.document_no = inputForm.document_no;
     }
-    if (props.formData.perihal === '') {
+
+    if(props.formData.perihal === '' &&  props.formData.category.alias == 'IZIN') {
+        inputForm.perihal = props.formData.template.name + " - " + dataUsers.user_name;
+    } else {
         inputForm.perihal = props.formData.template.name;
-    }
+    }  
+
     inputForm.need_attach = props.formData.need_attach;
     dataForm.value = props.formData.template.parameter;
 }
@@ -149,7 +168,14 @@ const loadData = async () => {
 // SETGET OPTIONS LIST TUJUAN
 const getListDivisi = () => {
     divisiService.getListAll().then((data) => {
-        optionDivisi.value = data;
+        if (props.formData.template.category_name === 'Izin') {
+            const defaultOption = data.find(option => option.id === 9);
+            if (defaultOption) {
+                optionDivisi.value = [defaultOption];
+            }
+        } else {
+            optionDivisi.value = data;
+        }
     });
 }
 const setDivisi = (event) => {
@@ -173,7 +199,7 @@ const getListTujuan = () => {
     });
 }
 const setTujuan = (event) => {
-    console.log(event, "PPP");
+    // console.log(event, "PPP");
     inputForm.receiver = event.value
     selectedTujuan.receiver = event.value
 };
@@ -183,14 +209,59 @@ const setTujuan = (event) => {
 const getListSigner = () => {
     userService.getListSigner().then((data) => (optionSigner.value = data));
 }
+
+const getTypeIzin = async () => {
+    const data = await absenService.getTypeIzin();
+
+    const finalOptionTypeIzin = data.data.filter(option => {
+        // If total_cuti <= 0, remove option with type '1'
+        if (props.formData.template.name === 'Permohonan Cuti Panjang') {
+            return option.type != 1 && option.multi == 0;
+        } else if (props.formData.template.name === 'Permohonan Cuti') {
+            return option.multi == 1;
+        }
+    });
+    // Assign the final filtered data to optionTypeIzin
+    optionTypeIzin.value = finalOptionTypeIzin;
+};
+
+
+const handleDropdownChange = (event) => {
+    selectedTypeIzin.value = event.value;
+};
+
+const setTypeIzin = (event) => {
+    inputForm.type_cuti = event.value
+    selectedTypeIzin.type_cuti = event.value
+};
+
+const setTypeIzinNew = (event) => {
+    const filteredData = dataForm.value.filter(item => item.type === '9');
+    const typeCutis = filteredData.map(item => item.value.type);
+
+    inputForm.type_cuti = event.value
+    selectedTypeIzin.type_cuti = event.value
+
+    absenService.getCountTotalCuti(event.value.type).then((data) => {
+        if (typeCutis[0] === 10 && totalSisaCuti.value <= 4) {
+            totalSisaCuti.value = 100 - data.data
+        } else if (typeCutis[0] === 11 && totalSisaCuti.value <= 4) {
+            totalSisaCuti.value = data.data
+        } else {
+            totalSisaCuti.value = data.data
+        }
+    });
+};
+
 const setSigner = (event) => {
-    let currentTime  = new Date();
+    let currentTime = new Date();
     inputForm.signer = event.value
     let myTarget = JSON.parse(JSON.stringify(inputForm.signer))
     let statusDIR = myTarget.filter((item) => {
         return item.divisi_alias === "DIR"
     })
     inputForm.document_no = `{no}/INT.${props.formData.category.alias}/${statusDIR.length !== 0 ? 'DIR' : inputForm.signer.length === 0 ? "DIR" : inputForm.signer[0].divisi_alias}/${romanize(currentTime.getMonth() + 1)}/${currentTime.getFullYear()}`
+    // inputForm.document_no = `TESTING/{no}/INT.${props.formData.category.alias}/${statusDIR.length !== 0 ? 'DIR' : inputForm.signer.length === 0 ? "DIR" : inputForm.signer[0].divisi_alias}/${romanize(currentTime.getMonth() + 1)}/${currentTime.getFullYear()}`
     if (event.value.length === 0) {
         selectedPenandatangan.value = !selectedPenandatangan
     }
@@ -202,21 +273,45 @@ const setSigner = (event) => {
 const getListVerif = () => {
     userService.getListVerif().then((data) => (optionVerif.value = data));
 }
+
+const getDocumentNatures = () => {
+    suratService.getDocumentNatures(2).then((data) => (optionSifatSurat.value = data));
+}
+
 const setVerificator = (event) => {
     inputForm.verificator = event.value
     selectedVerificator.verificator = event.value
 };
 // END SETGET OPTIONS LIST VERIFICATOR
 
+const setSifatSurat = (event) => {
+    inputForm.document_nature = event.value;  // Simpan ID ke database
+    selectedSifatSurat.value = event.value;      // Simpan objek terpilih
+};
+
 // SETGET OPTIONS LIST TEMBUSAN
 const getListTembusan = () => {
-    suratService.getListTembusan().then((data) => (optionTembusan.value = data));
+    divisiService.getListAll().then((data) => {
+        // optionTembusan.value = data;
+        optionTembusan.value = data.map((item) => {
+            const container = {};
+            container.user_name = item.name;
+            container.user_id = item.id;
+            container.user_type = "1";
+            return container;
+        })
+    });
 }
 const setTembusan = (event) => {
     inputForm.tembusan = event.value
-    console.log(inputForm.tembusan, "HHHHHHH");
 };
 // END SETGET OPTIONS LIST TEMBUSAN
+
+// const getCountTotalCuti = (data) => {
+//     absenService.getCountTotalCuti(data).then((data) => {
+//         totalSisaCuti.value = data.data
+//     });
+// }
 
 // SETGET OPTIONS BLOTTER INSTRUMENT TYPE
 const getBlotterInstrumentType = () => {
@@ -250,11 +345,43 @@ const setContent = () => {
     let contentDoc = contentTemplate;
     let dataUsersCuti = JSON.parse(localStorage.getItem('sipam'));
 
+    // console.log("tempDataCheckTypeTemplate", contentTemplate)
+
+
     // SET CONTENT IZIN
-    if (props.formData.template.name === "Template Izin Cuti") {
+    if (props.formData.template.name.includes('Izin') || props.formData.template.name.includes('Cuti')) {
         contentDoc = contentDoc.replaceAll('{nama_pembuat}', dataUsersCuti.user_name);
         contentDoc = contentDoc.replaceAll('{jabatan_pembuat}', dataUsersCuti.position);
         contentDoc = contentDoc.replaceAll('{tujuan_divisi}', inputForm.receiver[0].user_name);
+
+        if (props.formData.template.name === 'Permohonan Cuti Panjang') {
+            dataForm.value.forEach((item, idx) => {
+                if (item.value.default_qty !== undefined) {
+                    contentDoc = contentDoc.replaceAll('{jumlah_hari}', item.value.default_qty);
+                }
+
+                if (Object.prototype.toString.call(item.value) === '[object Date]') {
+                    // Buat salinan dari item.value untuk memastikan tidak memodifikasi nilai asli
+                    let addDate = new Date(item.value);
+                    dataForm.value.forEach((itemDetail, idxDetail) => {
+                        if (itemDetail.value.default_qty !== undefined) {
+                            let daysToAdd = itemDetail.value.default_qty; // Perbaiki penamaan variabel
+                            // Pastikan daysToAdd adalah angka dan bukan NaN
+                            if (!isNaN(daysToAdd)) {
+                                // Tambahkan daysToAdd
+                                daysToAdd = parseInt(daysToAdd, 10); // Convert to integer
+                                addDate.setDate(addDate.getDate() + daysToAdd);
+
+                                // Format tanggal baru menggunakan setFormatDateOnly atau fungsi format kustom
+                                const formatAddDate = setFormatDateOnly(addDate);
+                                contentDoc = contentDoc.replaceAll('{tanggal_akhir}', formatAddDate);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
     }
     // END SET CONTENT IZIN
 
@@ -263,17 +390,19 @@ const setContent = () => {
     contentDoc = contentDoc.replaceAll('{alamat}', inputForm.receiver.length > 1 ? "" : inputForm.receiver[0].address);
     contentDoc = contentDoc.replaceAll('{tanggal}', setFormatDate());
     contentDoc = contentDoc.replaceAll('{nomor}', inputForm.document_no);
+    contentDoc = contentDoc.replaceAll('{sifat_surat}', inputForm.document_nature.name_document_nature);
     contentDoc = contentDoc.replaceAll('{lampiran}', inputForm.attachment.length === 0 ? '-' : inputForm.attachment.length);
     contentDoc = contentDoc.replaceAll('{tembusan}', inputForm.tembusan.length === 0 ? '' : setTextList(inputForm.tembusan));
     contentDoc = contentDoc.replaceAll('{up}', inputForm.up);
     contentDoc = contentDoc.replaceAll('{signer}', setTextSigner(inputForm.signer));
     contentDoc = contentDoc.replaceAll('{tujuan_terlampir}', inputForm.receiver.length > 1 ? setTextTujuan(inputForm.receiver) : "");
+    // contentDoc = contentDoc.replaceAll('{note_sign}', props.formData.need_sign === 1 ? "Dokumen ini ditandatangani secara elektronik." : " ");
     if (Object.keys(dataBlotter.value).length === 0 && props.formData.template.name === 'Blotter') {
         toast.add({ severity: 'error', summary: 'Blotter', detail: 'Template Blotter harus diisi', life: 3000 });
-    }else {
+    } else {
         contentDoc = contentDoc.replaceAll('{date_blotter}', tempInputDateBlotter.date === null ? "" : setFormatDate(tempInputDateBlotter.date));
         contentDoc = contentDoc.replaceAll('{fund_blotter}', tempInputBlotterFund.fund_type === null ? "" : tempInputBlotterFund.fund_type.name);
-        contentDoc = contentDoc.replaceAll('{ins_blotter}', tempInputBlotterIns.ins_type === null ? "" : tempInputBlotterIns.ins_type.name );
+        contentDoc = contentDoc.replaceAll('{ins_blotter}', tempInputBlotterIns.ins_type === null ? "" : tempInputBlotterIns.ins_type.name);
     }
     // contentDoc = contentDoc.replaceAll('{{signer}}', setTextTable(inputForm.signer));
     for (let i = 0; i < dataForm.value.length; i++) {
@@ -281,31 +410,35 @@ const setContent = () => {
         const inputType = dataForm.value[i].type
         switch (inputType) {
             case "1":
-                contentDoc = contentDoc.replaceAll('{'+element.param+'}', element.value);
+                contentDoc = contentDoc.replaceAll('{' + element.param + '}', element.value);
                 break;
 
             case "2":
-                contentDoc = contentDoc.replaceAll('{'+element.param+'}', setFormatDateOnly(element.value));
+                contentDoc = contentDoc.replaceAll('{' + element.param + '}', setFormatDateOnly(element.value));
                 break;
 
             case "3":
-                contentDoc = contentDoc.replaceAll('{'+element.param+'}', setTextTable(element.value));
+                contentDoc = contentDoc.replaceAll('{' + element.param + '}', setTextTable(element.value));
                 break;
 
             case "5":
-                contentDoc = contentDoc.replaceAll('{'+element.param+'}', setFormatDate(element.value));
+                contentDoc = contentDoc.replaceAll('{' + element.param + '}', setFormatDate(element.value));
                 break;
-            
+
             case "7":
-                contentDoc = contentDoc.replaceAll('{'+element.param+'}', setBlotterPreview(dataBlotter.value));
+                contentDoc = contentDoc.replaceAll('{' + element.param + '}', setBlotterPreview(dataBlotter.value));
                 break;
-                
+
             case "8":
-                contentDoc = contentDoc.replaceAll('{'+element.param+'}', setFormatDateLooping(element.value));
+                contentDoc = contentDoc.replaceAll('{' + element.param + '}', setFormatDateLooping(element.value));
                 break;
-        
+
+            case "9":
+                contentDoc = contentDoc.replaceAll('{' + element.param + '}', setOption(element.value));
+                break;
+
             default:
-                contentDoc = contentDoc.replaceAll('{'+element.param+'}', element.value);
+                contentDoc = contentDoc.replaceAll('{' + element.param + '}', element.value);
                 break;
         }
         // contentDoc = contentDoc.replace('{{'+element.parameter+'}}', element.value);
@@ -315,7 +448,7 @@ const setContent = () => {
 // END SET CONTENT PREVIEW PDF
 // HELPER
 const setTextTujuans = (data) => {
-    
+
     return `<span>${data.name}</span><br><span>${data.alamat}</span>`;
 }
 const setFormatDateLooping = (date) => {
@@ -325,7 +458,7 @@ const setFormatDateLooping = (date) => {
         let tahun = date.getFullYear();
         let bulan = date.getMonth();
         let tanggal = date.getDate();
-        switch(bulan) {
+        switch (bulan) {
             case 0: bulan = "Januari"; break;
             case 1: bulan = "Februari"; break;
             case 2: bulan = "Maret"; break;
@@ -340,21 +473,22 @@ const setFormatDateLooping = (date) => {
             case 11: bulan = "Desember"; break;
         }
         let tampilTanggal = tanggal + " " + bulan + " " + tahun;
-        
+
         html += '<li>';
-            html += `${tampilTanggal}`;
+        html += `${tampilTanggal}`;
         html += '</li>';
     })
-        
+
     html += `</ol>`;
     return html;
 }
+
 const setFormatDateOnly = (date) => {
     // let date = new Date();
     let tahun = date.getFullYear();
     let bulan = date.getMonth();
     let tanggal = date.getDate();
-    switch(bulan) {
+    switch (bulan) {
         case 0: bulan = "Januari"; break;
         case 1: bulan = "Februari"; break;
         case 2: bulan = "Maret"; break;
@@ -369,29 +503,29 @@ const setFormatDateOnly = (date) => {
         case 11: bulan = "Desember"; break;
     }
     let tampilTanggal = tanggal + " " + bulan + " " + tahun;
-    
+
     return tampilTanggal;
 }
 const setFormatDateNumber = (date) => {
     var d = new Date(date),
-    bulan = '' + (d.getMonth() + 1),
-    tanggal = '' + d.getDate(),
-    tahun = d.getFullYear();
-    
-    if (bulan.length < 2) 
+        bulan = '' + (d.getMonth() + 1),
+        tanggal = '' + d.getDate(),
+        tahun = d.getFullYear();
+
+    if (bulan.length < 2)
         bulan = '0' + bulan;
-    if (tanggal.length < 2) 
+    if (tanggal.length < 2)
         tanggal = '0' + tanggal;
 
     inputBlotter.date = [tahun, bulan, tanggal].join('-');
 }
 const setFormatDate = (data) => {
-    let date = data?new Date(data):new Date();
+    let date = data ? new Date(data) : new Date();
     let tahun = date.getFullYear();
     let bulan = date.getMonth();
     let tanggal = date.getDate();
     let hari = date.getDay();
-    switch(hari) {
+    switch (hari) {
         case 0: hari = "Minggu"; break;
         case 1: hari = "Senin"; break;
         case 2: hari = "Selasa"; break;
@@ -400,7 +534,7 @@ const setFormatDate = (data) => {
         case 5: hari = "Jum'at"; break;
         case 6: hari = "Sabtu"; break;
     }
-    switch(bulan) {
+    switch (bulan) {
         case 0: bulan = "Januari"; break;
         case 1: bulan = "Februari"; break;
         case 2: bulan = "Maret"; break;
@@ -415,35 +549,50 @@ const setFormatDate = (data) => {
         case 11: bulan = "Desember"; break;
     }
     let tampilTanggal = hari + ", " + tanggal + " " + bulan + " " + tahun;
-    
+
     return tampilTanggal;
 }
+
 const setTextSigner = (data) => {
     let html = `<table style="width:100%"><tr>`;
+
     for (let i = 0; i < data.length; i++) {
         const element = data[i];
+        html += `<td style="padding-right: 20px;">`; // Add padding between each column
+
+        // If speciment exists, display the image; otherwise, display an empty placeholder
+        if (props.formData.need_sign === '1') {
+            if (element.speciment) {
+                html += `<img src="${element.speciment}" width="158" height="87" style="display: block; margin-bottom: 5px;"/>`;
+            } else {
+                html += `<div style="width: 158px; height: 87px;  display: block; margin-bottom: 5px;"></div>`; // Placeholder
+            }
+        } else {
+            html += `<div style="width: 158px; height: 87px;  display: block; margin-bottom: 5px;"></div>`; // Placeholder
+        }
+
         html += `
-            <td>
-                <p class="mb-0" style="${element.position !== 'External' ? 'text-decoration: underline;' : ''} font-weight: bold;">${element.user_name}</p>
-                ${element.position !== 'External' ? element.position : ''}
-            </td>
+            <p class="mb-0" style="${element.position !== 'External' ? 'text-decoration: underline;' : ''} font-weight: bold; margin-top: 5px;">${element.user_name}</p>
+            ${element.position !== 'External' ? element.position : ''}
+        </td>
         `;
     }
     html += `</tr></table>`;
     return html;
 }
+
 const setTextTable = (data) => {
     // let data = optionSigner.value;
     let html = `<table style="width:50%">`;
     let header = Object.keys(data[0]); //['name', 'jabatan', 'id']
-    
+
     //set header table
     html += '<tr>';
-        header.forEach(el => {
-            html += `<th>${el}</th>`;
+    header.forEach(el => {
+        html += `<th>${el}</th>`;
     });
     html += '</tr>';
-    
+
     //set body table
     for (let i = 0; i < data.length; i++) {
         const element = data[i];
@@ -457,6 +606,14 @@ const setTextTable = (data) => {
     html += `</table>`;
     return html;
 }
+const setOption = (data) => {
+    // let data = optionSigner.value;
+    let html;
+    const element = data;
+    html = `<a>${element.type_cuti}</a>`;
+
+    return html;
+}
 const setTextTujuan = (data) => {
     // let data = optionSigner.value;
     let html;
@@ -465,7 +622,7 @@ const setTextTujuan = (data) => {
     for (let i = 0; i < data.length; i++) {
         const element = data[i];
         html += '<li>';
-            html += `<span>${element.user_name}</span><span> (${element.address})</span>`;
+        html += `<span>${element.user_name}</span><span> (${element.address})</span>`;
         html += '</li>';
     }
     html += `</ol>`;
@@ -473,51 +630,52 @@ const setTextTujuan = (data) => {
 }
 const setTextList = (data) => {
     // let data = optionSigner.value;
-    console.log(data, "KKKKKK");
+    // console.log(data, "KKKKKK");
     let html;
     html = '<p>Tembusan : </p>';
     html += `<ol>`;
     // html += data.map((item) => {
-    //     console.log(item, "HAHAHAH");
+    //     // console.log(item, "HAHAHAH");
     //     `<li>${item.name}</li>`
     // })
 
     // let header = Object.keys(data[0]); //['name', 'jabatan', 'id']
-    
+
     //set header table
     // html += '<tr>';
     //     header.forEach(el => {
     //         html += `<th>${el}</th>`;
     // });
     // html += '</tr>';
-    
+
     //set body table
     for (let i = 0; i < data.length; i++) {
         const element = data[i];
         html += '<li>';
-            html += `${element.name}`;
+        html += `${element.user_name}`;
         html += '</li>';
     }
     html += `</ol>`;
     return html;
 }
-function romanize (num) {
+function romanize(num) {
     if (!+num)
         return false;
     var digits = String(+num).split(""),
-        key    = ["","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
-                  "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
-                  "","I","II","III","IV","V","VI","VII","VIII","IX"],
-        roman  = "",
-        i      = 3;
+        key = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM",
+            "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC",
+            "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"],
+        roman = "",
+        i = 3;
     while (i--)
         roman = (key[+digits.pop() + (i * 10)] || "") + roman;
     return Array(+digits.join("") + 1).join("M") + roman;
 }
 const setBlotterTable = (datax) => {
-      let insType = inputBlotter.ins_type;
-      let table = ` <table style="border:none;border-collapse:collapse;width: 100%;">`;
-      if (insType === 1) {
+    let insType = inputBlotter.ins_type;
+    let table = ` <table style="border:none;border-collapse:collapse;width: 100%;">`;
+    if (insType === 1) {
+        // console.log("insType", insType)
         table += `    <colgroup>
     										<col width="64">
     										<col width="63">
@@ -526,7 +684,7 @@ const setBlotterTable = (datax) => {
     										<col width="141">
     										<col width="95">
     									</colgroup>`;
-      } else if (insType === 2 || insType === 3) {
+    } else if (insType === 2 || insType === 3) {
         table += `    <colgroup>
                         <col width="45">
                         <col width="39">
@@ -538,7 +696,7 @@ const setBlotterTable = (datax) => {
                         <col width="46">
                         <col width="50">
     									</colgroup>`;
-      } else {
+    } else {
         table += `    <colgroup>
     										<col width="64">
     										<col width="63">
@@ -548,9 +706,9 @@ const setBlotterTable = (datax) => {
     										<col width="141">
     										<col width="95">
     									</colgroup>`;
-      }
+    }
 
-      table += `    <thead>
+    table += `    <thead>
     										<tr style="height:0pt">
     											<th style="border-left:solid #000000 1pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 1pt;vertical-align:top;overflow:hidden;overflow-wrap:break-word;">
     												<p dir="ltr" style="line-height:1.2;text-align: center;margin-top:0pt;margin-bottom:0pt;">
@@ -558,7 +716,7 @@ const setBlotterTable = (datax) => {
     												</p>
     											</th>`;
 
-      if (insType === 1) {
+    if (insType === 1) {
         table += `        <th style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 1pt;vertical-align:top;overflow:hidden;overflow-wrap:break-word;">
                             <p dir="ltr" style="line-height:1.2;text-align: center;margin-top:0pt;margin-bottom:0pt;">
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Stock ID</span>
@@ -574,7 +732,7 @@ const setBlotterTable = (datax) => {
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Price</span>
                             </p>
                           </th>`;
-      } else if (insType === 2 || insType === 3) {
+    } else if (insType === 2 || insType === 3) {
         table += `        <th style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 1pt;vertical-align:top;overflow:hidden;overflow-wrap:break-word;">
                             <p dir="ltr" style="line-height:1.2;text-align: center;margin-top:0pt;margin-bottom:0pt;">
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Bond ID</span>
@@ -600,7 +758,7 @@ const setBlotterTable = (datax) => {
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Yield %</span>
                             </p>
                           </th>`;
-      } else {
+    } else {
         table += `        <th style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 1pt;vertical-align:top;overflow:hidden;overflow-wrap:break-word;">
                             <p dir="ltr" style="line-height:1.2;text-align: center;margin-top:0pt;margin-bottom:0pt;">
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Bank ID</span>
@@ -621,15 +779,15 @@ const setBlotterTable = (datax) => {
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Maturity Date</span>
                             </p>
                           </th>`;
-      }
+    }
 
-      table += `          <th style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 1pt;vertical-align:top;overflow:hidden;overflow-wrap:break-word;">
+    table += `          <th style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 1pt;vertical-align:top;overflow:hidden;overflow-wrap:break-word;">
                             <p dir="ltr" style="line-height:1.2;text-align: center;margin-top:0pt;margin-bottom:0pt;">
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Amount</span>
                             </p>
                           </th>`;
 
-      if (insType === 1) {
+    if (insType === 1) {
         table += `        <th style="border-left:solid #000000 0.5pt;border-right:solid #000000 1pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 1pt;vertical-align:top;overflow:hidden;overflow-wrap:break-word;">
                             <p dir="ltr" style="line-height:1.2;text-align: center;margin-top:0pt;margin-bottom:0pt;">
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Order Type</span>
@@ -637,7 +795,7 @@ const setBlotterTable = (datax) => {
                           </th>
                         </tr>
                       </thead>`;
-      } else if (insType === 2 || insType === 3) {
+    } else if (insType === 2 || insType === 3) {
         table += `        <th style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 1pt;vertical-align:top;overflow:hidden;overflow-wrap:break-word;">
                             <p dir="ltr" style="line-height:1.2;text-align: center;margin-top:0pt;margin-bottom:0pt;">
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Settlement Date</span>
@@ -650,7 +808,7 @@ const setBlotterTable = (datax) => {
                           </th>
                         </tr>
                       </thead>`;
-      } else {
+    } else {
         table += `        <th style="border-left:solid #000000 0.5pt;border-right:solid #000000 1pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 1pt;vertical-align:top;overflow:hidden;overflow-wrap:break-word;">
                             <p dir="ltr" style="line-height:1.2;text-align: center;margin-top:0pt;margin-bottom:0pt;">
                               <span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Int. Percent</span>
@@ -658,8 +816,8 @@ const setBlotterTable = (datax) => {
                           </th>
                         </tr>
                       </thead>`;
-      }
-      datax.forEach((el) => {
+    }
+    datax.forEach((el) => {
         table += `<tbody><tr style="height:0pt">
     												<td style="border-left:solid #000000 1pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<p dir="ltr" style="line-height:1.2;text-align: left;margin-top:0pt;margin-bottom:0pt;">
@@ -668,14 +826,14 @@ const setBlotterTable = (datax) => {
     												</td>`;
 
         if (insType === 2 || insType === 3) {
-          table += `          
+            table += `          
     												<td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<p dir="ltr" style="line-height:1.2;text-align: left;margin-top:0pt;margin-bottom:0pt;">
     														<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${el.bond_id}</span>
     													</p>
     												</td>`;
         } else {
-          table += `          
+            table += `          
     												
           <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<p dir="ltr" style="line-height:1.2;text-align: left;margin-top:0pt;margin-bottom:0pt;">
@@ -688,21 +846,21 @@ const setBlotterTable = (datax) => {
     												<td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<p dir="ltr" style="line-height:1.2;text-align: right;margin-top:0pt;margin-bottom:0pt;">
     														<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${formatPriceDataBlotter(
-                                  el.volume_share
-                                )}</span>
+            el.volume_share
+        )}</span>
     													</p>
     												</td>`;
 
         if (insType === 1) {
-          table += `          <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
+            table += `          <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<p dir="ltr" style="line-height:1.2;text-align: right;margin-top:0pt;margin-bottom:0pt;">
     														<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${formatPriceDataBlotter(
-                                  el.price
-                                )}</span>
+                el.price
+            )}</span>
     													</p>
     												</td>`;
         } else if (insType === 2 || insType === 3) {
-          table += `          <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
+            table += `          <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<p dir="ltr" style="line-height:1.2;text-align: right;margin-top:0pt;margin-bottom:0pt;">
     														<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${el.price}</span>
     													</p>
@@ -718,58 +876,57 @@ const setBlotterTable = (datax) => {
     													</p>
     												</td>`;
         } else {
-          table += `          <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
+            table += `          <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<p dir="ltr" style="line-height:1.2;text-align: right;margin-top:0pt;margin-bottom:0pt;">
     														<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${setFormatDate(
-                                  el.value_date
-                                )}</span>
+                el.value_date
+            )}</span>
     													</p>
     												</td>
                             <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<p dir="ltr" style="line-height:1.2;text-align: right;margin-top:0pt;margin-bottom:0pt;">
     														<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${setFormatDate(
-                                  el.maturity_date
-                                )}</span>
+                el.maturity_date
+            )}</span>
     													</p>
     												</td>`;
         }
         table += `				  <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<p dir="ltr" style="line-height:1.2;text-align: right;margin-top:0pt;margin-bottom:0pt;">
     														<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${formatPriceDataBlotter(
-                                  el.amount
-                                )}</span>
+            el.amount
+        )}</span>
     													</p>
     												</td>`;
         if (insType === 1) {
-          table += `				  <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 1pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
-    													<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${
-                                typeof el.order_type === "undefined"
-                                  ? ""
-                                  : el.order_type
-                              }</span>
+            table += `				  <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 1pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
+    													<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${typeof el.order_type === "undefined"
+                    ? ""
+                    : el.order_type
+                }</span>
     												</td>
     											</tr>`;
         } else if (insType === 2 || insType === 3) {
-          table += `				  <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
+            table += `				  <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 0.5pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${setFormatDate(
-                                el.settled_date
-                              )}</span>
+                el.settled_date
+            )}</span>
     												</td>
                             <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 1pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${setFormatDate(
-                                el.last_coupon_date
-                              )}</span>
+                el.last_coupon_date
+            )}</span>
     												</td>
     											</tr>`;
         } else {
-          table += `				  <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 1pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
+            table += `				  <td style="border-left:solid #000000 0.5pt;border-right:solid #000000 1pt;border-bottom:solid #000000 0.5pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     													<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${el.int_percent}</span>
     												</td>
     											</tr>`;
         }
-      });
+    });
 
-      table += `<tr style="height:0pt">
+    table += `<tr style="height:0pt">
     											<td style="border-left:solid #000000 1pt;border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     												<br>
     											</td>
@@ -781,22 +938,22 @@ const setBlotterTable = (datax) => {
     											<td style="border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     												<p dir="ltr" style="line-height:1.2;text-align: right;margin-top:0pt;margin-bottom:0pt;">
     													<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${totalPriceDataBlotter(
-                                datax,
-                                "volume"
-                              )}</span>
+        datax,
+        "volume"
+    )}</span>
     												</p>
     											</td>
     											<td style="border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     												<br>
     											</td>`;
 
-      if (insType === 5) {
+    if (insType === 5) {
         table += `
                           <td style="border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     												<br>
     											</td>`;
-      }
-      if (insType === 2 || insType === 3) {
+    }
+    if (insType === 2 || insType === 3) {
         table += `
                           <td style="border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     												<br>
@@ -804,33 +961,33 @@ const setBlotterTable = (datax) => {
                           <td style="border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     												<br>
     											</td>`;
-      }
+    }
 
-      table += `<td style="border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
+    table += `<td style="border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     												<p dir="ltr" style="line-height:1.2;text-align: right;margin-top:0pt;margin-bottom:0pt;">
     													<span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">${totalPriceDataBlotter(
-                                datax,
-                                "amount"
-                              )}</span>
+        datax,
+        "amount"
+    )}</span>
     												</p>
     											</td>`;
-      if (insType === 2 || insType === 3) {
+    if (insType === 2 || insType === 3) {
         table += `
                           <td style="border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     												<br>
     											</td>`;
-      }
-      table += `
+    }
+    table += `
     											<td style="border-right:solid #000000 1pt;border-bottom:solid #000000 1pt;border-top:solid #000000 0.5pt;vertical-align:middle;padding:0pt 5pt 0pt 5pt;overflow:hidden;overflow-wrap:break-word;">
     												<br>
     											</td></tr>
     									</tbody>
     								</table>`;
 
-      return table;
+    return table;
 }
 const setBlotterPreview = (data) => {
-    console.log(data, "SET TEM");
+    // console.log(data, "SET TEM");
     let html = "";
     if (typeof data.buy !== "undefined" && data.buy.length > 0) {
         html += `<div dir="ltr" style="margin-left:0pt;" align="left">
@@ -877,7 +1034,7 @@ const setBlotterPreview = (data) => {
                     <tbody>
                     <tr style="height:0pt">
                         <td style="vertical-align:top;padding:5pt 5pt 5pt 0pt;overflow:hidden;overflow-wrap:break-word;">
-                        <p dir="ltr" style="line-height:1.2;margin-top:0pt;margin-bottom:0pt;">
+                        <p dir="ltr" style="lsine-height:1.2;margin-top:0pt;margin-bottom:0pt;">
                             <span style="font-size: 10pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;">Tipe Transaksi</span>
                         </p>
                         </td>
@@ -1011,7 +1168,7 @@ const setBlotterNote = (data) => {
     let dataNotes = [];
     if (typeof data.buy !== "undefined" && data.buy.length > 0) {
         dataNotes = [...dataNotes, ...data.buy];
-        // console.log(dataNotes);
+        // // console.log(dataNotes);
     }
 
     if (typeof data.sell !== "undefined" && data.sell.length > 0) {
@@ -1033,20 +1190,38 @@ const setBlotterNote = (data) => {
     return dataNotes;
 }
 const setNotes = (datax) => {
-      let text = `<p style='font-weight: bolder; font-size: 14px; margin-top: 6px;'>Note : </p>
+    let text = `<p style='font-weight: bolder; font-size: 14px; margin-top: 6px;'>Note : </p>
                     <ul style="list-style: none;padding-left: 0px;color: #000;">`;
-      datax.forEach((el) => {
+    datax.forEach((el) => {
         if (el.investment_notes !== "") {
-          text += `<li><span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0);"><b style="font-size: 8pt;">${el.trx_type} ${el.stock_id}: </b> ${el.investment_notes}</span></li>`;
+            text += `<li><span style="font-size: 8pt; font-family: Arial, Helvetica, sans-serif; color: rgb(0, 0, 0);"><b style="font-size: 8pt;">${el.trx_type} ${el.stock_id}: </b> ${el.investment_notes}</span></li>`;
         }
-      });
-      text += "</ul>";
-      return text;
+    });
+    text += "</ul>";
+    return text;
 }
 const validasiLimitTanggalCuti = (data) => {
-    if (data.length <= props.formData.total_cuti) {
+    if (data.length <= totalSisaCuti.value) {
         toast.add({ severity: 'success', summary: 'Sukses', detail: 'Tanggal berhasil dipilih.', life: 2000 });
-    }else {
+    } else if (data.length <= props.formData.total_cuti) {
+        toast.add({ severity: 'success', summary: 'Sukses', detail: 'Tanggal berhasil dipilih.', life: 2000 });
+    } else {
+        data.splice(-1)
+        toast.add({ severity: 'error', summary: 'Gagal', detail: 'Pilihan tanggal melebihi sisa cuti.', life: 3000 });
+    }
+}
+
+const validasiLimitTanggalCutiMulti = (data) => {
+    const filteredData = dataForm.value.filter(item => item.type === '9');
+    const typeCutis = filteredData.map(item => item.value.type);
+
+    if (typeCutis[0] === 10) {
+        toast.add({ severity: 'success', summary: 'Sukses', detail: 'Tanggal berhasil dipilih.', life: 2000 });
+    } else if (typeCutis[0] === 11 && data.length <= totalSisaCuti.value) {
+        toast.add({ severity: 'success', summary: 'Sukses', detail: 'Tanggal berhasil dipilih.', life: 2000 });
+    } else if (data.length <= totalSisaCuti.value) {
+        toast.add({ severity: 'success', summary: 'Sukses', detail: 'Tanggal berhasil dipilih.', life: 2000 });
+    } else {
         data.splice(-1)
         toast.add({ severity: 'error', summary: 'Gagal', detail: 'Pilihan tanggal melebihi sisa cuti.', life: 3000 });
     }
@@ -1060,7 +1235,7 @@ const formatPriceDataBlotter = (data) => {
     let sisa = split[0].length % 3
     let rupiah = split[0].substr(0, sisa)
     let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-    if(ribuan){
+    if (ribuan) {
         let separator = sisa ? '.' : '';
         rupiah += separator + ribuan.join('.');
     }
@@ -1068,19 +1243,19 @@ const formatPriceDataBlotter = (data) => {
     return rupiah;
 }
 const totalPriceDataBlotter = (data, tipe) => {
-    console.log(data, "TTTT");
+    // console.log(data, "TTTT");
     // let amount = (tipe !== null) ? tipe : amount
-    let total = data.reduce((n, {amount}) => n + amount, 0)
-    if (tipe==="volume") {
-        total = data.reduce((n, {volume_share}) => n + volume_share, 0)
+    let total = data.reduce((n, { amount }) => n + amount, 0)
+    if (tipe === "volume") {
+        total = data.reduce((n, { volume_share }) => n + volume_share, 0)
     }
-    console.log(total, "YYYY");
+    // console.log(total, "YYYY");
     let number_string = total.toString()
     let split = number_string.split(',')
     let sisa = split[0].length % 3
     let rupiah = split[0].substr(0, sisa)
     let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-    if(ribuan){
+    if (ribuan) {
         let separator = sisa ? '.' : '';
         rupiah += separator + ribuan.join('.');
     }
@@ -1093,7 +1268,7 @@ const checkDataBlotter = () => {
     suratService.postBlotter(inputBlotter).then((res) => {
         if (res.data.length === 0) {
             toast.add({ severity: 'error', summary: 'Data Kosong', detail: 'Data Blotter Tidak ada', life: 3000 });
-        }else {
+        } else {
             dataBlotter.value = res.data
         }
     });
@@ -1105,7 +1280,7 @@ const resetDataBlotter = () => {
 
 // FILE
 const onRemoveTemplatingFile = (file, removeFileCallback, index) => {
-    // console.log(removeFileCallback());
+    // // console.log(removeFileCallback());
     // removeFileCallback(index);
     if (index >= 0 && index < inputForm.attachment.length) {
         inputForm.attachment.splice(index, 1);
@@ -1131,18 +1306,104 @@ const checkValidate = () => {
         !selectedDivisi.value ||
         !selectedTujuan.value ||
         !selectedPenandatangan.value ||
-        !selectedVerificator.value
+        !selectedVerificator.value ||
+        !selectedSifatSurat.value
     ) {
         return false
-    }else {
+    } else {
         return true
     }
 }
 // END VALIDATE
 
-const nextPage = () => {
+const isDefaultQtyExceeded = () => {
+    const defaultQty = Number(icfault_qty);
+    const currentValue = Number(item.value);
+
+    return defaultQty > 0 && currentValue > defaultQty;
+}
+
+const nextPage = async () => {
+    const swalWithBootstrapButtons = swal.mixin({
+        customClass: {
+            confirmButton: 'btnCustomSweetalert bg-yellow-500',
+            cancelButton: 'btnCustomSweetalert bg-red-500'
+        },
+        buttonsStyling: false
+    });
+
     if (Object.keys(dataBlotter.value).length === 0 && props.formData.template.name === 'Blotter') {
         toast.add({ severity: 'error', summary: 'Blotter', detail: 'Template Blotter harus diisi', life: 3000 });
+    } else if (props.formData.template.name === 'Permohonan Cuti Panjang' || props.formData.template.name === 'Permohonan Cuti') {
+        if (totalSisaCuti.value > 0) {
+            if (selectedPenandatanganExternal.value !== undefined) {
+                for (let i = 0; i < selectedPenandatanganExternal.value.length; i++) {
+                    inputForm.signer.push(selectedPenandatanganExternal.value[i])
+                }
+            }
+            const check = checkValidate()
+            submitted.value = true
+            if (check !== false) {
+                const contentDoc = setContent();
+
+                const usersWithoutSpeciment = inputForm.signer.filter(user => !user.speciment);
+
+                if (usersWithoutSpeciment.length > 0) {
+                    // Buat teks daftar nama pengguna tanpa speciment
+                    const userList = usersWithoutSpeciment
+                        .map((user, index) => `${index + 1}. ${user.user_name}`)
+                        .join('<br />');
+
+                    // Tampilkan dialog konfirmasi
+                    const result = await swalWithBootstrapButtons.fire({
+                        title: 'Informasi',
+                        html: `Berikut ini belum memiliki spesimen tanda tangan:<br />${userList}`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Lanjuti',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true
+                    });
+
+                    // Jika pengguna memilih "Batal", hentikan eksekusi
+                    if (result.isDismissed) {
+                        return;
+                    }
+                }
+                emit("next-page", {
+                    formData: {
+                        document_no: inputForm.document_no,
+                        up: inputForm.up,
+                        divisi: inputForm.divisi,
+                        receiver: inputForm.receiver,
+                        signer: inputForm.signer,
+                        verificator: inputForm.verificator,
+                        perihal: inputForm.perihal,
+                        tembusan: inputForm.tembusan,
+                        attachment: inputForm.attachment,
+                        content: contentDoc,
+                        status: '1',
+                        document_nature: inputForm.document_nature,
+                        is_reply: "1",
+                        need_attach: props.formData.need_attach,
+                        // need_sign: "0",
+                        data_form: dataForm
+                    },
+                    pageIndex: 1,
+                });
+                submitted.value = true
+            } else {
+                window.scrollTo(0, 180);
+                // swal.fire({
+                //     icon: 'error',
+                //     text: 'Input Kosong, cek kembali input anda.',
+                //     showConfirmButton: false,
+                //     timer: 1500
+                // })
+            }
+        } else {
+            toast.add({ severity: 'error', summary: 'Blotter', detail: 'Sisa Cuti Habis', life: 3000 });
+        }
     } else {
         if (selectedPenandatanganExternal.value !== undefined) {
             for (let i = 0; i < selectedPenandatanganExternal.value.length; i++) {
@@ -1151,6 +1412,32 @@ const nextPage = () => {
         }
         const check = checkValidate()
         submitted.value = true
+
+        const usersWithoutSpeciment = inputForm.signer.filter(user => !user.speciment);
+
+        if (usersWithoutSpeciment.length > 0) {
+            // Buat teks daftar nama pengguna tanpa speciment
+            const userList = usersWithoutSpeciment
+                .map((user, index) => `${index + 1}. ${user.user_name}`)
+                .join('<br />');
+
+            // Tampilkan dialog konfirmasi
+            const result = await swalWithBootstrapButtons.fire({
+                title: 'Informasi',
+                html: `Berikut ini belum memiliki spesimen tanda tangan:<br />${userList}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Lanjuti',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            });
+
+            // Jika pengguna memilih "Batal", hentikan eksekusi
+            if (result.isDismissed) {
+                return;
+            }
+        }
+
         if (check !== false) {
             const contentDoc = setContent();
             emit("next-page", {
@@ -1166,15 +1453,16 @@ const nextPage = () => {
                     attachment: inputForm.attachment,
                     content: contentDoc,
                     status: '1',
+                    document_nature: inputForm.document_nature,
                     is_reply: "1",
                     need_attach: props.formData.need_attach,
-                    need_sign: "1",
+                    // need_sign: "0",
                     data_form: dataForm
                 },
                 pageIndex: 1,
             });
             submitted.value = true
-        }else {
+        } else {
             window.scrollTo(0, 180);
             // swal.fire({
             //     icon: 'error',
@@ -1186,9 +1474,9 @@ const nextPage = () => {
     }
 };
 const prevPage = () => {
-   emit("prev-page", {
+    emit("prev-page", {
         pageIndex: 1,
-      });
+    });
 };
 
 </script>
@@ -1216,85 +1504,57 @@ const prevPage = () => {
                 <div class="p-fluid formgrid grid mt-3">
                     <div class="field col-12 md:col-12">
                         <label for="perihal">Perihal</label>
-                        <InputText id="perihal" type="text" v-model="inputForm.perihal" required="true" autofocus :class="{'p-invalid': submitted && !inputForm.perihal}" />
+                        <InputText id="perihal" v-if="formData.template.category_name === 'Izin'" type="text"
+                            v-model="inputForm.perihal" required="true" autofocus
+                            :class="{ 'p-invalid': submitted && !inputForm.perihal }" disabled />
+                        <InputText id="perihal" v-else type="text" v-model="inputForm.perihal" required="true" autofocus
+                            :class="{ 'p-invalid': submitted && !inputForm.perihal }" />
                         <small class="p-error" v-if="submitted && !inputForm.perihal">Perihal is required.</small>
                     </div>
 
                     <div class="field col-12 md:col-6">
                         <label for="divisi">Divisi</label>
-                        <MultiSelect
-                            inputId="divisi"
-                            v-model="selectedDivisi"
-                            display="chip"
-                            :options="optionDivisi"
-                            @change="setDivisi($event)"
-                            optionLabel="name"
-                            placeholder="Pilih Divisi"
-                            required="true" autofocus :class="{'p-invalid': submitted && !selectedDivisi}"
-                            />
+                        <MultiSelect inputId="divisi" v-model="selectedDivisi" display="chip" :options="optionDivisi"
+                            @change="setDivisi($event)" optionLabel="name" placeholder="Pilih Divisi" required="true"
+                            autofocus :class="{ 'p-invalid': submitted && !selectedDivisi }" />
                         <small class="p-error" v-if="submitted && !selectedDivisi">Divisi is required.</small>
                     </div>
 
                     <div class="field col-12 md:col-6">
                         <label for="tujuan">Tujuan</label>
                         <div class="p-inputgroup flex-1">
-                            <MultiSelect
-                                inputId="tujuan"
-                                display="chip"
-                                v-model="selectedTujuan"
-                                :options="optionTujuan"
-                                @change="setTujuan($event)"
-                                optionLabel="user_name"
-                                placeholder="Pilih Tujuan"
-                                filter 
-                                panelClass="custom-panel"
-                                required="true" autofocus :class="{'p-invalid': submitted && !selectedTujuan}"
-                            />
+                            <MultiSelect inputId="tujuan" display="chip" v-model="selectedTujuan"
+                                :options="optionTujuan" @change="setTujuan($event)" optionLabel="user_name"
+                                placeholder="Pilih Tujuan" filter panelClass="custom-panel" required="true" autofocus
+                                :class="{ 'p-invalid': submitted && !selectedTujuan }" />
                         </div>
                         <small class="p-error" v-if="submitted && !selectedTujuan">Tujuan is required.</small>
                     </div>
 
                     <div class="field col-12 md:col-6">
-                        <label for="signer">Penandatangan {{  }}</label>
-                        <MultiSelect
-                            inputId="signer"
-                            v-model="selectedPenandatangan"
-                            display="chip"
-                            :options="optionSigner"
-                            @change="setSigner($event)"
-                            optionLabel="user_name"
-                            placeholder="Pilih Penandatangan"
-                            required="true" autofocus :class="{'p-invalid': submitted && !selectedPenandatangan}"
-                            />
-                        <small class="p-error" v-if="submitted && !selectedPenandatangan">Penandatangan is required.</small>
+                        <label for="signer">Penandatangan {{ }}</label>
+                        <MultiSelect inputId="signer" v-model="selectedPenandatangan" display="chip"
+                            :options="optionSigner" @change="setSigner($event)" optionLabel="user_name"
+                            placeholder="Pilih Penandatangan" required="true" autofocus
+                            :class="{ 'p-invalid': submitted && !selectedPenandatangan }" />
+                        <small class="p-error" v-if="submitted && !selectedPenandatangan">Penandatangan is
+                            required.</small>
                     </div>
 
                     <div class="field col-12 md:col-6">
                         <label for="verificator">Verificator</label>
-                        <Dropdown
-                            inputId="verificator"
-                            v-model="selectedVerificator"
-                            display="chip"
-                            :options="optionVerif"
-                            @change="setVerificator($event)"
-                            optionLabel="user_name"
-                            placeholder="Pilih Verifikator"
-                            required="true" autofocus :class="{'p-invalid': submitted && !selectedVerificator}"
-                            />
+                        <Dropdown inputId="verificator" v-model="selectedVerificator" display="chip"
+                            :options="optionVerif" @change="setVerificator($event)" optionLabel="user_name"
+                            placeholder="Pilih Verifikator" required="true" autofocus
+                            :class="{ 'p-invalid': submitted && !selectedVerificator }" />
                         <small class="p-error" v-if="submitted && !selectedVerificator">Verificator is required.</small>
                     </div>
-
                     <div class="field col-12 md:col-6">
-                        <label for="tembusan">Tembusan</label>
-                        <MultiSelect
-                            inputId="divisi"
-                            v-model="inputForm.tembusan"
-                            display="chip"
-                            :options="optionDivisi"
-                            @change="setTembusan($event)"
-                            optionLabel="name"
-                            placeholder="Pilih Tembusan"
-                            />
+                        <label for="tembusan">Tembusan {{ }}</label>
+
+                        <MultiSelect inputId="tembusan" v-model="inputForm.tembusan" display="chip"
+                            :options="optionTembusan" @change="setTembusan($event)" optionLabel="user_name"
+                            placeholder="Pilih Tembusan" />
                         <!-- <small class="p-error" v-if="submitted && !selectedDivisi">Divisi is required.</small> -->
                     </div>
 
@@ -1310,62 +1570,81 @@ const prevPage = () => {
                             placeholder="Pilih Tembusan"
                             />
                     </div> -->
-                    
+
+                    <div class="field col-12 md:col-6">
+                        <label for="document_nature">Sifat Surat</label>
+                        <Dropdown inputId="document_nature" v-model="selectedSifatSurat" display="chip"
+                            :options="optionSifatSurat" @change="setSifatSurat($event)" optionLabel="name_document_nature"
+                            placeholder="Pilih Sifat Surat" required="true" autofocus
+                            :class="{ 'p-invalid': submitted && !selectedSifatSurat }" />
+                        <small class="p-error" v-if="submitted && !selectedSifatSurat">Sifat Surat is required.</small>
+                    </div>
+
                     <div v-if="dataForm[0]?.type !== '6'" class="field col-12">
-                            <label for="tembusan">Attachment</label>
-                            <!-- <FileUpload v-model="inputForm.attachment" @select="onSelectFile($event)" :multiple="true" accept="application/pdf" :maxFileSize="1000000">
+                        <label for="tembusan">Attachment</label>
+                        <!-- <FileUpload v-model="inputForm.attachment" @select="onSelectFile($event)" :multiple="true" accept="application/pdf" :maxFileSize="1000000">
                                 <template #empty>
                                     <p>Drag and drop files to here to upload.</p>
                                 </template>
-                            </FileUpload> -->
+</FileUpload> -->
 
-                            <FileUpload @select="onSelectFile($event)" :multiple="true" accept="application/pdf" :maxFileSize="10000000">
-                                <template #header="{ chooseCallback, uploadCallback, clearCallback, files }">
-                                    <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
-                                        <div class="flex gap-2">
-                                            <Button @click="chooseCallback()" icon="pi pi-upload" style="padding: 6px 20px;" outlined>Choose</Button>
+                        <FileUpload @select="onSelectFile($event)" :multiple="true" accept="application/pdf"
+                            :maxFileSize="10000000">
+                            <template #header="{ chooseCallback }">
+                                <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
+                                    <div class="flex gap-2">
+                                        <Button @click="chooseCallback()" icon="pi pi-upload" style="padding: 6px 20px;"
+                                            outlined>Choose</Button>
+                                    </div>
+                                </div>
+                            </template>
+                            <template #content="{ removeFileCallback }">
+                                <p v-if="inputForm.attachment_avail.length !== 0" class="font-semibold">
+                                    File Uploaded
+                                </p>
+                                <div class="p-0 sm:p-5 sm:pb-2 sm:pt-0 gap-5">
+                                    <div v-for="(fileData, index) of inputForm.attachment_avail" :key="index"
+                                        class="card m-0 px-6 grid border-1 surface-border align-items-center my-2">
+                                        <div class="col-8">
+                                            <span class="font-semibold">{{ fileData.asset_url }}</span>
+                                            <div>{{ fileData.size ? formatSize(fileData.size) : '' }}</div>
+                                        </div>
+                                        <div class="col-3">
+                                            <Badge value="Uploaded" severity="success" />
+                                        </div>
+                                        <div class="col-1">
+                                            <Button icon="pi pi-times" outlined @click="onRemoveSuratFileEdit(fileData)"
+                                                severity="danger"
+                                                style="width: 100%; background-color: #D32F2F; border: none; color: white;" />
                                         </div>
                                     </div>
-                                </template>
-                                <template #content="{ files, uploadedFiles, removeUploadedFileCallback, removeFileCallback }">
-                                        <p v-if="inputForm.attachment_avail.length !== 0" class="font-semibold">
-                                            File Uploaded
-                                        </p>
-                                        <div class="p-0 sm:p-5 sm:pb-2 sm:pt-0 gap-5">
-                                            <div v-for="(fileData, index) of inputForm.attachment_avail" :key="index" class="card m-0 px-6 grid border-1 surface-border align-items-center my-2">
-                                                <div class="col-8">
-                                                    <span class="font-semibold">{{ fileData.asset_url }}</span>
-                                                    <div>{{ fileData.size?formatSize(fileData.size):'' }}</div>
-                                                </div>
-                                                <div class="col-3">
-                                                    <Badge value="Uploaded" severity="success" />
-                                                </div>
-                                                <div class="col-1">
-                                                    <Button icon="pi pi-times" outlined @click="onRemoveSuratFileEdit(fileData)" severity="danger" style="width: 100%; background-color: #D32F2F; border: none; color: white;"/>
-                                                </div>
-                                            </div>
-                                        </div>
+                                </div>
 
-                                        <p v-if="inputForm.attachment.length !== 0" class="mt-3 font-semibold">
-                                            File Pending
-                                        </p>
-                                        <div class="p-0 sm:p-5 sm:pb-2 sm:pt-0 gap-5">
-                                            <div v-for="(file, index) of inputForm.attachment" :key="file.name + file.type + file.size" class="card m-0 px-6 grid border-1 surface-border align-items-center my-2">
-                                                <div class="col-8">
-                                                    <span class="font-semibold">{{ file.name }}</span>
-                                                    <div>{{ file.size?formatSize(file.size):'' }}</div>
-                                                </div>
-                                                <div class="col-3">
-                                                    <Badge value="Pending" severity="warning" />
-                                                </div>
-                                                <div class="col-1">
-                                                    <Button icon="pi pi-times" @click="onRemoveTemplatingFile(file, removeFileCallback, index)" outlined  severity="danger" style="width: 100%; background-color: #D32F2F; border: none; color: white;"/>
-                                                </div>
-                                            </div>
+                                <p v-if="inputForm.attachment.length !== 0" class="mt-3 font-semibold">
+                                    File Pending
+                                </p>
+                                <div class="p-0 sm:p-5 sm:pb-2 sm:pt-0 gap-5">
+                                    <div v-for="(file, index) of inputForm.attachment"
+                                        :key="file.name + file.type + file.size"
+                                        class="card m-0 px-6 grid border-1 surface-border align-items-center my-2">
+                                        <div class="col-8">
+                                            <span class="font-semibold">{{ file.name }}</span>
+                                            <div>{{ file.size ? formatSize(file.size) : '' }}</div>
                                         </div>
-                                    <!-- </div> -->
+                                        <div class="col-3">
+                                            <Badge value="Pending" severity="warning" />
+                                        </div>
+                                        <div class="col-1">
+                                            <Button icon="pi pi-times"
+                                                @click="onRemoveTemplatingFile(file, removeFileCallback, index)"
+                                                outlined severity="danger"
+                                                style="width: 100%; background-color: #D32F2F; border: none; color: white;" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- </div> -->
 
-                                    <!-- <div v-if="uploadedFiles.length > 0">
+                                <!-- <div v-if="uploadedFiles.length > 0">
                                         <h5>Completed</h5>
                                         <div class="flex flex-wrap p-0 sm:p-5 gap-5">
                                             <div v-for="(file, index) of uploadedFiles" :key="file.name + file.type + file.size" class="card m-0 px-6 flex flex-column border-1 surface-border align-items-center gap-3">
@@ -1379,78 +1658,114 @@ const prevPage = () => {
                                             </div>
                                         </div>
                                     </div> -->
-                                </template>
-                                <template #empty>
-                                    <p>Drag and drop files to here to upload.</p>
-                                </template>
-                            </FileUpload>
-                            <!-- <FileUpload mode="basic" v-model="inputForm.attachment" @select="onSelectFile($event)" :multiple="true" accept="application/pdf" :maxFileSize="1000000" /> -->
+                            </template>
+                            <template #empty>
+                                <p>Drag and drop files to here to upload.</p>
+                            </template>
+                        </FileUpload>
+                        <!-- <FileUpload mode="basic" v-model="inputForm.attachment" @select="onSelectFile($event)" :multiple="true" accept="application/pdf" :maxFileSize="1000000" /> -->
                     </div>
-                    
+
                     <!-- TEMPLATE -->
-                    <template v-for="(item, idx) in dataForm" :key="idx" >
-                        <div class="field col-12 md:col-12">
-                            
-                        </div>
+                    <template v-for="(item, idx) in dataForm" :key="idx">
                         <div class="field col-12 md:col-6">
-                            <label v-if="item.type!=='7'" :for="item.parameter">{{ item.label }}</label>
-                            <InputText v-if="item.type==='1'" :id="item.parameter" type="text" v-model="item.value" />
-                            <Calendar v-if="item.type==='2' || item.type==='5'" :id="item.parameter" v-model="item.value" />
-                            <Calendar v-if="item.type==='8'" :id="item.parameter" :minDate="minDate" v-model="item.value" selectionMode="multiple" @date-select="validasiLimitTanggalCuti(item.value)"/>
-                            <div v-if="props.formData.template.name === 'Template Izin Cuti'" class="mt-3" style="background: rgba(4, 168, 59, 0.425)0000; border-radius: 6px">
+                            <label v-if="item.type !== '7'" :for="item.parameter">{{ item.label }}</label>
+                            <InputText v-if="item.type === '1' & props.formData.template.name !== 'Template Izin Cuti'"
+                                :id="item.parameter" type="text" v-model="item.value" autofocus
+                                :class="{ 'p-invalid': submitted && !item.value }" />
+                            <Calendar
+                                v-if="(item.type === '2' || item.type === '5') && props.formData.template.name !== 'Permohonan Cuti Panjang'"
+                                :id="item.parameter" v-model="item.value" autofocus
+                                :class="{ 'p-invalid': submitted && !item.value }" />
+                            <Calendar
+                                v-if="(item.type === '2' || item.type === '5') && props.formData.template.name === 'Permohonan Cuti Panjang'"
+                                :id="item.parameter" v-model="item.value" autofocus
+                                :class="{ 'p-invalid': submitted && !item.value }" />
+                            <Calendar v-if="item.type === '8' && props.formData.template.name === 'Template Izin Cuti'"
+                                :id="item.parameter" :minDate="minDate" v-model="item.value" selectionMode="multiple"
+                                @date-select="validasiLimitTanggalCuti(item.value)" autofocus
+                                :class="{ 'p-invalid': submitted && !item.value }" />
+                            <Calendar v-if="item.type === '8' && props.formData.template.name === 'Izin Sakit'"
+                                :id="item.parameter" :minDate="minDate" v-model="item.value" selectionMode="multiple"
+                                autofocus :class="{ 'p-invalid': submitted && !item.value }" />
+                            <Calendar
+                                v-if="item.type === '8' && props.formData.template.name !== 'Template Izin Cuti' && props.formData.template.name !== 'Permohonan Cuti' && props.formData.template.name !== 'Izin Sakit'"
+                                :id="item.parameter" :minDate="minDate" v-model="item.value" selectionMode="multiple"
+                                @date-select="validasiLimitTanggalCuti(item.value)" autofocus
+                                :class="{ 'p-invalid': submitted && !item.value }" />
+                            <Calendar
+                                v-if="item.type === '8' && props.formData.template.name === 'Permohonan Cuti' && item.value.type !== '10'"
+                                :id="item.parameter" :minDate="minDate" v-model="item.value" selectionMode="multiple"
+                                @date-select="validasiLimitTanggalCutiMulti(item.value)" autofocus
+                                :class="{ 'p-invalid': submitted && !item.value }" />
+                            <Calendar
+                                v-if="item.type === '8' && props.formData.template.name === 'Permohonan Cuti' && item.value.type === '10'"
+                                :id="item.parameter" :minDate="minDate" v-model="item.value" selectionMode="multiple"
+                                autofocus :class="{ 'p-invalid': submitted && !item.value }" />
+                            <div v-if="props.formData.template.name === 'Template Izin Cuti'" class="mt-3"
+                                style="background: rgba(4, 168, 59, 0.425)0000; border-radius: 6px">
                                 <p class="p-2 py-1 font-bold">Sisa Total Cuti anda : {{ formData.total_cuti }} </p>
                             </div>
-                            <MultiSelect
-                                v-if="item.type==='3'"
-                                :inputId="item.parameter"
-                                v-model="item.value"
-                                display="chip"
-                                :options="optionSigner"
-                                optionLabel="user_name"
-                                placeholder="Pilih User"
-                            />
 
+                            <MultiSelect v-if="item.type === '3'" :inputId="item.parameter" v-model="item.value"
+                                display="chip" :options="optionSigner" optionLabel="user_name" placeholder="Pilih User"
+                                autofocus :class="{ 'p-invalid': submitted && !item.value }" />
+                            <Dropdown v-if="item.type === '9' && (props.formData.template.name === 'Permohonan Cuti')"
+                                :inputId="item.parameter" v-model="item.value" display="chip" :options="optionTypeIzin"
+                                optionLabel="type_cuti" @change="setTypeIzinNew($event)" placeholder="Pilih Cuti"
+                                autofocus :class="{ 'p-invalid': submitted && !item.value }" />
+                            <Dropdown
+                                v-if="item.type === '9' && (props.formData.template.name === 'Permohonan Cuti Panjang')"
+                                :inputId="item.parameter" v-model="item.value" display="chip" :options="optionTypeIzin"
+                                optionLabel="type_cuti" @change="setTypeIzinNew($event)" placeholder="Pilih Cuti"
+                                autofocus :class="{ 'p-invalid': submitted && !item.value }" />
+
+                            <InputText v-if="item.type === '1' & props.formData.template.name === 'Template Izin Cuti'"
+                                :id="tem.parameter" type="text" v-model="item.value" autofocus
+                                :class="{ 'p-invalid': submitted && !item.value }" />
+                            <div v-if="item.type === '9' && ((props.formData.template.name === 'Permohonan Cuti Panjang' || props.formData.template.name === 'Permohonan Cuti') && item.value.type !== 10)"
+                                class="mt-3" style="background: rgba(4, 168, 59, 0.425)0000; border-radius: 6px">
+                                <p class="p-2 py-1 font-bold">Max Jumlah / Default Cuti: {{ totalSisaCuti || 0 }} </p>
+                            </div>
+                            <!-- <div v-if="item.type === '9' && (props.formData.template.name === 'Permohonan Cuti Panjang' || props.formData.template.name === 'Permohonan Cuti')"
+                                class="mt-3" style="background: rgba(4, 168, 59, 0.425)0000; border-radius: 6px">
+                                <p class="p-2 py-1 font-bold">Sisa saldo cuti anda : {{ formData.total_cuti < 0 ? 0 :
+                                    formData.total_cuti }} </p>
+                            </div> -->
+
+                            <small class="p-error" v-if="submitted && !item.value">{{ item.label }} is required.</small>
                         </div>
 
-                        <div v-if="item.type==='4'" class="field col-12 md:col-12">
+                        <div v-if="item.type === '4'" class="field col-12 md:col-12">
                             <ckeditor :editor="editor" v-model="item.value"></ckeditor>
                         </div>
 
                         <!-- FOR UPLOAD FILE -->
-                        <div v-if="item.type==='6'" class="field col-12 md:col-12">
-                            <FileUpload mode="basic" customUpload @select="onSelectFileTandatanganBasah" accept="application/pdf" :maxFileSize="10000000" />
+                        <div v-if="item.type === '6'" class="field col-12 md:col-12">
+                            <FileUpload mode="basic" customUpload @select="onSelectFileTandatanganBasah"
+                                accept="application/pdf" :maxFileSize="10000000" />
                         </div>
                         <!-- END FOR UPLOAD FILE -->
 
                         <!-- BLOTTER -->
-                        <div v-if="item.type==='7'" class="field col-12 md:col-12">
+                        <div v-if="item.type === '7'" class="field col-12 md:col-12">
                             <label :for="item.parameter">{{ item.label }}</label>
                             <div class="p-fluid formgrid grid">
                                 <div class="field col-12 md:col-2">
                                     <label for="date_blotter">Date</label>
-                                    <Calendar :id="'date_blotter'" v-model="inputBlotter.date"/>
+                                    <Calendar :id="'date_blotter'" v-model="inputBlotter.date" />
                                 </div>
                                 <div class="field col-12 md:col-2">
                                     <label>Instrument Type</label>
-                                    <Dropdown
-                                        v-model="tempInputBlotterIns.ins_type"
-                                        display="chip"
-                                        :options="optionInstrumentType"
-                                        @change="setBlotterInstrumentType($event)"
-                                        optionLabel="name"
-                                        placeholder="Pilih Instrument Type"
-                                    />
+                                    <Dropdown v-model="tempInputBlotterIns.ins_type" display="chip"
+                                        :options="optionInstrumentType" @change="setBlotterInstrumentType($event)"
+                                        optionLabel="name" placeholder="Pilih Instrument Type" />
                                 </div>
                                 <div class="field col-12 md:col-2">
                                     <label>Fund Type</label>
-                                    <Dropdown
-                                        v-model="tempInputBlotterFund.fund_type"
-                                        display="chip"
-                                        :options="optionFundType"
-                                        @change="setBlotterFundType($event)"
-                                        optionLabel="name"
-                                        placeholder="Pilih Fund Type"
-                                    />
+                                    <Dropdown v-model="tempInputBlotterFund.fund_type" display="chip"
+                                        :options="optionFundType" @change="setBlotterFundType($event)"
+                                        optionLabel="name" placeholder="Pilih Fund Type" />
                                 </div>
                                 <div class="field col-12 md:col-2">
                                     <label style="visibility: hidden;">-</label>
@@ -1458,12 +1773,14 @@ const prevPage = () => {
                                 </div>
                             </div>
                         </div>
-                        <div v-if="item.type==='7' && Object.keys(dataBlotter).length !== 0" class="field col-12 md:col-12">
+                        <div v-if="item.type === '7' && Object.keys(dataBlotter).length !== 0"
+                            class="field col-12 md:col-12">
                             <!-- TABLE EQUITY REGULER -->
                             <div class="p-fluid formgrid grid" v-if="inputBlotter.ins_type === 1">
                                 <div class="field col-12 md:col-6">
                                     <label style="font-weight: bolder; font-size: 20px;">Buy</label>
-                                    <DataTable class="p-datatable-buy" :value="dataBlotter.buy" tableStyle="min-width: 50rem">
+                                    <DataTable class="p-datatable-buy" :value="dataBlotter.buy"
+                                        tableStyle="min-width: 50rem">
                                         <Column field="ticket_id" header="ID" sortable></Column>
                                         <Column field="fund" header="Fund" sortable></Column>
                                         <Column field="stock_id" header="Stock"></Column>
@@ -1473,14 +1790,16 @@ const prevPage = () => {
                                         <Column field="investment_notes" header="Notes" sortable></Column>
                                         <ColumnGroup type="footer" v-if="dataBlotter.hasOwnProperty('buy')">
                                             <Row>
-                                                <Column :footer="'Total: ' + totalPriceDataBlotter(dataBlotter.buy)" :colspan="7" footerStyle="text-align:right" />
+                                                <Column :footer="'Total: ' + totalPriceDataBlotter(dataBlotter.buy)"
+                                                    :colspan="7" footerStyle="text-align:right" />
                                             </Row>
                                         </ColumnGroup>
                                     </DataTable>
                                 </div>
                                 <div class="field col-12 md:col-6">
                                     <label style="font-weight: bolder; font-size: 20px;">Sell</label>
-                                    <DataTable class="p-datatable-sell" :value="dataBlotter.sell" tableStyle="min-width: 50rem">
+                                    <DataTable class="p-datatable-sell" :value="dataBlotter.sell"
+                                        tableStyle="min-width: 50rem">
                                         <Column field="ticket_id" header="ID" sortable></Column>
                                         <Column field="fund" header="Fund" sortable></Column>
                                         <Column field="stock_id" header="Stock"></Column>
@@ -1490,7 +1809,8 @@ const prevPage = () => {
                                         <Column field="investment_notes" header="Notes" sortable></Column>
                                         <ColumnGroup type="footer" v-if="dataBlotter.hasOwnProperty('sell')">
                                             <Row>
-                                                <Column :footer="'Total: ' + totalPriceDataBlotter(dataBlotter.sell)" :colspan="7" footerStyle="text-align:right" />
+                                                <Column :footer="'Total: ' + totalPriceDataBlotter(dataBlotter.sell)"
+                                                    :colspan="7" footerStyle="text-align:right" />
                                             </Row>
                                         </ColumnGroup>
                                     </DataTable>
@@ -1502,7 +1822,8 @@ const prevPage = () => {
                             <div class="p-fluid formgrid grid" v-if="inputBlotter.ins_type === 2">
                                 <div class="field col-12 md:col-12">
                                     <label style="font-weight: bolder; font-size: 20px;">Buy</label>
-                                    <DataTable class="p-datatable-buy" :value="dataBlotter.buy" tableStyle="min-width: 50rem">
+                                    <DataTable class="p-datatable-buy" :value="dataBlotter.buy"
+                                        tableStyle="min-width: 50rem">
                                         <Column field="ticket_id" header="ID" sortable></Column>
                                         <Column field="fund" header="Fund" sortable></Column>
                                         <Column field="bond_id" header="Bond"></Column>
@@ -1518,14 +1839,16 @@ const prevPage = () => {
                                             <Row>
                                                 <Column :footer="' '" :colspan="7" footerStyle="" />
                                                 <Column :footer="'Total: '" footerStyle="" />
-                                                <Column :footer="totalPriceDataBlotter(dataBlotter.buy)" footerStyle="" />
+                                                <Column :footer="totalPriceDataBlotter(dataBlotter.buy)"
+                                                    footerStyle="" />
                                             </Row>
                                         </ColumnGroup>
                                     </DataTable>
                                 </div>
                                 <div class="field col-12 md:col-12">
                                     <label style="font-weight: bolder; font-size: 20px;">Sell</label>
-                                    <DataTable class="p-datatable-sell" :value="dataBlotter.sell" tableStyle="min-width: 50rem">
+                                    <DataTable class="p-datatable-sell" :value="dataBlotter.sell"
+                                        tableStyle="min-width: 50rem">
                                         <Column field="ticket_id" header="ID" sortable></Column>
                                         <Column field="fund" header="Fund" sortable></Column>
                                         <Column field="bond_id" header="Bond"></Column>
@@ -1541,7 +1864,8 @@ const prevPage = () => {
                                             <Row>
                                                 <Column :footer="' '" :colspan="7" footerStyle="" />
                                                 <Column :footer="'Total: '" footerStyle="" />
-                                                <Column :footer="totalPriceDataBlotter(dataBlotter.sell)" footerStyle="" />
+                                                <Column :footer="totalPriceDataBlotter(dataBlotter.sell)"
+                                                    footerStyle="" />
                                             </Row>
                                         </ColumnGroup>
                                     </DataTable>
@@ -1553,7 +1877,8 @@ const prevPage = () => {
                             <div class="p-fluid formgrid grid" v-if="inputBlotter.ins_type === 3">
                                 <div class="field col-12 md:col-12">
                                     <label style="font-weight: bolder; font-size: 20px;">Buy</label>
-                                    <DataTable class="p-datatable-buy" :value="dataBlotter.buy" tableStyle="min-width: 50rem">
+                                    <DataTable class="p-datatable-buy" :value="dataBlotter.buy"
+                                        tableStyle="min-width: 50rem">
                                         <Column field="ticket_id" header="ID" sortable></Column>
                                         <Column field="fund" header="Fund" sortable></Column>
                                         <Column field="bond_id" header="Bond"></Column>
@@ -1569,14 +1894,16 @@ const prevPage = () => {
                                             <Row>
                                                 <Column :footer="' '" :colspan="7" footerStyle="" />
                                                 <Column :footer="'Total: '" footerStyle="" />
-                                                <Column :footer="totalPriceDataBlotter(dataBlotter.buy)" footerStyle="" />
+                                                <Column :footer="totalPriceDataBlotter(dataBlotter.buy)"
+                                                    footerStyle="" />
                                             </Row>
                                         </ColumnGroup>
                                     </DataTable>
                                 </div>
                                 <div class="field col-12 md:col-12">
                                     <label style="font-weight: bolder; font-size: 20px;">Sell</label>
-                                    <DataTable class="p-datatable-sell" :value="dataBlotter.sell" tableStyle="min-width: 50rem">
+                                    <DataTable class="p-datatable-sell" :value="dataBlotter.sell"
+                                        tableStyle="min-width: 50rem">
                                         <Column field="ticket_id" header="ID" sortable></Column>
                                         <Column field="fund" header="Fund" sortable></Column>
                                         <Column field="bond_id" header="Bond"></Column>
@@ -1592,7 +1919,8 @@ const prevPage = () => {
                                             <Row>
                                                 <Column :footer="' '" :colspan="7" footerStyle="" />
                                                 <Column :footer="'Total: '" footerStyle="" />
-                                                <Column :footer="totalPriceDataBlotter(dataBlotter.sell)" footerStyle="" />
+                                                <Column :footer="totalPriceDataBlotter(dataBlotter.sell)"
+                                                    footerStyle="" />
                                             </Row>
                                         </ColumnGroup>
                                     </DataTable>
@@ -1604,7 +1932,8 @@ const prevPage = () => {
                             <div class="p-fluid formgrid grid" v-if="inputBlotter.ins_type === 5">
                                 <div class="field col-12 md:col-12" v-if="dataBlotter.hasOwnProperty('rollover')">
                                     <label style="font-weight: bolder; font-size: 20px;">Rollover</label>
-                                    <DataTable class="p-datatable-dmm" :value="dataBlotter.rollover" tableStyle="min-width: 50rem">
+                                    <DataTable class="p-datatable-dmm" :value="dataBlotter.rollover"
+                                        tableStyle="min-width: 50rem">
                                         <Column field="ticket_id" header="ID" sortable></Column>
                                         <Column field="fund" header="Fund" sortable></Column>
                                         <Column field="stock_id" header="Bank"></Column>
@@ -1618,14 +1947,16 @@ const prevPage = () => {
                                             <Row>
                                                 <Column :footer="' '" :colspan="5" footerStyle="" />
                                                 <Column :footer="'Total: '" footerStyle="" />
-                                                <Column :footer="totalPriceDataBlotter(dataBlotter.rollover)" footerStyle="" />
+                                                <Column :footer="totalPriceDataBlotter(dataBlotter.rollover)"
+                                                    footerStyle="" />
                                             </Row>
                                         </ColumnGroup>
                                     </DataTable>
                                 </div>
                                 <div class="field col-12 md:col-12" v-if="dataBlotter.hasOwnProperty('placement')">
                                     <label style="font-weight: bolder; font-size: 20px;">Placement</label>
-                                    <DataTable class="p-datatable-dmm" :value="dataBlotter.placement" tableStyle="min-width: 50rem">
+                                    <DataTable class="p-datatable-dmm" :value="dataBlotter.placement"
+                                        tableStyle="min-width: 50rem">
                                         <Column field="ticket_id" header="ID" sortable></Column>
                                         <Column field="fund" header="Fund" sortable></Column>
                                         <Column field="stock_id" header="Bank"></Column>
@@ -1639,14 +1970,16 @@ const prevPage = () => {
                                             <Row>
                                                 <Column :footer="' '" :colspan="5" footerStyle="" />
                                                 <Column :footer="'Total: '" footerStyle="" />
-                                                <Column :footer="totalPriceDataBlotter(dataBlotter.placement)" footerStyle="" />
+                                                <Column :footer="totalPriceDataBlotter(dataBlotter.placement)"
+                                                    footerStyle="" />
                                             </Row>
                                         </ColumnGroup>
                                     </DataTable>
                                 </div>
                                 <div class="field col-12 md:col-12" v-if="dataBlotter.hasOwnProperty('liquidate')">
                                     <label style="font-weight: bolder; font-size: 20px;">Liquidate</label>
-                                    <DataTable class="p-datatable-dmm" :value="dataBlotter.liquidate" tableStyle="min-width: 50rem">
+                                    <DataTable class="p-datatable-dmm" :value="dataBlotter.liquidate"
+                                        tableStyle="min-width: 50rem">
                                         <Column field="ticket_id" header="ID" sortable></Column>
                                         <Column field="fund" header="Fund" sortable></Column>
                                         <Column field="stock_id" header="Bank"></Column>
@@ -1660,7 +1993,8 @@ const prevPage = () => {
                                             <Row>
                                                 <Column :footer="' '" :colspan="5" footerStyle="" />
                                                 <Column :footer="'Total: '" footerStyle="" />
-                                                <Column :footer="totalPriceDataBlotter(dataBlotter.liquidate)" footerStyle="" />
+                                                <Column :footer="totalPriceDataBlotter(dataBlotter.liquidate)"
+                                                    footerStyle="" />
                                             </Row>
                                         </ColumnGroup>
                                     </DataTable>
@@ -1706,31 +2040,38 @@ const prevPage = () => {
     border: none;
     color: black;
 }
+
 :deep(.p-datatable-buy .p-datatable-thead > tr > th) {
     background: #0ba006;
     color: #e9ecef;
     border: none;
 }
+
 :deep(.p-datatable-sell .p-datatable-thead > tr > th) {
     background: #c51812;
     color: #e9ecef;
     border: none;
 }
+
 :deep(.p-datatable .p-sortable-column:focus) {
     box-shadow: none !important;
     outline: none !important;
 }
+
 :deep(.p-datatable-buy .p-datatable-thead > tr > th.p-highlight) {
     background-color: #e9ecef;
     color: #0ba006;
 }
+
 :deep(.p-datatable-sell .p-datatable-thead > tr > th.p-highlight) {
     background-color: #e9ecef;
     color: #c51812;
 }
+
 :deep(.p-datatable-buy .p-datatable-thead > tr > th.p-highlight span svg) {
     filter: invert(46%) sepia(100%) saturate(3079%) hue-rotate(88deg) brightness(93%) contrast(95%) !important;
 }
+
 :deep(.p-datatable-sell .p-datatable-thead > tr > th.p-highlight span svg) {
     filter: invert(20%) sepia(86%) saturate(3074%) hue-rotate(352deg) brightness(78%) contrast(99%) !important;
 }

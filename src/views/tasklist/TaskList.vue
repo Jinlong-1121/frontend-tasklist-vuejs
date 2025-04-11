@@ -42,11 +42,13 @@
               size="x-small"
               @click="Refreshbtn"
             ></v-btn>
+            <!-- <DialogComponent hidden ref="dialogComponent" /> -->
             <div >
                 <v-radio-group inline style="height: 40px;" @change="RadioBtnFilterClick" v-model="radioGroupfilter">
                   <v-radio  label="My Task" value="mytask"></v-radio>
                   <v-radio label="My Group Task" value="mygrouptask"></v-radio>
                   <v-radio label="As Reporter" value="asreporter"></v-radio>
+                  <v-radio :disabled="alltaskradio" label="All Task" value="alltask"></v-radio>
                 </v-radio-group>
               </div>
           </div>
@@ -1615,7 +1617,7 @@ export default defineComponent({
   setup() {
 
 // Auto-fit columns after grid is loaded
-   
+
     const breadcrumbHome = ref({
       icon: "pi pi-home",
       to: "/",
@@ -1641,6 +1643,7 @@ export default defineComponent({
   },
   data() {
     return {
+      alltaskradio: false,
       mentionedUsers: [],
       finalmentionedUsers:[],
       showUserSuggestions: false, // Controls visibility of user suggestions dropdown
@@ -1867,7 +1870,7 @@ export default defineComponent({
     },
     async RadioBtnFilterClick () {
 
-      if(this.radioGroupfilter === 'asreporter'){
+      if(this.radioGroupfilter == 'asreporter'){
         await this.$refs.gridRef.clearFiltering();
         var values = this.userid;
         //values.forEach(val => {
@@ -1876,7 +1879,7 @@ export default defineComponent({
       await this.Refreshbtn();
 
       }
-      if(this.radioGroupfilter === 'mygrouptask'){
+      if(this.radioGroupfilter == 'mygrouptask'){
         await this.$refs.gridRef.clearFiltering();
         await this.GetDataList("GetDataAssignTo", "-");
 
@@ -1892,13 +1895,26 @@ export default defineComponent({
       await this.Refreshbtn();
 
       }
-      if(this.radioGroupfilter === 'mytask'){
+      if(this.radioGroupfilter == 'mytask'){
         await this.$refs.gridRef.clearFiltering();
         var values = this.userid;
         //values.forEach(val => {
         await this.$refs.gridRef.filterByColumn('assign_to','contains',values)
        // });
       await this.Refreshbtn();
+      }      
+      if(this.radioGroupfilter == 'alltask'){
+        var divisirole = JSON.parse(dataLocal).divisi;
+        if(divisirole == "1")
+        {
+          
+          await this.$refs.gridRef.clearFiltering();
+          await this.Refreshbtn();
+        }else{
+          alert("yhaaaa ketauan mau bypass yaa!!!");
+
+        }
+        
       }
     },
     async RadioBtnSetAssigntoClick() {
@@ -2531,32 +2547,46 @@ try {
     {
       await this.GetDataList("GetDataHeaderTaskList", "AsReporter");
       await this.GetDataList("SetDataSummaryTaskList", "AsReporter");
-      this.updateStatus("");
-      this.filter.subject = "";
-      this.filter.task_id = "";
-      this.filter.topic = "";
-      this.filter.status = "";
-      this.filter.estimat = "";
-      this.filter.start_d = "";
-      this.filter.progres = "";
-      this.filter.finish_ = "";
-      this.filter.assign_ = "";
 
       //this.openDialog();
     }
     else if(this.radioGroupfilter == "mygrouptask") {
       await this.GetDataList("GetDataHeaderTaskList", "AsGroup");
       await this.GetDataList("SetDataSummaryTaskList", "AsGroup");
-      this.updateStatus("");
-      this.filter.subject = "";
-      this.filter.task_id = "";
-      this.filter.topic = "";
-      this.filter.status = "";
-      this.filter.estimat = "";
-      this.filter.start_d = "";
-      this.filter.progres = "";
-      this.filter.finish_ = "";
-      this.filter.assign_ = "";
+      // this.updateStatus("");
+      // this.filter.subject = "";
+      // this.filter.task_id = "";
+      // this.filter.topic = "";
+      // this.filter.status = "";
+      // this.filter.estimat = "";
+      // this.filter.start_d = "";
+      // this.filter.progres = "";
+      // this.filter.finish_ = "";
+      // this.filter.assign_ = "";
+
+      //this.openDialog();
+
+    }else if(this.radioGroupfilter == "alltask") {
+      var divisirole = JSON.parse(dataLocal).divisi;
+        if(divisirole == "1")
+        {
+          await this.GetDataList("GetDataHeaderTaskList", "AsAll");
+          await this.GetDataList("SetDataSummaryTaskList", "AsAll");
+        }else{
+          alert("yhaaaa ketauan mau bypass yaa!!!");
+
+        }
+        console.log(divisirole);
+      // this.updateStatus("");
+      // this.filter.subject = "";
+      // this.filter.task_id = "";
+      // this.filter.topic = "";
+      // this.filter.status = "";
+      // this.filter.estimat = "";
+      // this.filter.start_d = "";
+      // this.filter.progres = "";
+      // this.filter.finish_ = "";
+      // this.filter.assign_ = "";
 
       //this.openDialog();
 
@@ -2565,7 +2595,20 @@ try {
     {
       await this.GetDataList("GetDataHeaderTaskList", "");
       await this.GetDataList("SetDataSummaryTaskList", "");
-      this.updateStatus("");
+      // this.updateStatus("");
+      // this.filter.subject = "";
+      // this.filter.task_id = "";
+      // this.filter.topic = "";
+      // this.filter.status = "";
+      // this.filter.estimat = "";
+      // this.filter.start_d = "";
+      // this.filter.progres = "";
+      // this.filter.finish_ = "";
+      // this.filter.assign_ = "";
+
+      //this.openDialog();
+    }
+    this.updateStatus("");
       this.filter.subject = "";
       this.filter.task_id = "";
       this.filter.topic = "";
@@ -2576,9 +2619,6 @@ try {
       this.filter.finish_ = "";
       this.filter.assign_ = "";
 
-      //this.openDialog();
-    }
-      
     },
     disableBeforeToday(date) {
       const today = new Date().setHours(0, 0, 0, 0); // Current date without time
@@ -3187,6 +3227,12 @@ try {
       );
       this.userid = Useridd[0].number_officer;
       this.name = Useridd[0].name;
+      var divisirole = JSON.parse(dataLocal).divisi;
+      if (divisirole == "1"){
+        this.alltaskradio = false;
+      }else{
+        this.alltaskradio = true;
+      }
       //console.log("Formatted priority list:", this.userid);
     } catch (error) {
       console.error("Error fetching task summary:", error);

@@ -45,6 +45,7 @@
             <!-- <DialogComponent hidden ref="dialogComponent" /> -->
             <div >
                 <v-radio-group inline style="height: 40px;" @change="RadioBtnFilterClick" v-model="radioGroupfilter">
+                  <v-radio label="All Task" value="alltask"></v-radio>
                   <v-radio  label="My Task" value="mytask"></v-radio>
                   <v-radio label="My Group Task" value="mygrouptask"></v-radio>
                   <v-radio label="As Reporter" value="asreporter"></v-radio>
@@ -1648,6 +1649,7 @@ export default defineComponent({
   },
   data() {
     return {
+      alltaskradio: false,
       mentionedUsers: [],
       finalmentionedUsers:[],
       showUserSuggestions: false, // Controls visibility of user suggestions dropdown
@@ -2538,32 +2540,38 @@ try {
     {
       await this.GetDataList("GetDataHeaderTaskList", "AsReporter");
       await this.GetDataList("SetDataSummaryTaskList", "AsReporter");
-      this.updateStatus("");
-      this.filter.subject = "";
-      this.filter.task_id = "";
-      this.filter.topic = "";
-      this.filter.status = "";
-      this.filter.estimat = "";
-      this.filter.start_d = "";
-      this.filter.progres = "";
-      this.filter.finish_ = "";
-      this.filter.assign_ = "";
 
       //this.openDialog();
     }
     else if(this.radioGroupfilter == "mygrouptask") {
       await this.GetDataList("GetDataHeaderTaskList", "AsGroup");
       await this.GetDataList("SetDataSummaryTaskList", "AsGroup");
-      this.updateStatus("");
-      this.filter.subject = "";
-      this.filter.task_id = "";
-      this.filter.topic = "";
-      this.filter.status = "";
-      this.filter.estimat = "";
-      this.filter.start_d = "";
-      this.filter.progres = "";
-      this.filter.finish_ = "";
-      this.filter.assign_ = "";
+      // this.updateStatus("");
+      // this.filter.subject = "";
+      // this.filter.task_id = "";
+      // this.filter.topic = "";
+      // this.filter.status = "";
+      // this.filter.estimat = "";
+      // this.filter.start_d = "";
+      // this.filter.progres = "";
+      // this.filter.finish_ = "";
+      // this.filter.assign_ = "";
+
+      //this.openDialog();
+
+    }else if(this.radioGroupfilter == "alltask") {
+      await this.GetDataList("GetDataHeaderTaskList", "AsAll");
+      await this.GetDataList("SetDataSummaryTaskList", "AsAll");
+      // this.updateStatus("");
+      // this.filter.subject = "";
+      // this.filter.task_id = "";
+      // this.filter.topic = "";
+      // this.filter.status = "";
+      // this.filter.estimat = "";
+      // this.filter.start_d = "";
+      // this.filter.progres = "";
+      // this.filter.finish_ = "";
+      // this.filter.assign_ = "";
 
       //this.openDialog();
 
@@ -2572,7 +2580,20 @@ try {
     {
       await this.GetDataList("GetDataHeaderTaskList", "");
       await this.GetDataList("SetDataSummaryTaskList", "");
-      this.updateStatus("");
+      // this.updateStatus("");
+      // this.filter.subject = "";
+      // this.filter.task_id = "";
+      // this.filter.topic = "";
+      // this.filter.status = "";
+      // this.filter.estimat = "";
+      // this.filter.start_d = "";
+      // this.filter.progres = "";
+      // this.filter.finish_ = "";
+      // this.filter.assign_ = "";
+
+      //this.openDialog();
+    }
+    this.updateStatus("");
       this.filter.subject = "";
       this.filter.task_id = "";
       this.filter.topic = "";
@@ -2583,9 +2604,6 @@ try {
       this.filter.finish_ = "";
       this.filter.assign_ = "";
 
-      //this.openDialog();
-    }
-      
     },
     disableBeforeToday(date) {
       const today = new Date().setHours(0, 0, 0, 0); // Current date without time
@@ -3194,6 +3212,12 @@ try {
       );
       this.userid = Useridd[0].number_officer;
       this.name = Useridd[0].name;
+      var divisirole = JSON.parse(dataLocal).divisi;
+      if (divisirole === "1"){
+        this.alltaskradio = true;
+      }else{
+        this.alltaskradio = false;
+      }
       //console.log("Formatted priority list:", this.userid);
     } catch (error) {
       console.error("Error fetching task summary:", error);

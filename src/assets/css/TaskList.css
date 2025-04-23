@@ -27,7 +27,7 @@ body {
 }
 .Button-Box {
   display: grid;
-  grid-template-columns: 90px 40px 500px;
+  grid-template-columns: 90px 40px 600px;
 }
 .v-icon {
   font-size: 20px;

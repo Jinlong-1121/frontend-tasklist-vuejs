@@ -65,6 +65,16 @@ export default class TaskListService {
       throw error; // Rethrow the error if you want the caller to handle it
     }
   }
+  async GetIncomingTask(Userid) {
+    try {
+      const dataTotals = await helperrr.GetMethode(`api/v1/Tasklist/GetIncomingTask?Userid=${Userid}`);
+      RetrunValue = dataTotals || []; // Fallback to an empty array if no data is returned
+      return RetrunValue;
+    } catch (error) {
+      console.error("Error fetching task priority data:", error);
+      throw error; // Rethrow the error if you want the caller to handle it
+    }
+  }
   async GetCommentList(TaskID) {
     try {
       const dataTotals = await helperrr.GetMethode(`api/v1/Tasklist/GetListtComments?Task_ID=${TaskID}`);

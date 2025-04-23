@@ -48,6 +48,7 @@
                   <v-radio  label="My Task" value="mytask"></v-radio>
                   <v-radio label="My Group Task" value="mygrouptask"></v-radio>
                   <v-radio label="As Reporter" value="asreporter"></v-radio>
+                  <v-radio  label="Incoming Task" value="incomingtask"></v-radio>
                   <v-radio :disabled="alltaskradio" label="All Task" value="alltask"></v-radio>
                 </v-radio-group>
               </div>
@@ -127,7 +128,35 @@
           </div>
         </div>
 
-        <div class="Comments-List-Box">
+        <div class="Comments-List-Box" v-if="radioGroupfilter === 'incomingtask'">
+          <ejs-treegrid
+            :dataSource="TaskListGetIncomingTask" ref='gridRef'
+            :treeColumnIndex='1' childMapping='subtasks' :allowPaging="true" :pageSettings='pageSettings' :allowSorting='true'
+            :allowFiltering='true' :filterSettings='filterOptions' :sort='true' :allowResizing='true' :showColumnMenu='true'
+            height="390" rowHeight=30 style="margin: 10px;"  :loadingIndicator='loadingIndicator' :allowTextWrap='true'
+             enableHover=true  :enableCollapseAll="false" :frozenColumns='2' :textWrapSettings='wrapSettings'
+            :enableAutoFitAllColumns='true' gridLines='Both'
+          >
+          <e-columns>
+            <e-column field='task_code' headerText='TASK CODE' textAlign='left' width='auto' :filter='filter1'></e-column>
+            <e-column field='departemen' headerText='DEPARTMENT' textAlign='left' width='auto' :filter='filter1'></e-column>
+            <e-column field='subject' headerText='SUBJECT' textAlign='left' width='auto' :filter='filter1'></e-column>
+            <e-column field='task_name' headerText='TASK NAME' textAlign='left' width='auto' :maxWidth="380" :minWidth="280" :filter='filter1'></e-column>
+            <e-column field='task_category' headerText='CATEGORY' textAlign='left' width='auto' :filter='filter1'></e-column>
+            <e-column field='generate_every' headerText='GENERATE EVERY' textAlign='left' width='auto' :filter='filter1'></e-column>
+            <e-column field='priority' headerText='PRIORITY' textAlign='left' width='auto' :filter='filter1'></e-column>
+            <e-column field='estimated_time_done' headerText='EST FINISH DATE' type='text' textAlign='left' width='auto'></e-column>
+            <e-column field='reminder_task' headerText='REMINDER' textAlign='left' width='auto' :filter='filter1'></e-column>
+            <e-column field='assign_to' headerText='ASSIGN TO' textAlign='left' width='auto' :filter='filter1'></e-column>
+            <e-column :visible='false' field='generate_every_day' headerText='GEN EVERY DAY' textAlign='left' width='auto' :filter='filter1'></e-column>
+            <e-column field='running_at' headerText='RUNNING AT' textAlign='left' type='date' :format='formatOptions' width='auto'></e-column>
+            <e-column field='next_running_at' headerText='NEXT RUNNING AT' textAlign='left' type='date' :format='formatOptions' width='auto'></e-column>
+          </e-columns>
+
+        </ejs-treegrid>
+      </div>        
+      
+      <div class="Comments-List-Box" v-else>
           <ejs-treegrid
             :dataSource="filteredTasks" ref='gridRef'
             :treeColumnIndex='1' childMapping='subtasks' :allowPaging="true" :pageSettings='pageSettings' :allowSorting='true'
@@ -1733,6 +1762,7 @@ export default defineComponent({
         order: "asc",
       },
       TaskListDetail: [],
+      TaskListGetIncomingTask: [],
       UsernameReporter: [],
       ListDataAssignTo: [],
       ValidateUserLevel: [],
@@ -1915,6 +1945,11 @@ export default defineComponent({
 
         }
         
+      }
+      if(this.radioGroupfilter == 'incomingtask'){
+        var values = this.userid;
+        await this.$refs.gridRef.clearFiltering();
+        await this.Refreshbtn();
       }
     },
     async RadioBtnSetAssigntoClick() {
@@ -2438,6 +2473,9 @@ try {
           this.userid,
           Taskid
         );
+        const Tasklist_GetIncomingTask = await taskService.GetIncomingTask(
+          this.userid
+        );
 
         const AssignTO  = await taskService.GetDataAssignTo(this.userid);
         if (param == "SetDataSummaryTaskList") {
@@ -2445,7 +2483,24 @@ try {
         } else if (param == "GetDataHeaderTaskList") {
           this.TaskListHeader = Tasklist;
           await this.$refs.gridRef.autoFitColumns();
-
+        }else if (param == "GetDataIncomingTask") {
+          this.TaskListGetIncomingTask = Tasklist_GetIncomingTask;
+          this.TaskListSummary = [
+                                  {
+                                    emp_no: "",
+                                    emp_name: "",
+                                    new: 0,
+                                    open: 0,
+                                    in_progress: 0,
+                                    done: 0,
+                                    warning: 0,
+                                    outdate: 0,
+                                    warning: 0,
+                                    close : 0,
+                                    total : 0,
+                                  },
+                                ];
+          await this.$refs.gridRef.autoFitColumns();
         } else if (param == "GetDataDetailTaskList") {
           this.TaskListDetail = Tasklist;
         } else if (param == "GetDataAssignTo") {
@@ -2553,6 +2608,23 @@ try {
     else if(this.radioGroupfilter == "mygrouptask") {
       await this.GetDataList("GetDataHeaderTaskList", "AsGroup");
       await this.GetDataList("SetDataSummaryTaskList", "AsGroup");
+      // this.updateStatus("");
+      // this.filter.subject = "";
+      // this.filter.task_id = "";
+      // this.filter.topic = "";
+      // this.filter.status = "";
+      // this.filter.estimat = "";
+      // this.filter.start_d = "";
+      // this.filter.progres = "";
+      // this.filter.finish_ = "";
+      // this.filter.assign_ = "";
+
+      //this.openDialog();
+
+    }    
+    else if(this.radioGroupfilter == "incomingtask") {
+      await this.GetDataList("GetDataIncomingTask", "");
+      //await this.GetDataList("", "");
       // this.updateStatus("");
       // this.filter.subject = "";
       // this.filter.task_id = "";
